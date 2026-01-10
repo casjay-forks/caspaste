@@ -813,7 +813,11 @@ func main() {
 		yamlCfg = cfg
 	}
 
-	// Merge only --address and --port from CLI flags (they override config file)
+	// Apply environment variable overrides to config
+	// Priority: Config file < Environment variables < CLI flags
+	config.ApplyEnvironmentOverrides(yamlCfg)
+
+	// Merge CLI flags (highest priority - override both config file and env vars)
 	if *flagPort != "" {
 		yamlCfg.Server.Port, _ = strconv.Atoi(*flagPort)
 	}
