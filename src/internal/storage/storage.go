@@ -46,7 +46,7 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 			backupPath = "./data/db/caspaste.db"
 		}
 
-		db.backupPool, err = sql.Open("sqlite3", backupPath)
+		db.backupPool, err = sql.Open("sqlite", backupPath)
 		if err != nil {
 			// Don't fail if backup can't be opened, just log warning
 			db.backupPool = nil
@@ -54,7 +54,7 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 			db.backupPool.SetMaxOpenConns(10)
 			db.backupPool.SetMaxIdleConns(2)
 			// Initialize backup database schema
-			InitDB("sqlite3", backupPath)
+			InitDB("sqlite", backupPath)
 		}
 	}
 

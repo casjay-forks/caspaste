@@ -29,7 +29,7 @@ services:
 
       # Additional configuration via environment variables (all optional):
       # - CASPASTE_ADDRESS=:80
-      # - CASPASTE_DB_DRIVER=sqlite3
+      # - CASPASTE_DB_DRIVER=sqlite  # Both "sqlite" and "sqlite3" work (uses modernc.org/sqlite)
       # - CASPASTE_TITLE_MAX_LENGTH=100
       # - CASPASTE_BODY_MAX_LENGTH=52428800
       # - CASPASTE_MAX_PASTE_LIFETIME=unlimited

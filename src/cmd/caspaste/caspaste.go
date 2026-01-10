@@ -424,11 +424,17 @@ func checkAndMigrateDatabase(dataDir, configDir, backupDir, newDriver, newSource
 	return nil
 }
 
-// normalizeDriverName normalizes driver names for comparison
+// normalizeDriverName normalizes driver names for comparison and usage
 func normalizeDriverName(driver string) string {
 	driver = strings.ToLower(driver)
+	// MariaDB uses MySQL driver
 	if driver == "mariadb" {
 		return "mysql"
+	}
+	// sqlite3 (CGo driver) → sqlite (pure Go driver)
+	// We use modernc.org/sqlite (pure Go) which registers as "sqlite"
+	if driver == "sqlite3" {
+		return "sqlite"
 	}
 	return driver
 }
@@ -825,6 +831,9 @@ func main() {
 		yamlCfg.Directories.Logs = *flagLogsDir
 	}
 
+	// Normalize database driver name (sqlite3 → sqlite, mariadb → mysql)
+	yamlCfg.Database.Driver = normalizeDriverName(yamlCfg.Database.Driver)
+
 	// Process --port flag (overrides port in --address)
 	if *flagPort != "" {
 		// Extract host from address (if any)
@@ -1206,6 +1215,17 @@ func main() {
 	err = storage.InitDB(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 	if err != nil {
 		exitOnError(err)
+	}
+
+	// Chown directories AGAIN after database initialization to ensure DB file has correct ownership
+	// The database file was just created, so it needs to be chowned before privilege drop
+	if os.Geteuid() == 0 && uid > 0 && gid > 0 {
+		dirsToChown := []string{*flagDataDir, *flagConfigDir, dbDir, backupDir, cacheDir, logsDir}
+		for _, dir := range dirsToChown {
+			if dir != "" {
+				privilege.ChownPathRecursive(dir, uid, gid)
+			}
+		}
 	}
 
 	// Load pages

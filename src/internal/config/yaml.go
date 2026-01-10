@@ -94,7 +94,9 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Server.TrustReverseProxy = false
 
 	// Database defaults
-	defaultConfig.Database.Driver = "sqlite3"
+	// Note: Using "sqlite" (modernc.org/sqlite - pure Go, no CGo)
+	// NOT "sqlite3" (github.com/mattn/go-sqlite3 - requires CGo)
+	defaultConfig.Database.Driver = "sqlite"
 	defaultConfig.Database.Source = "./data/db/caspaste.db"
 	defaultConfig.Database.MaxOpenConns = 25
 	defaultConfig.Database.MaxIdleConns = 5
