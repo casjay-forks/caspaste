@@ -93,17 +93,80 @@ func GetProtocol(req *http.Request) string {
 	return "http"
 }
 
-// GetClientAddrTrusted extracts client IP address from request
-// Set trustProxy=true only when behind a trusted reverse proxy
-// WARNING: trustProxy=true without a proxy allows IP spoofing for rate limit bypass
-func GetClientAddrTrusted(req *http.Request, trustProxy bool) net.IP {
-	// If not trusting proxy headers, use direct connection IP only
-	if !trustProxy {
-		host, _, err := net.SplitHostPort(req.RemoteAddr)
-		if err != nil {
-			return nil
+// isPrivateIP checks if an IP address is in a private range
+func isPrivateIP(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+
+	// IPv4 private ranges
+	privateIPv4Ranges := []struct {
+		min net.IP
+		max net.IP
+	}{
+		{net.ParseIP("10.0.0.0"), net.ParseIP("10.255.255.255")},         // 10.0.0.0/8
+		{net.ParseIP("172.16.0.0"), net.ParseIP("172.31.255.255")},       // 172.16.0.0/12
+		{net.ParseIP("192.168.0.0"), net.ParseIP("192.168.255.255")},     // 192.168.0.0/16
+		{net.ParseIP("127.0.0.0"), net.ParseIP("127.255.255.255")},       // 127.0.0.0/8 (localhost)
+	}
+
+	// Check IPv4
+	if ip.To4() != nil {
+		for _, r := range privateIPv4Ranges {
+			if bytesInRange(ip.To4(), r.min.To4(), r.max.To4()) {
+				return true
+			}
 		}
-		return net.ParseIP(host)
+		return false
+	}
+
+	// IPv6 private ranges
+	// fc00::/7 (Unique Local Addresses)
+	// fe80::/10 (Link-Local)
+	// ::1/128 (Localhost)
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+		return true
+	}
+
+	// Check fc00::/7 (ULA)
+	if len(ip) == 16 && (ip[0]&0xfe) == 0xfc {
+		return true
+	}
+
+	return false
+}
+
+// bytesInRange checks if IP is within min-max range
+func bytesInRange(ip, min, max net.IP) bool {
+	if len(ip) != len(min) || len(ip) != len(max) {
+		return false
+	}
+	for i := range ip {
+		if ip[i] < min[i] || ip[i] > max[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// GetClientAddrTrusted extracts client IP address from request
+// Set trustProxy=true to always trust proxy headers
+// If trustProxy=false (default), only trusts proxy headers from private IPs
+// This provides security by default while supporting common reverse proxy setups
+func GetClientAddrTrusted(req *http.Request, trustProxy bool) net.IP {
+	// Get the direct connection IP
+	host, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err != nil {
+		return nil
+	}
+	remoteIP := net.ParseIP(host)
+
+	// Determine if we should trust proxy headers
+	shouldTrust := trustProxy || isPrivateIP(remoteIP)
+
+	// If not trusting proxy headers, use direct connection IP only
+	if !shouldTrust {
+		return remoteIP
 	}
 
 	// Try RFC 7239 Forwarded header first
@@ -166,13 +229,8 @@ func GetClientAddrTrusted(req *http.Request, trustProxy bool) net.IP {
 		}
 	}
 
-	// Fallback: use real client address from connection
-	host, _, err := net.SplitHostPort(req.RemoteAddr)
-	if err != nil {
-		return nil
-	}
-
-	return net.ParseIP(host)
+	// Fallback: use remote IP we already extracted
+	return remoteIP
 }
 
 // GetClientAddr extracts client IP address using direct connection only

@@ -33,7 +33,7 @@ RUN apk add --no-cache ca-certificates tzdata
 # Create non-root user and directories
 RUN addgroup -g 1000 caspaste && \
     adduser -D -u 1000 -G caspaste caspaste && \
-    mkdir -p /data/caspaste /data/db/sqlite /config/caspaste && \
+    mkdir -p /data /data/db /config && \
     chown -R caspaste:caspaste /data /config
 
 # Copy binary from builder
@@ -43,7 +43,12 @@ COPY --from=builder /caspaste /usr/local/bin/caspaste
 USER caspaste
 
 # Set working directory
-WORKDIR /data/caspaste
+WORKDIR /data
+
+# Set environment variables for Docker deployment
+# Database directory inside container (defaults to /data/db)
+# Backup directory on host OS (must be set via docker-compose or docker run)
+ENV CASPASTE_DB_DIR=/data/db
 
 # Expose default port
 EXPOSE 80
@@ -54,14 +59,23 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Entrypoint with default arguments
 # Container Paths:
-#   - Config: /config/caspaste/caspaste.yml (auto-generated on first run)
-#   - Data: /data/caspaste/ (backups and other data)
-#   - Database: /data/db/sqlite/caspaste.db (SQLite database)
-# Default Ports:
-#   - Internal: 80
-#   - External: Map to 172.17.0.1:64365
-# Usage: docker run -p 172.17.0.1:64365:80 -v ...
-ENTRYPOINT ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste", "--db-source", "/data/db/sqlite/caspaste.db"]
+#   - Config: /config/caspaste.yml (auto-generated on first run)
+#   - Data: /data/ (application data)
+#   - Database: /data/db/caspaste.db (SQLite via CASPASTE_DB_DIR)
+#   - Backups: /data/backups/ (via CASPASTE_BACKUP_DIR)
+# Host Mounts:
+#   - ./rootfs/config:/config
+#   - ./rootfs/data:/data
+#   - ./rootfs/db:/data/db
+#   - ./rootfs/data/backups:/data/backups (→ /mnt/Backups/caspaste on Linux host)
+# Privilege Escalation:
+#   - Binary prefers system directories when running as root (/var/log, /var/lib, etc.)
+#   - Falls back to user directories when running as non-root
+# Security:
+#   - Auto-trusts reverse proxy headers from private IPs (10.x, 172.16-31.x, 192.168.x, fc00::/7)
+#   - Prevents IP spoofing from public IPs
+# Usage: docker run -p 172.17.0.1:64365:80 -v ./rootfs/data:/data ...
+ENTRYPOINT ["caspaste", "--config", "/config", "--data", "/data"]
 
 # Additional arguments can be passed when running the container
 # Example: docker run -p 172.17.0.1:64365:80 caspaste --ui-default-theme nord

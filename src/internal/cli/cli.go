@@ -20,6 +20,27 @@ func exitOnError(msg string) {
 	os.Exit(1)
 }
 
+// getEnvVar attempts to read an environment variable with backward compatibility.
+// It first tries CASPASTE_<name>, then falls back to LENPASTE_<name>.
+// Returns the value and true if found, empty string and false otherwise.
+func getEnvVar(name string) (string, bool) {
+	// Convert flag name to environment variable format
+	// Example: "db-driver" -> "DB_DRIVER"
+	envName := strings.ToUpper(strings.ReplaceAll(name, "-", "_"))
+
+	// Try CASPASTE_ prefix first (new)
+	if val := os.Getenv("CASPASTE_" + envName); val != "" {
+		return val, true
+	}
+
+	// Fall back to LENPASTE_ prefix (legacy/backward compatibility)
+	if val := os.Getenv("LENPASTE_" + envName); val != "" {
+		return val, true
+	}
+
+	return "", false
+}
+
 type variable struct {
 	name        string
 	cliFlagName string
@@ -237,7 +258,20 @@ func (c *CLI) Parse() {
 	// Used to check if "required" flags are present.
 	readVars := make(map[string]struct{})
 
-	// Read variables from CLI flags
+	// Read variables from environment variables first
+	// Priority: CASPASTE_* > LENPASTE_* (backward compatibility)
+	for i := range c.vars {
+		v := &c.vars[i]
+		if envVal, found := getEnvVar(v.name); found {
+			err := writeVar(envVal, v.value, v.preHook)
+			if err != nil {
+				exitOnError("read environment variable for \"" + v.name + "\": " + err.Error())
+			}
+			readVars[v.name] = struct{}{}
+		}
+	}
+
+	// Read variables from CLI flags (these override environment variables)
 	{
 		alreadyRead := make(map[string]struct{})
 

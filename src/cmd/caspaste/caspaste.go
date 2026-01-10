@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -77,20 +78,47 @@ func exitOnError(e error) {
 	os.Exit(1)
 }
 
-// ensureDirectories creates all necessary directories if they don't exist
-func ensureDirectories(dataDir, configDir string) error {
-	// Create data directory structure
-	if dataDir != "" {
-		dirs := []string{
-			dataDir,
-			dataDir + "/db",
-			dataDir + "/backups",
+// isRunningAsRoot checks if the process is running with root/admin privileges
+func isRunningAsRoot() bool {
+	switch runtime.GOOS {
+	case "windows":
+		// On Windows, check if running as administrator
+		// Simple heuristic: try to create a file in Windows system directory
+		testPath := os.Getenv("WINDIR") + "\\Temp\\.caspaste-test"
+		if f, err := os.Create(testPath); err == nil {
+			f.Close()
+			os.Remove(testPath)
+			return true
 		}
+		return false
+	default:
+		// Unix-like systems: check if UID is 0
+		return os.Geteuid() == 0
+	}
+}
 
-		for _, dir := range dirs {
-			if err := os.MkdirAll(dir, 0755); err != nil {
-				return fmt.Errorf("failed to create directory %s: %w", dir, err)
-			}
+// ensureDirectories creates all necessary directories if they don't exist
+// dbDir should be the full path to the database directory (can be empty if not using SQLite)
+// backupDir should be the full path to the backup directory (can be empty)
+func ensureDirectories(dataDir, configDir, dbDir, backupDir string) error {
+	// Create data directory
+	if dataDir != "" {
+		if err := os.MkdirAll(dataDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dataDir, err)
+		}
+	}
+
+	// Create database directory if specified and different from dataDir
+	if dbDir != "" && dbDir != dataDir {
+		if err := os.MkdirAll(dbDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", dbDir, err)
+		}
+	}
+
+	// Create backup directory if specified
+	if backupDir != "" {
+		if err := os.MkdirAll(backupDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", backupDir, err)
 		}
 	}
 
@@ -198,7 +226,7 @@ func printServiceHelp() {
 }
 
 // handleMaintenanceCommand processes --maintenance flag commands
-func handleMaintenanceCommand(command, dbDriver, dbSource, dataDir, configDir string) {
+func handleMaintenanceCommand(command, dbDriver, dbSource, dataDir, configDir, backupDir string) {
 	parts := strings.Fields(command)
 	if len(parts) == 0 {
 		fmt.Fprintf(os.Stderr, "Maintenance command required\n")
@@ -214,7 +242,7 @@ func handleMaintenanceCommand(command, dbDriver, dbSource, dataDir, configDir st
 
 	switch action {
 	case "backup":
-		err := performBackup(dbDriver, dbSource, dataDir, configDir, arg)
+		err := performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, arg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Backup failed: %v\n", err)
 			os.Exit(1)
@@ -222,7 +250,7 @@ func handleMaintenanceCommand(command, dbDriver, dbSource, dataDir, configDir st
 		os.Exit(0)
 
 	case "restore":
-		err := performRestore(dbDriver, dbSource, dataDir, configDir, arg)
+		err := performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, arg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Restore failed: %v\n", err)
 			os.Exit(1)
@@ -271,7 +299,7 @@ func printMaintenanceHelp() {
 }
 
 // checkAndMigrateDatabase checks if database driver/source changed and auto-migrates if needed
-func checkAndMigrateDatabase(dataDir, configDir, newDriver, newSource string) error {
+func checkAndMigrateDatabase(dataDir, configDir, backupDir, newDriver, newSource string) error {
 	stateFile := dataDir + "/.db-state"
 
 	// Read previous database state if exists
@@ -304,8 +332,8 @@ func checkAndMigrateDatabase(dataDir, configDir, newDriver, newSource string) er
 
 		// Create backup before migration
 		backupFilename := "pre-migration-" + time.Now().Format("20060102-150405") + ".tar.gz"
-		fmt.Printf("Creating safety backup: %s\n", dataDir+"/backups/"+backupFilename)
-		performBackup(oldDriver, oldSource, dataDir, configDir, backupFilename)
+		fmt.Printf("Creating safety backup: %s\n", backupDir+"/"+backupFilename)
+		performBackup(oldDriver, oldSource, dataDir, configDir, backupDir, backupFilename)
 
 		// Perform migration
 		err := storage.MigrateDatabase(oldDriver, oldSource, newDriver, newSource)
@@ -344,7 +372,7 @@ func normalizeDriverName(driver string) string {
 }
 
 // performBackup creates a full disaster recovery backup
-func performBackup(dbDriver, dbSource, dataDir, configDir, filename string) error {
+func performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, filename string) error {
 	if dataDir == "" {
 		dataDir = "."
 	}
@@ -355,7 +383,6 @@ func performBackup(dbDriver, dbSource, dataDir, configDir, filename string) erro
 	}
 
 	// Ensure backup directory exists
-	backupDir := dataDir + "/backups"
 	if err := os.MkdirAll(backupDir, 0755); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
@@ -428,12 +455,10 @@ func performBackup(dbDriver, dbSource, dataDir, configDir, filename string) erro
 }
 
 // performRestore performs full disaster recovery restore from backup archive
-func performRestore(dbDriver, dbSource, dataDir, configDir, filename string) error {
+func performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, filename string) error {
 	if dataDir == "" {
 		dataDir = "."
 	}
-
-	backupDir := dataDir + "/backups"
 
 	// If no filename, find latest backup
 	if filename == "" {
@@ -475,7 +500,7 @@ func performRestore(dbDriver, dbSource, dataDir, configDir, filename string) err
 
 	// Create safety backup of current state
 	fmt.Println("Creating safety backup of current state...")
-	performBackup(dbDriver, dbSource, dataDir, configDir, "pre-restore-"+time.Now().Format("20060102-150405")+".tar.gz")
+	performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, "pre-restore-"+time.Now().Format("20060102-150405")+".tar.gz")
 
 	// Create temporary extraction directory
 	tempDir := dataDir + "/.restore-temp"
@@ -709,7 +734,7 @@ func main() {
 
 	flagCasPasswdFile := c.AddStringVar("caspasswd-file", "", "File in CasPasswd format. If set, authorization will be required to create pastes.", nil)
 
-	flagTrustReverseProxy := c.AddBoolVar("trust-reverse-proxy", "Trust X-Forwarded-* headers for client IP detection. Only enable when behind a trusted reverse proxy (nginx, caddy, etc.). WARNING: Enabling without a proxy allows IP spoofing.")
+	flagTrustReverseProxy := c.AddBoolVar("trust-reverse-proxy", "Always trust X-Forwarded-* headers for client IP detection. Default: auto-trust from private IPs (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7). Set to true to trust from any IP (use with caution).")
 
 	c.Parse()
 
@@ -787,16 +812,111 @@ func main() {
 		}
 	}
 
-	// Process --data directory
+	// Process --data directory and determine database directory
+	var dbDir string
 	if *flagDataDir != "" {
 		// Update db-source if it's relative or default
 		if *flagDbSource == "" || !strings.Contains(*flagDbSource, "/") {
-			*flagDbSource = *flagDataDir + "/db/caspaste.db"
+			// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
+			dbDir = os.Getenv("CASPASTE_DB_DIR")
+			if dbDir == "" {
+				dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+			}
+			if dbDir == "" {
+				// Default: {dataDir}/db
+				dbDir = *flagDataDir + "/db"
+			}
+			*flagDbSource = dbDir + "/caspaste.db"
+		} else if strings.Contains(*flagDbSource, "/") {
+			// Extract directory from existing db-source path
+			lastSlash := strings.LastIndex(*flagDbSource, "/")
+			if lastSlash > 0 {
+				dbDir = (*flagDbSource)[:lastSlash]
+			}
+		}
+	}
+
+	// Determine backup directory
+	backupDir := os.Getenv("CASPASTE_BACKUP_DIR")
+	if backupDir == "" {
+		backupDir = os.Getenv("LENPASTE_BACKUP_DIR") // Backward compatibility
+	}
+	if backupDir == "" && *flagDataDir != "" {
+		// Set platform-specific defaults
+		if *flagDataDir == "/data" {
+			// Docker container
+			backupDir = "/data/backups"
+		} else {
+			// Standalone binary - use platform-specific defaults
+			// Prefer global system directories if running as root, fallback to user directories
+			isRoot := isRunningAsRoot()
+
+			switch runtime.GOOS {
+			case "linux":
+				if isRoot {
+					// Root: Use /mnt/Backups/caspaste (global)
+					backupDir = "/mnt/Backups/caspaste"
+				} else {
+					// User: Use ~/.local/share/caspaste/backups
+					if home := os.Getenv("HOME"); home != "" {
+						backupDir = home + "/.local/share/caspaste/backups"
+					} else {
+						backupDir = *flagDataDir + "/backups"
+					}
+				}
+
+			case "darwin":
+				if isRoot {
+					// Root: Use /var/backups/caspaste (global)
+					backupDir = "/var/backups/caspaste"
+				} else {
+					// User: Use ~/Library/Application Support/CasPaste/Backups
+					if home := os.Getenv("HOME"); home != "" {
+						backupDir = home + "/Library/Application Support/CasPaste/Backups"
+					} else {
+						backupDir = *flagDataDir + "/backups"
+					}
+				}
+
+			case "windows":
+				if isRoot {
+					// Admin: Use C:\ProgramData\CasPaste\Backups (global)
+					if programData := os.Getenv("ProgramData"); programData != "" {
+						backupDir = programData + "\\CasPaste\\Backups"
+					} else {
+						backupDir = "C:\\ProgramData\\CasPaste\\Backups"
+					}
+				} else {
+					// User: Use %APPDATA%\CasPaste\Backups
+					if appdata := os.Getenv("APPDATA"); appdata != "" {
+						backupDir = appdata + "\\CasPaste\\Backups"
+					} else {
+						backupDir = *flagDataDir + "/backups"
+					}
+				}
+
+			case "freebsd", "openbsd":
+				if isRoot {
+					// Root: Use /var/backups/caspaste (global)
+					backupDir = "/var/backups/caspaste"
+				} else {
+					// User: Use ~/.caspaste/backups
+					if home := os.Getenv("HOME"); home != "" {
+						backupDir = home + "/.caspaste/backups"
+					} else {
+						backupDir = *flagDataDir + "/backups"
+					}
+				}
+
+			default:
+				// Fallback
+				backupDir = *flagDataDir + "/backups"
+			}
 		}
 	}
 
 	// Ensure all directories exist
-	if err := ensureDirectories(*flagDataDir, *flagConfigDir); err != nil {
+	if err := ensureDirectories(*flagDataDir, *flagConfigDir, dbDir, backupDir); err != nil {
 		exitOnError(err)
 	}
 
@@ -828,13 +948,13 @@ func main() {
 
 	// Handle --maintenance command (exits after operation)
 	if *flagMaintenance != "" {
-		handleMaintenanceCommand(*flagMaintenance, *flagDbDriver, *flagDbSource, *flagDataDir, *flagConfigDir)
+		handleMaintenanceCommand(*flagMaintenance, *flagDbDriver, *flagDbSource, *flagDataDir, *flagConfigDir, backupDir)
 		return
 	}
 
 	// Auto-detect and perform database migration if driver changed
 	if *flagDataDir != "" {
-		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, *flagDbDriver, *flagDbSource)
+		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, backupDir, *flagDbDriver, *flagDbSource)
 		if err != nil {
 			exitOnError(err)
 		}

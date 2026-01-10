@@ -8,14 +8,49 @@ services:
     ports:
       - "172.17.0.1:64365:80"
     volumes:
-      - /var/lib/caspaste:/data/caspaste
-      - /var/lib/caspaste-db:/data/db/sqlite
-      - /etc/caspaste:/config/caspaste
+      # Application data
+      - ./rootfs/data:/data
+      # Database directory
+      - ./rootfs/db:/data/db
+      # Backup directory
+      - ./rootfs/data/backups:/data/backups
+      # Configuration files
+      - ./rootfs/config:/config
     environment:
-      - TZ=UTC
-    # Default: SQLite database
-    # Database at: /data/db/sqlite/caspaste.db
-    # Config auto-generated at: /config/caspaste/caspaste.yml
+      - TZ=${TZ:-America/New_York}
+
+      # Directory paths (optional, these are the defaults)
+      # - CASPASTE_DB_DIR=/data/db
+      # - CASPASTE_BACKUP_DIR=/data/backups
+
+      # Backward compatibility: LENPASTE_* environment variables are still supported
+      # - LENPASTE_DB_DIR=/data/db
+      # - LENPASTE_BACKUP_DIR=/data/backups
+
+      # Additional configuration via environment variables (all optional):
+      # - CASPASTE_ADDRESS=:80
+      # - CASPASTE_DB_DRIVER=sqlite3
+      # - CASPASTE_TITLE_MAX_LENGTH=100
+      # - CASPASTE_BODY_MAX_LENGTH=52428800
+      # - CASPASTE_MAX_PASTE_LIFETIME=unlimited
+      # - CASPASTE_ADMIN_NAME=Admin Name
+      # - CASPASTE_ADMIN_MAIL=admin@example.com
+      # - CASPASTE_UI_DEFAULT_THEME=dracula
+      # - CASPASTE_ROBOTS_DISALLOW=false
+      # - CASPASTE_TRUST_REVERSE_PROXY=false  # Default: auto-trust private IPs
+
+    # Notes:
+    #   - Database: /data/db/caspaste.db (mounted from ./rootfs/db)
+    #   - Config: /config/caspaste.yml (auto-generated, mounted from ./rootfs/config)
+    #   - Backups: /data/backups/ (mounted from ./rootfs/data/backups)
+    #   - On Linux host: ./rootfs/data/backups → /mnt/Backups/caspaste (symlink recommended)
+    #
+    # Environment variable priority:
+    #   1. CLI flags (highest)
+    #   2. CASPASTE_* environment variables
+    #   3. LENPASTE_* environment variables (backward compatibility)
+    #   4. Config file values
+    #   5. Defaults (lowest)
 
   # Uncomment to use PostgreSQL instead of SQLite
   # postgres:
@@ -62,23 +97,3 @@ services:
 networks:
   default:
     driver: bridge
-
-volumes:
-  caspaste-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /var/lib/caspaste
-  caspaste-db:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /var/lib/caspaste-db
-  caspaste-config:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /etc/caspaste
