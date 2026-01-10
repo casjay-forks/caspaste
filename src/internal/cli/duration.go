@@ -1,9 +1,8 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
 
 // This file is part of CasPaste.
 
 // CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+// See LICENSE.md file for details.
 
 package cli
 
@@ -13,7 +12,7 @@ import (
 	"time"
 )
 
-func parseDuration(s string) (time.Duration, error) {
+func ParseDuration(s string) (time.Duration, error) {
 	var out int64
 
 	var tmp string

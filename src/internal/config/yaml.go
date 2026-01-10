@@ -1,9 +1,8 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
 
 // This file is part of CasPaste.
 
 // CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+// See LICENSE.md file for details.
 
 package config
 
@@ -59,6 +58,11 @@ type YAMLConfig struct {
 		RulesFile string `yaml:"rules_file"`
 		TermsFile string `yaml:"terms_file"`
 	} `yaml:"content"`
+
+	Directories struct {
+		Cache string `yaml:"cache"`
+		Logs  string `yaml:"logs"`
+	} `yaml:"directories"`
 }
 
 // LoadYAMLConfig loads configuration from YAML file
@@ -119,6 +123,10 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Content.AboutFile = ""
 	defaultConfig.Content.RulesFile = ""
 	defaultConfig.Content.TermsFile = ""
+
+	// Directory defaults (platform-specific, empty = auto-detect)
+	defaultConfig.Directories.Cache = ""
+	defaultConfig.Directories.Logs = ""
 
 	// Marshal to YAML
 	data, err := yaml.Marshal(&defaultConfig)

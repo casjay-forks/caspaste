@@ -17,8 +17,25 @@
 		<title>{{template "titlePrefix" .}}{{ call .Translate `base.CasPaste` }}</title>
 		<link rel="stylesheet" type="text/css" href="/style.css">
 		<link rel="icon" href="data:,">
+
+		<!-- PWA Support -->
+		<link rel="manifest" href="/manifest.json">
+		<meta name="theme-color" content="#282a36">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="apple-mobile-web-app-title" content="CasPaste">
+
 		{{template "headAppend" .}}
 		<script src="/history.js"></script>
+
+		<!-- PWA Service Worker -->
+		<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('/sw.js').catch(function(error) {
+					console.log('Service Worker registration failed:', error);
+				});
+			}
+		</script>
 	</head>
 	<body>
 		<header role="banner">

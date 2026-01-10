@@ -1,9 +1,8 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
 
 // This file is part of CasPaste.
 
 // CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+// See LICENSE.md file for details.
 
 package main
 
@@ -12,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,6 +27,7 @@ import (
 	"github.com/casjay-forks/caspaste/src/internal/config"
 	"github.com/casjay-forks/caspaste/src/internal/logger"
 	"github.com/casjay-forks/caspaste/src/internal/netshare"
+	"github.com/casjay-forks/caspaste/src/internal/privilege"
 	"github.com/casjay-forks/caspaste/src/internal/raw"
 	"github.com/casjay-forks/caspaste/src/internal/service"
 	"github.com/casjay-forks/caspaste/src/internal/storage"
@@ -78,6 +79,55 @@ func exitOnError(e error) {
 	os.Exit(1)
 }
 
+// getDisplayAddress converts a listen address to a user-friendly display address
+// Replaces 0.0.0.0, 127.0.0.1, localhost, etc. with valid FQDN, hostname, or IP
+func getDisplayAddress(listenAddr string) string {
+	host, port, err := net.SplitHostPort(listenAddr)
+	if err != nil {
+		// No port specified, use address as-is
+		host = listenAddr
+		port = "80"
+	}
+
+	// List of addresses to replace (localhost/loopback indicators)
+	replaceableHosts := []string{"", "0.0.0.0", "127.0.0.1", "localhost", "::1", "::"}
+
+	shouldReplace := false
+	for _, replaceable := range replaceableHosts {
+		if host == replaceable {
+			shouldReplace = true
+			break
+		}
+	}
+
+	if shouldReplace {
+		// Try to get hostname
+		if hostname, err := os.Hostname(); err == nil && hostname != "" && hostname != "localhost" {
+			host = hostname
+		} else {
+			// Try to get first non-loopback IP
+			if addrs, err := net.InterfaceAddrs(); err == nil {
+				for _, addr := range addrs {
+					if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+						if ipnet.IP.To4() != nil {
+							// Prefer IPv4
+							host = ipnet.IP.String()
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// If still couldn't determine, use localhost
+	if host == "" || host == "0.0.0.0" || host == "::" {
+		host = "localhost"
+	}
+
+	return net.JoinHostPort(host, port)
+}
+
 // isRunningAsRoot checks if the process is running with root/admin privileges
 func isRunningAsRoot() bool {
 	switch runtime.GOOS {
@@ -98,9 +148,7 @@ func isRunningAsRoot() bool {
 }
 
 // ensureDirectories creates all necessary directories if they don't exist
-// dbDir should be the full path to the database directory (can be empty if not using SQLite)
-// backupDir should be the full path to the backup directory (can be empty)
-func ensureDirectories(dataDir, configDir, dbDir, backupDir string) error {
+func ensureDirectories(dataDir, configDir, dbDir, backupDir, cacheDir, logsDir string) error {
 	// Create data directory
 	if dataDir != "" {
 		if err := os.MkdirAll(dataDir, 0755); err != nil {
@@ -119,6 +167,20 @@ func ensureDirectories(dataDir, configDir, dbDir, backupDir string) error {
 	if backupDir != "" {
 		if err := os.MkdirAll(backupDir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %w", backupDir, err)
+		}
+	}
+
+	// Create cache directory if specified
+	if cacheDir != "" {
+		if err := os.MkdirAll(cacheDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", cacheDir, err)
+		}
+	}
+
+	// Create logs directory if specified
+	if logsDir != "" {
+		if err := os.MkdirAll(logsDir, 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", logsDir, err)
 		}
 	}
 
@@ -689,54 +751,21 @@ func main() {
 	flagService := c.AddStringVar("service", "", "Service management: start, stop, restart, reload, --install, --uninstall, --disable, --help", nil)
 	flagMaintenance := c.AddStringVar("maintenance", "", "Maintenance mode: backup [filename], restore [filename], mode {enabled|disabled}", nil)
 
-	// New modern flags (also support old flag names for backward compatibility)
+	// Directory flags
 	flagPort := c.AddStringVar("port", "", "Port to listen on (alternative to specifying in --address). Examples: 80, 8080, 443.", nil)
-	flagDataDir := c.AddStringVar("data", "", "Data directory for storing database and other files.", nil)
-	flagConfigDir := c.AddStringVar("config", "", "Configuration directory for loading config files.", nil)
-
-	flagDbDriver := c.AddStringVar("db-driver", "sqlite3", "Database driver: sqlite3, postgres, mysql, mariadb", nil)
-	flagDbSource := c.AddStringVar("db-source", "", "DB source (auto-set when using --data).", nil)
-	flagDbMaxOpenConns := c.AddIntVar("db-max-open-conns", 25, "Maximum number of connections to the database.", nil)
-	flagDbMaxIdleConns := c.AddIntVar("db-max-idle-conns", 5, "Maximum number of idle connections to the database.", nil)
-	flagDbCleanupPeriod := c.AddDurationVar("db-cleanup-period", "1m", "Interval at which the DB is cleared of expired but not yet deleted pastes.", nil)
-
-	flagRobotsDisallow := c.AddBoolVar("robots-disallow", "Prohibits search engine crawlers from indexing site using robots.txt file.")
-
-	flagTitleMaxLen := c.AddIntVar("title-max-length", 100, "Maximum length of the paste title. If 0 disable title, if -1 disable length limit.", nil)
-	flagBodyMaxLen := c.AddIntVar("body-max-length", 52428800, "Maximum length of the paste body in bytes. Default 50MB. If -1 disable length limit. Can't be -1.", nil)
-	flagMaxLifetime := c.AddDurationVar("max-paste-lifetime", "unlimited", "Maximum lifetime of the paste. Examples: 10m, 1h 30m, 12h, 1w, 30d, 365d.", &cli.FlagOptions{
-		PreHook: func(s string) (string, error) {
-			if s == "never" || s == "unlimited" {
-				return "", nil
-			}
-
-			return s, nil
-		},
-	})
-
-	flagGetPastesPer5Min := c.AddUintVar("get-pastes-per-5min", 50, "Maximum number of pastes that can be VIEWED in 5 minutes from one IP. If 0 disable rate-limit.", nil)
-	flagGetPastesPer15Min := c.AddUintVar("get-pastes-per-15min", 100, "Maximum number of pastes that can be VIEWED in 15 minutes from one IP. If 0 disable rate-limit.", nil)
-	flagGetPastesPer1Hour := c.AddUintVar("get-pastes-per-1hour", 500, "Maximum number of pastes that can be VIEWED in 1 hour from one IP. If 0 disable rate-limit.", nil)
-	flagNewPastesPer5Min := c.AddUintVar("new-pastes-per-5min", 15, "Maximum number of pastes that can be CREATED in 5 minutes from one IP. If 0 disable rate-limit.", nil)
-	flagNewPastesPer15Min := c.AddUintVar("new-pastes-per-15min", 30, "Maximum number of pastes that can be CREATED in 15 minutes from one IP. If 0 disable rate-limit.", nil)
-	flagNewPastesPer1Hour := c.AddUintVar("new-pastes-per-1hour", 40, "Maximum number of pastes that can be CREATED in 1 hour from one IP. If 0 disable rate-limit.", nil)
-
-	flagServerAbout := c.AddStringVar("server-about", "", "Path to the TXT file that contains the server description.", nil)
-	flagServerRules := c.AddStringVar("server-rules", "", "Path to the TXT file that contains the server rules.", nil)
-	flagServerTerms := c.AddStringVar("server-terms", "", "Path to the TXT file that contains the server terms of use.", nil)
-
-	flagAdminName := c.AddStringVar("admin-name", "", "Name of the administrator of this server.", nil)
-	flagAdminMail := c.AddStringVar("admin-mail", "", "Email of the administrator of this server.", nil)
-
-	flagUiDefaultLifetime := c.AddStringVar("ui-default-lifetime", "never", "Lifetime of paste will be set by default in WEB interface. Examples: 10min, 1h, 1d, 2w, 6mon, 1y, never.", nil)
-	flagUiDefaultTheme := c.AddStringVar("ui-default-theme", "dracula", "Sets the default theme for the WEB interface. Examples: dracula, nord, github-light.", nil)
-	flagUiThemesDir := c.AddStringVar("ui-themes-dir", "", "Loads external WEB interface themes from directory.", nil)
-
-	flagCasPasswdFile := c.AddStringVar("caspasswd-file", "", "File in CasPasswd format. If set, authorization will be required to create pastes.", nil)
-
-	flagTrustReverseProxy := c.AddBoolVar("trust-reverse-proxy", "Always trust X-Forwarded-* headers for client IP detection. Default: auto-trust from private IPs (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7). Set to true to trust from any IP (use with caution).")
+	flagDataDir := c.AddStringVar("data", "", "Data directory. Examples: /var/lib/caspaste, ~/.local/share/caspaste", nil)
+	flagConfigDir := c.AddStringVar("config", "", "Configuration directory. Examples: /etc/caspaste, ~/.config/caspaste", nil)
+	flagCacheDir := c.AddStringVar("cache", "", "Cache directory. Examples: /var/cache/caspaste, ~/.cache/caspaste", nil)
+	flagLogsDir := c.AddStringVar("logs", "", "Logs directory. Examples: /var/log/caspaste, ~/.local/log/caspaste", nil)
 
 	c.Parse()
+
+	// Create config directory first if specified (needed before generating config file)
+	if *flagConfigDir != "" {
+		if err := os.MkdirAll(*flagConfigDir, 0755); err != nil {
+			exitOnError(fmt.Errorf("failed to create config directory: %w", err))
+		}
+	}
 
 	// Try to load config file from config directory or current directory
 	var yamlCfg *config.YAMLConfig
@@ -755,44 +784,45 @@ func main() {
 		}
 	}
 
-	// If no config file found and --config specified, create default config
-	if yamlCfg == nil && *flagConfigDir != "" {
-		defaultConfigPath := *flagConfigDir + "/caspaste.yml"
-		if err := config.GenerateDefaultYAMLConfig(defaultConfigPath); err == nil {
-			fmt.Printf("Created default config file: %s\n", defaultConfigPath)
-			// Try to load the newly created config
-			if cfg, err := config.LoadYAMLConfig(defaultConfigPath); err == nil {
-				yamlCfg = cfg
-			}
+	// If no config file found, create default config
+	if yamlCfg == nil {
+		var defaultConfigPath string
+		if *flagConfigDir != "" {
+			defaultConfigPath = *flagConfigDir + "/caspaste.yml"
+		} else {
+			defaultConfigPath = "./caspaste.yml"
 		}
+
+		if err := config.GenerateDefaultYAMLConfig(defaultConfigPath); err != nil {
+			exitOnError(fmt.Errorf("failed to create default config file: %w", err))
+		}
+
+		fmt.Printf("Created default config file: %s\n", defaultConfigPath)
+
+		// Load the newly created config
+		cfg, err := config.LoadYAMLConfig(defaultConfigPath)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to load generated config: %w", err))
+		}
+		yamlCfg = cfg
 	}
 
-	// Merge config file with flags (flags take precedence)
-	if yamlCfg != nil {
-		if *flagPort == "" && yamlCfg.Server.Port != 0 {
-			*flagPort = strconv.Itoa(yamlCfg.Server.Port)
-		}
-		if *flagAddress == ":80" && yamlCfg.Server.Address != "" {
-			*flagAddress = yamlCfg.Server.Address
-		}
-		if *flagDbSource == "" && yamlCfg.Database.Source != "" {
-			*flagDbSource = yamlCfg.Database.Source
-		}
-		if *flagDbDriver == "sqlite3" && yamlCfg.Database.Driver != "" {
-			*flagDbDriver = yamlCfg.Database.Driver
-		}
-		if *flagAdminName == "" && yamlCfg.Server.AdminName != "" {
-			*flagAdminName = yamlCfg.Server.AdminName
-		}
-		if *flagAdminMail == "" && yamlCfg.Server.AdminEmail != "" {
-			*flagAdminMail = yamlCfg.Server.AdminEmail
-		}
-		if *flagUiDefaultTheme == "dracula" && yamlCfg.UI.DefaultTheme != "" {
-			*flagUiDefaultTheme = yamlCfg.UI.DefaultTheme
-		}
-		if *flagCasPasswdFile == "" && yamlCfg.Security.PasswordFile != "" {
-			*flagCasPasswdFile = yamlCfg.Security.PasswordFile
-		}
+	// Merge only --address and --port from CLI flags (they override config file)
+	if *flagPort != "" {
+		yamlCfg.Server.Port, _ = strconv.Atoi(*flagPort)
+	}
+	if *flagAddress != ":80" {
+		yamlCfg.Server.Address = *flagAddress
+	} else if yamlCfg.Server.Address != "" {
+		*flagAddress = yamlCfg.Server.Address
+	}
+
+	// Merge cache/logs directories from CLI (override config if specified)
+	if *flagCacheDir != "" {
+		yamlCfg.Directories.Cache = *flagCacheDir
+	}
+	if *flagLogsDir != "" {
+		yamlCfg.Directories.Logs = *flagLogsDir
 	}
 
 	// Process --port flag (overrides port in --address)
@@ -812,27 +842,33 @@ func main() {
 		}
 	}
 
-	// Process --data directory and determine database directory
+	// Process --data directory and determine database directory from config
 	var dbDir string
-	if *flagDataDir != "" {
-		// Update db-source if it's relative or default
-		if *flagDbSource == "" || !strings.Contains(*flagDbSource, "/") {
-			// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
-			dbDir = os.Getenv("CASPASTE_DB_DIR")
-			if dbDir == "" {
-				dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
-			}
-			if dbDir == "" {
-				// Default: {dataDir}/db
-				dbDir = *flagDataDir + "/db"
-			}
-			*flagDbSource = dbDir + "/caspaste.db"
-		} else if strings.Contains(*flagDbSource, "/") {
-			// Extract directory from existing db-source path
-			lastSlash := strings.LastIndex(*flagDbSource, "/")
-			if lastSlash > 0 {
-				dbDir = (*flagDbSource)[:lastSlash]
-			}
+	dbSource := yamlCfg.Database.Source
+	if dbSource == "" {
+		exitOnError(errors.New("database.source must be specified in config file"))
+	}
+
+	// If database source is relative, make it absolute based on data directory
+	if !strings.HasPrefix(dbSource, "/") && *flagDataDir != "" {
+		// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
+		dbDir = os.Getenv("CASPASTE_DB_DIR")
+		if dbDir == "" {
+			dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+		}
+		if dbDir == "" {
+			// Default: {dataDir}/db
+			dbDir = *flagDataDir + "/db"
+		}
+		yamlCfg.Database.Source = dbDir + "/caspaste.db"
+		dbSource = yamlCfg.Database.Source
+	}
+
+	// Extract directory from database source path
+	if strings.Contains(dbSource, "/") {
+		lastSlash := strings.LastIndex(dbSource, "/")
+		if lastSlash > 0 {
+			dbDir = dbSource[:lastSlash]
 		}
 	}
 
@@ -915,122 +951,251 @@ func main() {
 		}
 	}
 
-	// Ensure all directories exist
-	if err := ensureDirectories(*flagDataDir, *flagConfigDir, dbDir, backupDir); err != nil {
-		exitOnError(err)
+	// Determine cache directory
+	cacheDir := yamlCfg.Directories.Cache
+	if cacheDir == "" {
+		cacheDir = os.Getenv("CASPASTE_CACHE_DIR")
 	}
-
-	// Process --config directory (for future config file support)
-	if *flagConfigDir != "" {
-		// Reserved for future use - could load config files from this directory
-		// For now, just note it for potential caspasswd-file path resolution
-		if *flagCasPasswdFile != "" && !strings.HasPrefix(*flagCasPasswdFile, "/") {
-			*flagCasPasswdFile = *flagConfigDir + "/" + *flagCasPasswdFile
+	if cacheDir == "" {
+		cacheDir = os.Getenv("LENPASTE_CACHE_DIR") // Backward compatibility
+	}
+	if cacheDir == "" && *flagDataDir != "" {
+		isRoot := isRunningAsRoot()
+		switch runtime.GOOS {
+		case "linux":
+			if isRoot {
+				cacheDir = "/var/cache/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					cacheDir = home + "/.cache/caspaste"
+				} else {
+					cacheDir = *flagDataDir + "/cache"
+				}
+			}
+		case "darwin":
+			if isRoot {
+				cacheDir = "/var/cache/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					cacheDir = home + "/Library/Caches/CasPaste"
+				} else {
+					cacheDir = *flagDataDir + "/cache"
+				}
+			}
+		case "windows":
+			if isRoot {
+				cacheDir = "C:\\ProgramData\\CasPaste\\Cache"
+			} else {
+				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+					cacheDir = localAppData + "\\CasPaste\\Cache"
+				} else {
+					cacheDir = *flagDataDir + "/cache"
+				}
+			}
+		case "freebsd", "openbsd":
+			if isRoot {
+				cacheDir = "/var/cache/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					cacheDir = home + "/.cache/caspaste"
+				} else {
+					cacheDir = *flagDataDir + "/cache"
+				}
+			}
+		default:
+			cacheDir = *flagDataDir + "/cache"
 		}
 	}
 
-	// Validate that either --data or --db-source is provided
-	if *flagDbSource == "" {
-		exitOnError(errors.New("either --data or --db-source must be provided"))
+	// Determine logs directory
+	logsDir := yamlCfg.Directories.Logs
+	if logsDir == "" {
+		logsDir = os.Getenv("CASPASTE_LOGS_DIR")
+	}
+	if logsDir == "" {
+		logsDir = os.Getenv("LENPASTE_LOGS_DIR") // Backward compatibility
+	}
+	if logsDir == "" && *flagDataDir != "" {
+		isRoot := isRunningAsRoot()
+		switch runtime.GOOS {
+		case "linux":
+			if isRoot {
+				logsDir = "/var/log/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					logsDir = home + "/.local/log/caspaste"
+				} else {
+					logsDir = *flagDataDir + "/logs"
+				}
+			}
+		case "darwin":
+			if isRoot {
+				logsDir = "/var/log/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					logsDir = home + "/Library/Logs/CasPaste"
+				} else {
+					logsDir = *flagDataDir + "/logs"
+				}
+			}
+		case "windows":
+			if isRoot {
+				logsDir = "C:\\ProgramData\\CasPaste\\Logs"
+			} else {
+				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+					logsDir = localAppData + "\\CasPaste\\Logs"
+				} else {
+					logsDir = *flagDataDir + "/logs"
+				}
+			}
+		case "freebsd", "openbsd":
+			if isRoot {
+				logsDir = "/var/log/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					logsDir = home + "/.local/log/caspaste"
+				} else {
+					logsDir = *flagDataDir + "/logs"
+				}
+			}
+		default:
+			logsDir = *flagDataDir + "/logs"
+		}
+	}
+
+	// Setup user (Linux/BSD/macOS only) - must be done before creating directories
+	var uid, gid int
+	if runtime.GOOS != "windows" {
+		var err error
+		uid, gid, err = privilege.EnsureUser()
+		if err != nil {
+			// User creation failed - might not be running as root or user already exists
+			// This is OK - we'll create directories with current user
+			uid = 0
+			gid = 0
+		}
+	}
+
+	// Ensure all directories exist
+	if err := ensureDirectories(*flagDataDir, *flagConfigDir, dbDir, backupDir, cacheDir, logsDir); err != nil {
+		exitOnError(err)
+	}
+
+	// Chown ALL directories if we're running as root and created a user
+	// This must be done before privilege drop to ensure the user can access everything
+	if os.Geteuid() == 0 && uid > 0 && gid > 0 {
+		dirsToChown := []string{*flagDataDir, *flagConfigDir, dbDir, backupDir, cacheDir, logsDir}
+		for _, dir := range dirsToChown {
+			if dir != "" {
+				if err := privilege.ChownPathRecursive(dir, uid, gid); err != nil {
+					// Log but don't fail - directory might not exist or already has correct ownership
+					fmt.Fprintf(os.Stderr, "Warning: failed to chown %s: %v\n", dir, err)
+				}
+			}
+		}
 	}
 
 	// Handle --status command (exits after checking)
 	if *flagStatus {
-		checkStatus(*flagDbDriver, *flagDbSource, *flagAddress)
+		checkStatus(yamlCfg.Database.Driver, yamlCfg.Database.Source, *flagAddress)
 		return // checkStatus calls os.Exit, but return for safety
 	}
 
 	// Handle --service command (exits after operation)
 	if *flagService != "" {
-		handleServiceCommand(*flagService, *flagAddress, *flagDbSource, *flagDataDir, *flagConfigDir)
+		handleServiceCommand(*flagService, *flagAddress, yamlCfg.Database.Source, *flagDataDir, *flagConfigDir)
 		return
 	}
 
 	// Handle --maintenance command (exits after operation)
 	if *flagMaintenance != "" {
-		handleMaintenanceCommand(*flagMaintenance, *flagDbDriver, *flagDbSource, *flagDataDir, *flagConfigDir, backupDir)
+		handleMaintenanceCommand(*flagMaintenance, yamlCfg.Database.Driver, yamlCfg.Database.Source, *flagDataDir, *flagConfigDir, backupDir)
 		return
 	}
 
 	// Auto-detect and perform database migration if driver changed
 	if *flagDataDir != "" {
-		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, backupDir, *flagDbDriver, *flagDbSource)
+		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, backupDir, yamlCfg.Database.Driver, yamlCfg.Database.Source)
 		if err != nil {
 			exitOnError(err)
 		}
 	}
 
-	// -body-max-length flag
-	if *flagBodyMaxLen == 0 {
-		exitOnError(errors.New("maximum body length cannot be 0"))
+	// Validate body max length from config
+	if yamlCfg.Limits.BodyMaxLength == 0 {
+		exitOnError(errors.New("limits.body_max_length cannot be 0 in config file"))
 	}
 
-	// -max-paste-lifetime
+	// Parse max paste lifetime from config
 	maxLifeTime := int64(-1)
-
-	if *flagMaxLifetime != 0 && *flagMaxLifetime < 600 {
-		exitOnError(errors.New("maximum paste lifetime flag cannot have a value less than 10 minutes"))
-		maxLifeTime = int64(*flagMaxLifetime / time.Second)
+	if yamlCfg.Limits.MaxPasteLifetime != "" && yamlCfg.Limits.MaxPasteLifetime != "never" && yamlCfg.Limits.MaxPasteLifetime != "unlimited" {
+		duration, err := cli.ParseDuration(yamlCfg.Limits.MaxPasteLifetime)
+		if err != nil {
+			exitOnError(fmt.Errorf("invalid limits.max_paste_lifetime in config: %w", err))
+		}
+		if duration < 600*time.Second {
+			exitOnError(errors.New("limits.max_paste_lifetime cannot be less than 10 minutes"))
+		}
+		maxLifeTime = int64(duration / time.Second)
 	}
 
-	// Load server about
+	// Load server about from config
 	serverAbout := ""
-	if *flagServerAbout != "" {
-		serverAbout, err = readFile(*flagServerAbout)
+	if yamlCfg.Content.AboutFile != "" {
+		serverAbout, err = readFile(yamlCfg.Content.AboutFile)
 		if err != nil {
-			exitOnError(err)
+			exitOnError(fmt.Errorf("failed to read content.about_file: %w", err))
 		}
 	}
 
-	// Load server rules
+	// Load server rules from config
 	serverRules := ""
-	if *flagServerRules != "" {
-		serverRules, err = readFile(*flagServerRules)
+	if yamlCfg.Content.RulesFile != "" {
+		serverRules, err = readFile(yamlCfg.Content.RulesFile)
 		if err != nil {
-			exitOnError(err)
+			exitOnError(fmt.Errorf("failed to read content.rules_file: %w", err))
 		}
 	}
 
-	// Load server "terms of use"
+	// Load server terms of use from config
 	serverTermsOfUse := ""
-	if *flagServerTerms != "" {
+	if yamlCfg.Content.TermsFile != "" {
 		if serverRules == "" {
-			exitOnError(errors.New("in order to set the Terms of Use you must also specify the Server Rules"))
+			exitOnError(errors.New("content.terms_file requires content.rules_file to also be set"))
 		}
-
-		serverTermsOfUse, err = readFile(*flagServerTerms)
+		serverTermsOfUse, err = readFile(yamlCfg.Content.TermsFile)
 		if err != nil {
-			exitOnError(err)
+			exitOnError(fmt.Errorf("failed to read content.terms_file: %w", err))
 		}
 	}
 
 	// Settings
 	log := logger.New("2006/01/02 15:04:05")
 
-	db, err := storage.NewPool(*flagDbDriver, *flagDbSource, *flagDbMaxOpenConns, *flagDbMaxIdleConns, *flagDataDir)
+	db, err := storage.NewPool(yamlCfg.Database.Driver, yamlCfg.Database.Source, yamlCfg.Database.MaxOpenConns, yamlCfg.Database.MaxIdleConns, *flagDataDir)
 	if err != nil {
 		exitOnError(err)
 	}
 
 	cfg := config.Config{
 		Log:               log,
-		RateLimitGet:      netshare.NewRateLimitSystem(*flagGetPastesPer5Min, *flagGetPastesPer15Min, *flagGetPastesPer1Hour),
-		RateLimitNew:      netshare.NewRateLimitSystem(*flagNewPastesPer5Min, *flagNewPastesPer15Min, *flagNewPastesPer1Hour),
+		RateLimitGet:      netshare.NewRateLimitSystem(yamlCfg.Limits.GetPastesPer5Min, yamlCfg.Limits.GetPastesPer15Min, yamlCfg.Limits.GetPastesPer1Hour),
+		RateLimitNew:      netshare.NewRateLimitSystem(yamlCfg.Limits.NewPastesPer5Min, yamlCfg.Limits.NewPastesPer15Min, yamlCfg.Limits.NewPastesPer1Hour),
 		Version:           Version,
-		TitleMaxLen:       *flagTitleMaxLen,
-		BodyMaxLen:        *flagBodyMaxLen,
+		TitleMaxLen:       yamlCfg.Limits.TitleMaxLength,
+		BodyMaxLen:        yamlCfg.Limits.BodyMaxLength,
 		MaxLifeTime:       maxLifeTime,
 		ServerAbout:       serverAbout,
 		ServerRules:       serverRules,
 		ServerTermsOfUse:  serverTermsOfUse,
-		AdminName:         *flagAdminName,
-		AdminMail:         *flagAdminMail,
-		RobotsDisallow:    *flagRobotsDisallow,
-		TrustReverseProxy: *flagTrustReverseProxy,
-		UiDefaultLifetime: *flagUiDefaultLifetime,
-		UiDefaultTheme:    *flagUiDefaultTheme,
-		UiThemesDir:       *flagUiThemesDir,
-		CasPasswdFile:     *flagCasPasswdFile,
+		AdminName:         yamlCfg.Server.AdminName,
+		AdminMail:         yamlCfg.Server.AdminEmail,
+		RobotsDisallow:    yamlCfg.Server.RobotsDisallow,
+		TrustReverseProxy: yamlCfg.Server.TrustReverseProxy,
+		UiDefaultLifetime: yamlCfg.UI.DefaultLifetime,
+		UiDefaultTheme:    yamlCfg.UI.DefaultTheme,
+		UiThemesDir:       yamlCfg.UI.ThemesDir,
+		CasPasswdFile:     yamlCfg.Security.PasswordFile,
 	}
 
 	apiv1Data := apiv1.Load(db, cfg)
@@ -1038,7 +1203,7 @@ func main() {
 	rawData := raw.Load(db, cfg)
 
 	// Init data base
-	err = storage.InitDB(*flagDbDriver, *flagDbSource)
+	err = storage.InitDB(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 	if err != nil {
 		exitOnError(err)
 	}
@@ -1066,7 +1231,14 @@ func main() {
 	if dataDirectory == "" {
 		dataDirectory = "."
 	}
-	handler := web.MaintenanceMiddleware(dataDirectory, mux)
+	// Parse cleanup period from config
+	cleanupPeriod, err := cli.ParseDuration(yamlCfg.Database.CleanupPeriod)
+	if err != nil {
+		exitOnError(fmt.Errorf("invalid database.cleanup_period in config: %w", err))
+	}
+
+	// Apply middleware chain: CORS → Maintenance → App
+	handler := web.CORSMiddleware(web.MaintenanceMiddleware(dataDirectory, mux))
 
 	// Run background job
 	go func(cleanJobPeriod time.Duration) {
@@ -1082,12 +1254,25 @@ func main() {
 			// Wait
 			time.Sleep(cleanJobPeriod)
 		}
-	}(*flagDbCleanupPeriod)
+	}(cleanupPeriod)
+
+	// Create listener (must be done as root for ports < 1024 on Unix)
+	listener, err := net.Listen("tcp", *flagAddress)
+	if err != nil {
+		exitOnError(fmt.Errorf("failed to bind to %s: %w", *flagAddress, err))
+	}
+
+	// Drop privileges after binding to port (uid/gid set earlier during directory creation)
+	if runtime.GOOS != "windows" && uid > 0 && gid > 0 {
+		if err := privilege.DropPrivileges(uid, gid); err != nil {
+			log.Error(fmt.Errorf("failed to drop privileges: %w", err))
+			// Continue anyway
+		}
+	}
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{
-		Addr:         *flagAddress,
-		Handler:      handler, // Custom mux with maintenance middleware
+		Handler:      handler, // Custom mux with middleware
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -1098,11 +1283,12 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	// Start server in a goroutine
+	// Start server in a goroutine using the already-created listener
 	serverErrors := make(chan error, 1)
 	go func() {
-		log.Info("Run HTTP server on " + *flagAddress)
-		serverErrors <- srv.ListenAndServe()
+		displayAddr := getDisplayAddress(*flagAddress)
+		log.Info("Run HTTP server on " + displayAddr)
+		serverErrors <- srv.Serve(listener)
 	}()
 
 	// Wait for interrupt signal or server error

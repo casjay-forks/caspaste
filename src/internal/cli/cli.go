@@ -1,9 +1,8 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
 
 // This file is part of CasPaste.
 
 // CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+// See LICENSE.md file for details.
 
 package cli
 
@@ -144,7 +143,7 @@ func (c *CLI) AddDurationVar(name, defValue string, usage string, opts *FlagOpti
 		}
 	}
 
-	valDuration, err := parseDuration(defValue)
+	valDuration, err := ParseDuration(defValue)
 	if err != nil {
 		panic("cli: add duration variable \"" + name + "\": " + err.Error())
 	}
@@ -186,7 +185,7 @@ func writeVar(val string, to interface{}, preHook func(string) (string, error)) 
 		*to = uint(val)
 
 	case *time.Duration:
-		val, err := parseDuration(val)
+		val, err := ParseDuration(val)
 		if err != nil {
 			return err
 		}

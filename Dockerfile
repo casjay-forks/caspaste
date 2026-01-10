@@ -30,17 +30,8 @@ FROM alpine:latest
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata
 
-# Create non-root user and directories
-RUN addgroup -g 1000 caspaste && \
-    adduser -D -u 1000 -G caspaste caspaste && \
-    mkdir -p /data /data/db /config && \
-    chown -R caspaste:caspaste /data /config
-
 # Copy binary from builder
 COPY --from=builder /caspaste /usr/local/bin/caspaste
-
-# Switch to non-root user
-USER caspaste
 
 # Set working directory
 WORKDIR /data

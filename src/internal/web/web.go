@@ -1,9 +1,8 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
 
 // This file is part of CasPaste.
 
 // CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+// See LICENSE.md file for details.
 
 package web
 
@@ -285,6 +284,11 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		err = data.codeJSHand(rw, req)
 	case "/paste.js":
 		err = data.pasteJSHand(rw, req)
+	// PWA Support
+	case "/manifest.json":
+		err = data.manifestHand(rw, req)
+	case "/sw.js":
+		err = data.serviceWorkerHand(rw, req)
 	case "/about":
 		err = data.aboutHand(rw, req)
 	case "/about/authors":
