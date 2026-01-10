@@ -78,17 +78,25 @@ jobs:
       - name: Get version
         id: version
         run: |
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          elif [ -f release.txt ]; then
-            VERSION=$(cat release.txt | tr -d '[:space:]')
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag push - strip the 'v' prefix
             VERSION="${{ github.ref_name }}"
             VERSION="${VERSION#v}"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            # Manual workflow dispatch
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ -f release.txt ]; then
+            # Version from file
+            VERSION=$(cat release.txt | tr -d '[:space:]')
+          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
+            # Push to main = dev release
+            VERSION="dev"
           else
+            # Fallback
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "1.0.0")
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
 
       - name: Build binary
         env:
@@ -154,18 +162,26 @@ jobs:
       - name: Get version and tags
         id: meta
         run: |
-          # Get version
-          if [ -n "${{ github.event.inputs.version }}" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          elif [ -f release.txt ]; then
-            VERSION=$(cat release.txt | tr -d '[:space:]')
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          # Get version (matches build and release jobs)
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag push - strip the 'v' prefix
             VERSION="${{ github.ref_name }}"
             VERSION="${VERSION#v}"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            # Manual workflow dispatch
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ -f release.txt ]; then
+            # Version from file
+            VERSION=$(cat release.txt | tr -d '[:space:]')
+          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
+            # Push to main = dev release
+            VERSION="dev"
           else
+            # Fallback
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "1.0.0")
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Docker build version: $VERSION"
 
           # Get YYMM tag
           YYMM=$(date +%y%m)
@@ -226,48 +242,82 @@ jobs:
       - name: Determine release type and version
         id: release_info
         run: |
-          # Check if this is a tag push or main branch push
-          if [[ "${{ github.ref }}" == refs/tags/v* ]] || [ -n "${{ github.event.inputs.version }}" ]; then
-            # Tagged release
-            if [ -n "${{ github.event.inputs.version }}" ]; then
-              VERSION="${{ github.event.inputs.version }}"
-            elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-              VERSION="${{ github.ref_name }}"
-              VERSION="${VERSION#v}"
-            elif [ -f release.txt ]; then
-              VERSION=$(cat release.txt | tr -d '[:space:]')
-            else
-              VERSION="1.0.0"
-            fi
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ env.PROJECT_NAME }} v${VERSION}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          # Determine version
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag push - strip the 'v' prefix
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            # Manual workflow dispatch
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ -f release.txt ]; then
+            # Version from file
+            VERSION=$(cat release.txt | tr -d '[:space:]')
+          elif [[ "${{ github.ref }}" == refs/heads/main ]]; then
+            # Push to main = dev release
+            VERSION="dev"
           else
-            # Dev release (push to main)
-            echo "version=dev" >> $GITHUB_OUTPUT
-            echo "tag_name=dev" >> $GITHUB_OUTPUT
-            echo "release_name=${{ env.PROJECT_NAME }} dev" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            # Fallback
+            VERSION="1.0.0"
           fi
+
+          # Determine if this is a semantic version (x.y.z format)
+          # Only semantic versions get the 'v' prefix
+          # Named releases (dev, beta, alpha, rc, etc.) don't get 'v' prefix
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            # Semantic version - add 'v' prefix for tag
+            TAG_NAME="v${VERSION}"
+            RELEASE_NAME="${{ env.PROJECT_NAME }} v${VERSION}"
+            IS_PRERELEASE="false"
+          else
+            # Named release - no 'v' prefix
+            TAG_NAME="${VERSION}"
+            RELEASE_NAME="${{ env.PROJECT_NAME }} ${VERSION}"
+            IS_PRERELEASE="true"
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+
+          # Debug output
+          echo "Version: $VERSION"
+          echo "Tag name: $TAG_NAME"
+          echo "Release name: $RELEASE_NAME"
+          echo "Is prerelease: $IS_PRERELEASE"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: releases
-          merge-multiple: true
 
-      - name: Create source archive
+      - name: Prepare release assets
         run: |
           VERSION="${{ steps.release_info.outputs.version }}"
           mkdir -p release-assets
 
-          # Copy binaries
-          cp releases/* release-assets/ 2>/dev/null || true
+          # Debug: Show what was downloaded
+          echo "=== Downloaded artifacts structure ==="
+          ls -la releases/
+          echo "======================================"
+
+          # Copy all binaries from artifact subdirectories
+          find releases -type f -name "${{ env.PROJECT_NAME }}-*" -exec cp {} release-assets/ \;
+
+          # Verify binaries were copied
+          echo "=== Binaries copied to release-assets ==="
+          ls -lh release-assets/
+          echo "=========================================="
 
           # Create source archive (excludes VCS files via .gitattributes)
           git archive --format=tar.gz --prefix=${{ env.PROJECT_NAME }}-${VERSION}/ \
             -o release-assets/${{ env.PROJECT_NAME }}-${VERSION}-source.tar.gz HEAD
+
+          # Final check
+          echo "=== Final release assets ==="
+          ls -lh release-assets/
+          echo "============================"
 
       - name: Delete existing release
         env:
