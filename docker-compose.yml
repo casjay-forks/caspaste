@@ -9,7 +9,7 @@ services:
   app:
     image: ghcr.io/casjay-forks/caspaste:latest
     container_name: caspaste-app
-    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    hostname: ${$HOSTNAME:-caspaste}
     restart: always
     pull_policy: always
     logging: *default-logging
@@ -35,6 +35,7 @@ services:
       - '172.17.0.1:59093:80'
     volumes:
       - './rootfs/data:/data'
+      - './rootfs/config:/config'
     networks:
       - caspaste
 
