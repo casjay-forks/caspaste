@@ -37,9 +37,7 @@ COPY --from=builder /caspaste /usr/local/bin/caspaste
 WORKDIR /data
 
 # Set environment variables for Docker deployment
-# Database directory inside container (defaults to /data/db)
-# Backup directory on host OS (must be set via docker-compose or docker run)
-ENV CASPASTE_DB_DIR=/data/db
+ENV CASPASTE_DB_DIR=/data/db/sqlite
 
 # Expose default port
 EXPOSE 80
@@ -52,21 +50,18 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Container Paths:
 #   - Config: /config/caspaste.yml (auto-generated on first run)
 #   - Data: /data/ (application data)
-#   - Database: /data/db/caspaste.db (SQLite via CASPASTE_DB_DIR)
-#   - Backups: /data/backups/ (via CASPASTE_BACKUP_DIR)
-# Host Mounts:
-#   - ./rootfs/config:/config
+#   - Database: /data/db/sqlite/caspaste.db (SQLite)
+#   - Backups: /data/backups/
+#   - Cache: Auto-detected
+#   - Logs: Auto-detected
+# Host Mounts (from docker-compose.yml):
 #   - ./rootfs/data:/data
-#   - ./rootfs/db:/data/db
-#   - ./rootfs/data/backups:/data/backups (→ /mnt/Backups/caspaste on Linux host)
+#   - ./rootfs/config:/config (optional)
 # Privilege Escalation:
-#   - Binary prefers system directories when running as root (/var/log, /var/lib, etc.)
-#   - Falls back to user directories when running as non-root
+#   - Creates user caspaste (UID:GID 642:642)
+#   - Binds to port as root
+#   - Drops privileges to caspaste user
 # Security:
-#   - Auto-trusts reverse proxy headers from private IPs (10.x, 172.16-31.x, 192.168.x, fc00::/7)
+#   - Auto-trusts reverse proxy headers from private IPs
 #   - Prevents IP spoofing from public IPs
-# Usage: docker run -p 172.17.0.1:64365:80 -v ./rootfs/data:/data ...
 ENTRYPOINT ["caspaste", "--config", "/config", "--data", "/data"]
-
-# Additional arguments can be passed when running the container
-# Example: docker run -p 172.17.0.1:64365:80 caspaste --ui-default-theme nord

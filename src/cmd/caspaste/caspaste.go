@@ -862,26 +862,33 @@ func main() {
 		exitOnError(errors.New("database.source must be specified in config file"))
 	}
 
-	// If database source is relative, make it absolute based on data directory
-	if !strings.HasPrefix(dbSource, "/") && *flagDataDir != "" {
-		// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
-		dbDir = os.Getenv("CASPASTE_DB_DIR")
-		if dbDir == "" {
-			dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+	// Only process file paths for SQLite databases
+	// PostgreSQL/MySQL use connection strings (postgres://, mysql://, etc.)
+	driver := yamlCfg.Database.Driver
+	if driver == "sqlite" || driver == "sqlite3" {
+		// If database source is relative, make it absolute based on data directory
+		if !strings.HasPrefix(dbSource, "/") && *flagDataDir != "" {
+			// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
+			// These specify the DATABASE DIRECTORY (not full path)
+			dbDir = os.Getenv("CASPASTE_DB_DIR")
+			if dbDir == "" {
+				dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+			}
+			if dbDir == "" {
+				// Code default: {dataDir}/db
+				// Docker overrides this via ENV CASPASTE_DB_DIR=/data/db/sqlite in Dockerfile
+				dbDir = *flagDataDir + "/db"
+			}
+			yamlCfg.Database.Source = dbDir + "/caspaste.db"
+			dbSource = yamlCfg.Database.Source
 		}
-		if dbDir == "" {
-			// Default: {dataDir}/db
-			dbDir = *flagDataDir + "/db"
-		}
-		yamlCfg.Database.Source = dbDir + "/caspaste.db"
-		dbSource = yamlCfg.Database.Source
-	}
 
-	// Extract directory from database source path
-	if strings.Contains(dbSource, "/") {
-		lastSlash := strings.LastIndex(dbSource, "/")
-		if lastSlash > 0 {
-			dbDir = dbSource[:lastSlash]
+		// Extract directory from database source path
+		if strings.Contains(dbSource, "/") {
+			lastSlash := strings.LastIndex(dbSource, "/")
+			if lastSlash > 0 {
+				dbDir = dbSource[:lastSlash]
+			}
 		}
 	}
 

@@ -95,9 +95,11 @@ func GenerateDefaultYAMLConfig(path string) error {
 
 	// Database defaults
 	// Note: Using "sqlite" (modernc.org/sqlite - pure Go, no CGo)
-	// NOT "sqlite3" (github.com/mattn/go-sqlite3 - requires CGo)
+	// Source is relative - converted to absolute at runtime:
+	//   Docker (--data /data): /data/db/sqlite/caspaste.db
+	//   Standalone: {data_dir}/db/caspaste.db
 	defaultConfig.Database.Driver = "sqlite"
-	defaultConfig.Database.Source = "./data/db/caspaste.db"
+	defaultConfig.Database.Source = "caspaste.db"
 	defaultConfig.Database.MaxOpenConns = 25
 	defaultConfig.Database.MaxIdleConns = 5
 	defaultConfig.Database.CleanupPeriod = "1m"
