@@ -14,7 +14,7 @@ on:
         type: string
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.23'
   PROJECT_NAME: caspaste
 
 jobs:
@@ -109,7 +109,7 @@ jobs:
             -tags netgo \
             -ldflags "-w -s -X main.Version=${VERSION} -extldflags '-static'" \
             -o "binaries/${OUTPUT}" \
-            ./cmd/${{ env.PROJECT_NAME }}
+            ./src/cmd/${{ env.PROJECT_NAME }}
 
           chmod +x "binaries/${OUTPUT}" 2>/dev/null || true
 
@@ -265,7 +265,7 @@ jobs:
           # Copy binaries
           cp releases/* release-assets/ 2>/dev/null || true
 
-          # Create source archive without .git
+          # Create source archive (excludes VCS files via .gitattributes)
           git archive --format=tar.gz --prefix=${{ env.PROJECT_NAME }}-${VERSION}/ \
             -o release-assets/${{ env.PROJECT_NAME }}-${VERSION}-source.tar.gz HEAD
 

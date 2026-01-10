@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  caspaste:
+    image: ghcr.io/casjay-forks/caspaste:latest
+    container_name: caspaste
+    restart: unless-stopped
+    ports:
+      - "172.17.0.1:64365:80"
+    volumes:
+      - /var/lib/caspaste:/data/caspaste
+      - /var/lib/caspaste-db:/data/db/sqlite
+      - /etc/caspaste:/config/caspaste
+    environment:
+      - TZ=UTC
+    # Default: SQLite database
+    # Database at: /data/db/sqlite/caspaste.db
+    # Config auto-generated at: /config/caspaste/caspaste.yml
+
+  # Uncomment to use PostgreSQL instead of SQLite
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: caspaste-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: caspaste
+  #     POSTGRES_USER: caspaste
+  #     POSTGRES_PASSWORD: changeme
+  #   volumes:
+  #     - /var/lib/caspaste-postgres:/var/lib/postgresql/data
+  #   ports:
+  #     - "172.17.0.1:5432:5432"
+  #
+  # # Then update caspaste service:
+  # # Add under caspaste service:
+  # # depends_on:
+  # #   - postgres
+  # # command: --db-driver postgres --db-source "postgres://caspaste:changeme@postgres:5432/caspaste?sslmode=disable"
+
+  # Uncomment to use MariaDB instead of SQLite
+  # mariadb:
+  #   image: mariadb:11-jammy
+  #   container_name: caspaste-mariadb
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_DATABASE: caspaste
+  #     MYSQL_USER: caspaste
+  #     MYSQL_PASSWORD: changeme
+  #     MYSQL_ROOT_PASSWORD: rootchangeme
+  #   volumes:
+  #     - /var/lib/caspaste-mariadb:/var/lib/mysql
+  #   ports:
+  #     - "172.17.0.1:3306:3306"
+  #   command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  #
+  # # Then update caspaste service:
+  # # Add under caspaste service:
+  # # depends_on:
+  # #   - mariadb
+  # # command: --db-driver mysql --db-source "caspaste:changeme@tcp(mariadb:3306)/caspaste?charset=utf8mb4&parseTime=true"
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  caspaste-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/caspaste
+  caspaste-db:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/caspaste-db
+  caspaste-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /etc/caspaste

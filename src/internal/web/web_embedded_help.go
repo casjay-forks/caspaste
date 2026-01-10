@@ -1,0 +1,57 @@
+// Copyright (C) 2021-2023 Leonid Maslakov.
+
+// This file is part of CasPaste.
+
+// CasPaste is free software released under the MIT License.
+// See LICENSE file for details.
+
+package web
+
+import (
+	"github.com/casjay-forks/caspaste/src/internal/netshare"
+	"html/template"
+	"net/http"
+)
+
+type embHelpTmpl struct {
+	ID         string
+	DeleteTime int64
+	OneUse     bool
+
+	Protocol string
+	Host     string
+
+	Translate func(string, ...interface{}) template.HTML
+	Highlight func(string, string) template.HTML
+}
+
+// Pattern: /emb_help/
+func (data *Data) embeddedHelpHand(rw http.ResponseWriter, req *http.Request) error {
+	// Check rate limit
+	err := data.RateLimitGet.CheckAndUse(netshare.GetClientAddr(req))
+	if err != nil {
+		return err
+	}
+
+	// Get paste ID
+	pasteID := string([]rune(req.URL.Path)[10:])
+
+	// Read DB
+	paste, err := data.DB.PasteGet(pasteID)
+	if err != nil {
+		return err
+	}
+
+	// Show paste
+	tmplData := embHelpTmpl{
+		ID:         paste.ID,
+		DeleteTime: paste.DeleteTime,
+		OneUse:     paste.OneUse,
+		Protocol:   netshare.GetProtocol(req),
+		Host:       netshare.GetHost(req),
+		Translate:  data.Locales.findLocale(req).translate,
+		Highlight:  data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight,
+	}
+
+	return data.EmbeddedHelpPage.Execute(rw, tmplData)
+}

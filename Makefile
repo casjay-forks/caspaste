@@ -4,11 +4,12 @@
 GO ?= go
 GOFMT ?= gofmt
 GH ?= gh
+GO_VERSION := 1.23
 
 # Project info
 NAME := caspaste
 ORGANIZATION := casjay-forks
-MAIN_GO := ./cmd/$(NAME)
+MAIN_GO := ./src/cmd/caspaste
 
 # Version management
 VERSION_FILE := release.txt
@@ -46,10 +47,31 @@ PLATFORMS := \
     openbsd_amd64 \
     openbsd_arm64
 
-.PHONY: all build release test clean fmt version init-version bump-patch bump-minor bump-major
+.PHONY: all build release test clean fmt version init-version bump-patch bump-minor bump-major local docker help
 
 # Default target
-all: build
+all: help
+
+# Show help
+help:
+	@echo "CasPaste Makefile - Local Development"
+	@echo "====================================="
+	@echo ""
+	@echo "Targets:"
+	@echo "  make build         - Build all binaries (all OS/arch) + host binary"
+	@echo "  make local         - Build for current OS/arch only (fast)"
+	@echo "  make release       - Build production binaries and create GitHub release"
+	@echo "  make docker        - Build and push Docker images (multi-arch)"
+	@echo "  make test          - Run all tests"
+	@echo "  make version       - Show current version"
+	@echo "  make bump-patch    - Increment patch version (1.0.0 -> 1.0.1)"
+	@echo "  make bump-minor    - Increment minor version (1.0.1 -> 1.1.0)"
+	@echo "  make bump-major    - Increment major version (1.1.0 -> 2.0.0)"
+	@echo "  make clean         - Remove build artifacts"
+	@echo "  make fmt           - Format Go code"
+	@echo ""
+	@echo "Current version: $(APP_VERSION)"
+	@echo ""
 
 # Initialize or update version file
 init-version:
@@ -162,6 +184,36 @@ release: init-version
 		$(RELEASE_DIR)/$(NAME)-*
 
 	@echo "Release v$(APP_VERSION) complete!"
+
+# Build for local OS/arch only (fast development build)
+local: init-version
+	@mkdir -p $(BUILD_DIR)
+	@echo "Building $(NAME) v$(APP_VERSION) for current OS/arch..."
+	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
+	@chmod +x $(BUILD_DIR)/$(NAME)
+	@echo "Build complete: $(BUILD_DIR)/$(NAME)"
+
+# Build and push Docker images
+docker: init-version
+	@echo "Building Docker images v$(APP_VERSION)..."
+	@COMMIT_ID=$$(git rev-parse --short HEAD); \
+	YYMM=$$(date +%y%m); \
+	REPO="ghcr.io/$(ORGANIZATION)/$(NAME)"; \
+	echo "Building multi-arch image..."; \
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--build-arg VERSION=$(APP_VERSION) \
+		--tag $$REPO:$(APP_VERSION) \
+		--tag $$REPO:$$YYMM \
+		--tag $$REPO:$$COMMIT_ID \
+		--tag $$REPO:latest \
+		--push \
+		. || exit 1; \
+	echo "Docker images pushed:"; \
+	echo "  - $$REPO:$(APP_VERSION)"; \
+	echo "  - $$REPO:$$YYMM"; \
+	echo "  - $$REPO:$$COMMIT_ID"; \
+	echo "  - $$REPO:latest"
 
 # Run tests
 test:

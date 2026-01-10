@@ -1,0 +1,52 @@
+{{/*
+   Copyright (C) 2021-2023 Leonid Maslakov.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{ call .Translate `docsAPIv1Libs.Title` }} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3><a href="/docs">{{ call .Translate `docs.Title` }}</a> / {{ call .Translate `docsAPIv1Libs.Title` }}</h3>
+<h4 id="recommended">{{ call .Translate `docsAPIv1Libs.Recommended` }}</h4>
+<table>
+	<th>{{ call .Translate `docsAPIv1Libs.Name` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.Language` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.ApiVersion` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.Status` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.License` }}</th>
+	<tr>
+		<td><a href="https://git.lcomrade.su/root/pasteapi.go" target="_blank">PasteAPI.go</a></td>
+		<td>Go</td>
+		<td>v1.2</td>
+		<td>{{ call .Translate `docsAPIv1Libs.StatusOfficial`}}</td>
+		<td>MIT</td>
+	</tr>
+</table>
+<h4 id="out_of_date">{{ call .Translate `docsAPIv1Libs.OutOfDateTitle` }}</h4>
+<p>{{ call .Translate `docsAPIv1Libs.OutOfDataMessage` }}</p>
+<table>
+	<th>{{ call .Translate `docsAPIv1Libs.Name` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.Language` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.ApiVersion` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.Status` }}</th>
+	<th>{{ call .Translate `docsAPIv1Libs.License` }}</th>
+	<tr>
+		<td><a href="https://git.lcomrade.su/root/lenin" target="_blank">Lenin</a></td>
+		<td>Go</td>
+		<td>v0.2</td>
+		<td>{{ call .Translate `docsAPIv1Libs.StatusOfficial` }}</td>
+		<td>{{ call .Translate `docsAPIv1Libs.GPL3Later` }}</td>
+	</tr>
+	<tr>
+		<td><a href="https://github.com/rjdbcm/pylenin" target="_blank">PyLenin</a></td>
+		<td>Python</td>
+		<td>v0.1</td>
+		<td>{{ call .Translate `docsAPIv1Libs.StatusUnofficial` }}</td>
+		<td>{{ call .Translate `docsAPIv1Libs.GPL3Later` }}</td>
+	</tr>
+</table>
+{{end}}

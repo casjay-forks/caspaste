@@ -1,0 +1,31 @@
+theme.Name.en = Catppuccin Latte
+theme.Name.de = Catppuccin Latte
+theme.Name.ru = Catppuccin Латте
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = catppuccin-latte
+
+color.Font             = #4C4F69
+color.SVG              = #4C4F69
+color.BackgroundBody   = #EFF1F5
+color.Header           = #1E66F5
+color.HeaderFont       = #EFF1F5
+color.Article          = #E6E9EF
+color.BackgroundBlack  = #DCE0E8
+color.FocusOutline     = #8839EF
+color.Element          = #CCD0DA
+
+color.Red  = #D20F39
+color.Grey = #6C6F85
+
+color.Button           = #CCD0DA
+color.ButtonHover      = #1E66F5
+color.ButtonFont       = #4C4F69
+color.ButtonGreen      = #40A02B
+color.ButtonGreenHover = #179299
+color.ButtonGreenFont  = #EFF1F5
+
+color.InputHover       = #CCD0DA
+color.InputPlaceholder = #6C6F85

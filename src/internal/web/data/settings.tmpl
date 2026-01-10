@@ -1,0 +1,70 @@
+{{/*
+   Copyright (C) 2021-2023 Leonid Maslakov.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{call .Translate `settings.Title`}} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3>{{call .Translate `settings.Title`}}</h3>
+<form action="/settings" method="post">
+	<table class="table-hidden">
+		<tr>
+			<td><label>{{ call .Translate `settings.Language` }}</label></td>
+			<td style="text-align: left;"><select name="lang" tabindex=1 size=1>
+				<option value="">{{call .Translate `settings.LanguageDefault`}}</option>
+				{{ $language := .Language }}
+				{{range $key, $value := .LanguageSelector}}
+				<option value="{{$key}}"{{if eq $key $language}} selected="true"{{end}}>{{$value}}</option>
+				{{end}}
+			</select></td>
+		</tr>
+		<tr>
+			<td><label>{{ call .Translate `settings.Theme` }}</label></td>
+			<td style="text-align: left;"><select name="theme" tabindex=2 size=1>
+				{{ $theme := .Theme }}
+				{{range $key, $value := .ThemeSelector}}
+				<option value="{{$key}}"{{if eq $key $theme}} selected="true"{{end}}>{{$value}}</option>
+				{{end}}
+			</select></td>
+		</tr>
+	</table>
+	{{if eq .AuthOk true}}
+	<h4>{{ call .Translate `main.AdvancedParameters` }}</h4>
+	<table class="table-hidden">
+		<tr>
+			<td><label>{{ call .Translate `main.Author` }}</label></td>
+			<td><input
+				name="author" value="{{.Author}}"
+				autocomplete="off" autocorrect="off" spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorPlaceholder`}}"
+				tabindex=3 maxlength="{{.AuthorAllMaxLen}}"
+			></td>
+		</tr>
+		<tr>
+			<td><label>{{ call .Translate `main.AuthorEmail` }}</label></td>
+			<td><input
+				name="authorEmail" value="{{.AuthorEmail}}"
+				autocomplete="off" autocorrect="off" spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorEmailPlaceholder`}}"
+				tabindex=4 maxlength="{{.AuthorAllMaxLen}}"
+			></td>
+		</tr>
+		<tr>
+			<td><label>{{ call .Translate `main.AuthorURL` }}</label></td>
+			<td><input
+				name="authorURL" value="{{.AuthorURL}}"
+				autocomplete="off" autocorrect="off" spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorURLPlaceholder`}}"
+				tabindex=5 maxlength="{{.AuthorAllMaxLen}}"
+			></td>
+		</tr>
+	</table>
+	{{end}}
+	<div><button class="button-green" type="submit" tabindex=6>{{ call .Translate `settings.Save` }}</button></div>
+</form>
+{{end}}

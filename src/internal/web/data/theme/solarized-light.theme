@@ -1,0 +1,31 @@
+theme.Name.en = Solarized Light
+theme.Name.de = Solarized Hell
+theme.Name.ru = Solarized Светлая
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = solarized-light
+
+color.Font             = #586E75
+color.SVG              = #586E75
+color.BackgroundBody   = #FDF6E3
+color.Header           = #268BD2
+color.HeaderFont       = #FDF6E3
+color.Article          = #EEE8D5
+color.BackgroundBlack  = #FDF6E3
+color.FocusOutline     = #2AA198
+color.Element          = #93A1A1
+
+color.Red  = #DC322F
+color.Grey = #93A1A1
+
+color.Button           = #EEE8D5
+color.ButtonHover      = #268BD2
+color.ButtonFont       = #586E75
+color.ButtonGreen      = #859900
+color.ButtonGreenHover = #2AA198
+color.ButtonGreenFont  = #FDF6E3
+
+color.InputHover       = #EEE8D5
+color.InputPlaceholder = #93A1A1

@@ -1,12 +1,14 @@
 module github.com/casjay-forks/caspaste
 
-go 1.21
-
-replace github.com/casjay-forks/caspaste/internal => ./internal
+go 1.23
 
 require (
 	github.com/alecthomas/chroma/v2 v2.4.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.7
+	golang.org/x/crypto v0.18.0
+	golang.org/x/term v0.16.0
+	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.28.0
 )
 

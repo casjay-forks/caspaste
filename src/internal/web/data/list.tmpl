@@ -1,0 +1,44 @@
+{{/*
+   Copyright (C) 2021-2023 Leonid Maslakov.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}Paste List | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3>Recent Pastes</h3>
+
+{{if .Pastes}}
+<table style="width: 100%; border-collapse: collapse;">
+	<thead>
+		<tr style="border-bottom: 1px solid #ccc;">
+			<th style="text-align: left; padding: 8px;">Title</th>
+			<th style="text-align: left; padding: 8px;">Language</th>
+			<th style="text-align: left; padding: 8px;">Created</th>
+		</tr>
+	</thead>
+	<tbody>
+	{{range .Pastes}}
+		<tr style="border-bottom: 1px solid #eee;">
+			<td style="padding: 8px;"><a href="/{{.ID}}">{{if .Title}}{{.Title}}{{else}}Untitled{{end}}</a></td>
+			<td style="padding: 8px;">{{.Syntax}}</td>
+			<td style="padding: 8px;">{{.CreateTime}}</td>
+		</tr>
+	{{end}}
+	</tbody>
+</table>
+
+<div style="margin-top: 20px;">
+	{{if .HasPrev}}<a href="/list?limit={{.Limit}}&offset={{.PrevOffset}}">&larr; Previous</a>{{end}}
+	{{if and .HasPrev .HasNext}} | {{end}}
+	{{if .HasNext}}<a href="/list?limit={{.Limit}}&offset={{.NextOffset}}">Next &rarr;</a>{{end}}
+</div>
+{{else}}
+<p>No pastes found.</p>
+{{end}}
+
+{{end}}

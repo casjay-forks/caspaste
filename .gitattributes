@@ -79,10 +79,13 @@
 *.zst      binary
 # Text files where line endings should be preserved
 *.patch    -text
-# Exclude files from exporting
+# Exclude files from exporting (VCS and build files)
 .gitattributes export-ignore
 .gitignore     export-ignore
 .gitkeep       export-ignore
+.github/       export-ignore
+.dockerignore  export-ignore
+Dockerfile     export-ignore
 
 # Template generated on Wed Oct 22 05:26:51 PM EDT 2025
 # Files for git large file system
