@@ -1,99 +1,44 @@
-version: '3.8'
+name: caspaste
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
 
 services:
-  caspaste:
+  app:
     image: ghcr.io/casjay-forks/caspaste:latest
-    container_name: caspaste
-    restart: unless-stopped
-    ports:
-      - "172.17.0.1:64365:80"
-    volumes:
-      # Application data
-      - ./rootfs/data:/data
-      # Database directory
-      - ./rootfs/db:/data/db
-      # Backup directory
-      - ./rootfs/data/backups:/data/backups
-      # Configuration files
-      - ./rootfs/config:/config
+    container_name: caspaste-app
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
     environment:
       - TZ=${TZ:-America/New_York}
-
-      # Directory paths (optional, these are the defaults)
-      # - CASPASTE_DB_DIR=/data/db
-      # - CASPASTE_BACKUP_DIR=/data/backups
-
-      # Backward compatibility: LENPASTE_* environment variables are still supported
-      # - LENPASTE_DB_DIR=/data/db
-      # - LENPASTE_BACKUP_DIR=/data/backups
-
-      # Additional configuration via environment variables (all optional):
-      # - CASPASTE_ADDRESS=:80
-      # - CASPASTE_DB_DRIVER=sqlite  # Both "sqlite" and "sqlite3" work (uses modernc.org/sqlite)
-      # - CASPASTE_TITLE_MAX_LENGTH=100
-      # - CASPASTE_BODY_MAX_LENGTH=52428800
-      # - CASPASTE_MAX_PASTE_LIFETIME=unlimited
-      # - CASPASTE_ADMIN_NAME=Admin Name
-      # - CASPASTE_ADMIN_MAIL=admin@example.com
-      # - CASPASTE_UI_DEFAULT_THEME=dracula
-      # - CASPASTE_ROBOTS_DISALLOW=false
-      # - CASPASTE_TRUST_REVERSE_PROXY=false  # Default: auto-trust private IPs
-
-    # Notes:
-    #   - Database: /data/db/caspaste.db (mounted from ./rootfs/db)
-    #   - Config: /config/caspaste.yml (auto-generated, mounted from ./rootfs/config)
-    #   - Backups: /data/backups/ (mounted from ./rootfs/data/backups)
-    #   - On Linux host: ./rootfs/data/backups → /mnt/Backups/caspaste (symlink recommended)
-    #
-    # Environment variable priority:
-    #   1. CLI flags (highest)
-    #   2. CASPASTE_* environment variables
-    #   3. LENPASTE_* environment variables (backward compatibility)
-    #   4. Config file values
-    #   5. Defaults (lowest)
-
-  # Uncomment to use PostgreSQL instead of SQLite
-  # postgres:
-  #   image: postgres:16-alpine
-  #   container_name: caspaste-postgres
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_DB: caspaste
-  #     POSTGRES_USER: caspaste
-  #     POSTGRES_PASSWORD: changeme
-  #   volumes:
-  #     - /var/lib/caspaste-postgres:/var/lib/postgresql/data
-  #   ports:
-  #     - "172.17.0.1:5432:5432"
-  #
-  # # Then update caspaste service:
-  # # Add under caspaste service:
-  # # depends_on:
-  # #   - postgres
-  # # command: --db-driver postgres --db-source "postgres://caspaste:changeme@postgres:5432/caspaste?sslmode=disable"
-
-  # Uncomment to use MariaDB instead of SQLite
-  # mariadb:
-  #   image: mariadb:11-jammy
-  #   container_name: caspaste-mariadb
-  #   restart: unless-stopped
-  #   environment:
-  #     MYSQL_DATABASE: caspaste
-  #     MYSQL_USER: caspaste
-  #     MYSQL_PASSWORD: changeme
-  #     MYSQL_ROOT_PASSWORD: rootchangeme
-  #   volumes:
-  #     - /var/lib/caspaste-mariadb:/var/lib/mysql
-  #   ports:
-  #     - "172.17.0.1:3306:3306"
-  #   command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-  #
-  # # Then update caspaste service:
-  # # Add under caspaste service:
-  # # depends_on:
-  # #   - mariadb
-  # # command: --db-driver mysql --db-source "caspaste:changeme@tcp(mariadb:3306)/caspaste?charset=utf8mb4&parseTime=true"
+      - CASPASTE_DB_CLEANUP_PERIOD=1m
+      - CASPASTE_ROBOTS_DISALLOW=false
+      - CASPASTE_TITLE_MAX_LENGTH=120
+      - CASPASTE_BODY_MAX_LENGTH=9999999999999999
+      - CASPASTE_MAX_PASTE_LIFETIME=unlimited
+      - CASPASTE_ADMIN_NAME=${APP_ORG_NAME}
+      - CASPASTE_ADDRESS=${BASE_HOST_NAME:-$HOSTNAME}:80
+      - CASPASTE_UI_DEFAULT_LIFETIME=never
+      - CASPASTE_UI_DEFAULT_THEME=dark
+      - CASPASTE_GET_PASTES_PER_5MIN=0
+      - CASPASTE_GET_PASTES_PER_15MIN=0
+      - CASPASTE_GET_PASTES_PER_1HOUR=0
+      - CASPASTE_NEW_PASTES_PER_5MIN=30
+      - CASPASTE_NEW_PASTES_PER_15MIN=60
+      - CASPASTE_NEW_PASTES_PER_1HOUR=120
+      - CASPASTE_DB_DRIVER=sqlite
+    ports:
+      - '172.17.0.1:59093:80'
+    volumes:
+      - './rootfs/data:/data'
+    networks:
+      - caspaste
 
 networks:
-  default:
-    driver: bridge
+  caspaste:
+    name: caspaste
+    external: false
