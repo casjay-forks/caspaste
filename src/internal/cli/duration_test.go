@@ -21,7 +21,7 @@ func TestParseDuration(t *testing.T) {
 	}
 
 	for s, exp := range testData {
-		res, err := parseDuration(s)
+		res, err := ParseDuration(s)
 		if err != nil {
 			t.Fatal(err)
 		}
