@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/casjay-forks/caspaste/internal/apiv1"
@@ -68,7 +69,16 @@ func main() {
 	// Read environment variables and CLI flags
 	c := cli.New(Version)
 
-	flagAddress := c.AddStringVar("address", ":80", "HTTP server ADDRESS:PORT.", nil)
+	flagAddress := c.AddStringVar("address", ":80", "HTTP server ADDRESS:PORT.", &cli.FlagOptions{
+		PreHook: func(s string) (string, error) {
+			// If the address doesn't contain a colon, it's missing the port
+			// Default to port 80
+			if s != "" && !strings.Contains(s, ":") {
+				return s + ":80", nil
+			}
+			return s, nil
+		},
+	})
 
 	flagDbDriver := c.AddStringVar("db-driver", "sqlite3", "Currently supported drivers: \"sqlite3\" and \"postgres\".", nil)
 	flagDbSource := c.AddStringVar("db-source", "", "DB source.", &cli.FlagOptions{Required: true})
