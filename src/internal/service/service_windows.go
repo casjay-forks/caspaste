@@ -12,10 +12,9 @@ package service
 
 import (
 	"fmt"
-	"strings"
 )
 
-func (m *Manager) installWindows() error {
+func (m *Manager) install() error {
 	binPath := fmt.Sprintf("\"%s\" %s", m.config.Executable, m.buildArgs())
 
 	args := []string{
@@ -44,7 +43,7 @@ func (m *Manager) installWindows() error {
 	return nil
 }
 
-func (m *Manager) uninstallWindows() error {
+func (m *Manager) uninstall() error {
 	// Stop service first
 	runCommand("sc", "stop", m.config.Name)
 
@@ -56,7 +55,7 @@ func (m *Manager) uninstallWindows() error {
 	return nil
 }
 
-func (m *Manager) controlWindows(action string) error {
+func (m *Manager) control(action string) error {
 	var scAction string
 	switch action {
 	case "start":
@@ -68,6 +67,8 @@ func (m *Manager) controlWindows(action string) error {
 			return err
 		}
 		scAction = "start"
+	case "reload":
+		return fmt.Errorf("reload not supported on Windows, use restart instead")
 	default:
 		return fmt.Errorf("unknown action: %s", action)
 	}
@@ -75,10 +76,10 @@ func (m *Manager) controlWindows(action string) error {
 	return runCommand("sc", scAction, m.config.Name)
 }
 
-func (m *Manager) disableWindows() error {
+func (m *Manager) disable() error {
 	return runCommand("sc", "config", m.config.Name, "start=", "disabled")
 }
 
-func (m *Manager) statusWindows() error {
+func (m *Manager) status() error {
 	return runCommand("sc", "query", m.config.Name)
 }

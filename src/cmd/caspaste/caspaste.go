@@ -474,7 +474,6 @@ func performRestore(dbDriver, dbSource, dataDir, configDir, filename string) err
 	}
 
 	// Create safety backup of current state
-	currentBackupPath := backupDir + "/pre-restore-" + time.Now().Format("20060102-150405") + ".tar.gz"
 	fmt.Println("Creating safety backup of current state...")
 	performBackup(dbDriver, dbSource, dataDir, configDir, "pre-restore-"+time.Now().Format("20060102-150405")+".tar.gz")
 
@@ -722,12 +721,10 @@ func main() {
 	}
 	configPaths = append(configPaths, "caspaste.yml", "caspaste.yaml", "/etc/caspaste/caspaste.yml", "/etc/caspaste/caspaste.yaml")
 
-	var loadedConfigPath string
 	for _, path := range configPaths {
 		cfg, err := config.LoadYAMLConfig(path)
 		if err == nil {
 			yamlCfg = cfg
-			loadedConfigPath = path
 			fmt.Printf("Loaded config from: %s\n", path)
 			break
 		}
@@ -741,7 +738,6 @@ func main() {
 			// Try to load the newly created config
 			if cfg, err := config.LoadYAMLConfig(defaultConfigPath); err == nil {
 				yamlCfg = cfg
-				loadedConfigPath = defaultConfigPath
 			}
 		}
 	}
@@ -1005,7 +1001,7 @@ func main() {
 
 		// Attempt graceful shutdown
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Error(fmt.Sprintf("Server shutdown error: %v", err))
+			log.Error(fmt.Errorf("server shutdown error: %w", err))
 			// Force close if graceful shutdown fails
 			srv.Close()
 		}

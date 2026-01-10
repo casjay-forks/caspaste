@@ -8,6 +8,7 @@
 package web
 
 import (
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -54,17 +55,15 @@ func (data *Data) listHand(rw http.ResponseWriter, req *http.Request) error {
 
 	// Render template
 	tmplData := struct {
-		ServerName    string
-		Pastes        interface{}
-		Limit         int
-		Offset        int
-		NextOffset    int
-		PrevOffset    int
-		HasNext       bool
-		HasPrev       bool
-		Translate     func(string, ...interface{}) string
+		Pastes     interface{}
+		Limit      int
+		Offset     int
+		NextOffset int
+		PrevOffset int
+		HasNext    bool
+		HasPrev    bool
+		Translate  func(string, ...interface{}) template.HTML
 	}{
-		ServerName: data.ServerName,
 		Pastes:     pastes,
 		Limit:      limit,
 		Offset:     offset,

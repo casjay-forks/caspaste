@@ -4,7 +4,7 @@
 GO ?= go
 GOFMT ?= gofmt
 GH ?= gh
-GO_VERSION := 1.23
+GO_VERSION := alpine
 
 # Project info
 NAME := caspaste

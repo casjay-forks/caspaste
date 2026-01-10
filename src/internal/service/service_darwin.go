@@ -42,7 +42,7 @@ const launchdTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>
 `
 
-func (m *Manager) installDarwin() error {
+func (m *Manager) install() error {
 	plistPath := filepath.Join("/Library/LaunchDaemons", m.config.Name+".plist")
 
 	// Build program arguments
@@ -73,7 +73,7 @@ func (m *Manager) installDarwin() error {
 	return nil
 }
 
-func (m *Manager) uninstallDarwin() error {
+func (m *Manager) uninstall() error {
 	plistPath := filepath.Join("/Library/LaunchDaemons", m.config.Name+".plist")
 
 	if err := runCommand("launchctl", "unload", plistPath); err != nil {
@@ -88,7 +88,7 @@ func (m *Manager) uninstallDarwin() error {
 	return nil
 }
 
-func (m *Manager) controlDarwin(action string) error {
+func (m *Manager) control(action string) error {
 	plistPath := filepath.Join("/Library/LaunchDaemons", m.config.Name+".plist")
 
 	switch action {
@@ -108,11 +108,11 @@ func (m *Manager) controlDarwin(action string) error {
 	}
 }
 
-func (m *Manager) disableDarwin() error {
+func (m *Manager) disable() error {
 	plistPath := filepath.Join("/Library/LaunchDaemons", m.config.Name+".plist")
 	return runCommand("launchctl", "unload", "-w", plistPath)
 }
 
-func (m *Manager) statusDarwin() error {
+func (m *Manager) status() error {
 	return runCommand("launchctl", "list", m.config.Name)
 }

@@ -25,17 +25,17 @@ var (
 	ErrInternal         = errors.New("Internal Server Error") // 500
 )
 
-type ErrTooManyRequests struct {
+type RateLimitError struct {
 	s          string
 	RetryAfter int64
 }
 
-func (e *ErrTooManyRequests) Error() string {
+func (e *RateLimitError) Error() string {
 	return e.s
 }
 
-func ErrTooManyRequestsNew(retryAfter int64) *ErrTooManyRequests {
-	return &ErrTooManyRequests{
+func ErrTooManyRequestsNew(retryAfter int64) *RateLimitError {
+	return &RateLimitError{
 		s:          "Too Many Requests",
 		RetryAfter: retryAfter,
 	}

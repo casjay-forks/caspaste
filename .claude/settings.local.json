@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod tidy:*)",
+      "Bash(grep:*)",
+      "Bash(make clean:*)",
+      "Bash(make build:*)",
+      "Bash(timeout 120 sh:*)",
+      "Bash(ldd:*)",
+      "Bash(test-build/caspaste-linux-amd64:*)",
+      "Bash(docker build:*)",
+      "Bash(docker run:*)",
+      "Bash(docker rmi:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

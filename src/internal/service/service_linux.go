@@ -32,7 +32,7 @@ RestartSec=5
 WantedBy=multi-user.target
 `
 
-func (m *Manager) installLinux() error {
+func (m *Manager) install() error {
 	servicePath := filepath.Join("/etc/systemd/system", m.config.Name+".service")
 
 	content := fmt.Sprintf(systemdTemplate,
@@ -60,7 +60,7 @@ func (m *Manager) installLinux() error {
 	return nil
 }
 
-func (m *Manager) uninstallLinux() error {
+func (m *Manager) uninstall() error {
 	if err := runCommand("systemctl", "disable", m.config.Name); err != nil {
 		fmt.Printf("Warning: failed to disable service: %v\n", err)
 	}
@@ -82,14 +82,14 @@ func (m *Manager) uninstallLinux() error {
 	return nil
 }
 
-func (m *Manager) controlLinux(action string) error {
+func (m *Manager) control(action string) error {
 	return runCommand("systemctl", action, m.config.Name)
 }
 
-func (m *Manager) disableLinux() error {
+func (m *Manager) disable() error {
 	return runCommand("systemctl", "disable", m.config.Name)
 }
 
-func (m *Manager) statusLinux() error {
+func (m *Manager) status() error {
 	return runCommand("systemctl", "status", m.config.Name)
 }

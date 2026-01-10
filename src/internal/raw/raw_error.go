@@ -21,7 +21,7 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 	var errCode int
 
 	// Dectect error
-	var eTmp429 *netshare.ErrTooManyRequests
+	var eTmp429 *netshare.RateLimitError
 
 	if e == storage.ErrNotFoundID && e == netshare.ErrNotFound {
 		errCode = 404

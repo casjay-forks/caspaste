@@ -36,7 +36,7 @@ load_rc_config $name
 run_rc_command "$1"
 `
 
-func (m *Manager) installBSD() error {
+func (m *Manager) install() error {
 	rcPath := filepath.Join("/usr/local/etc/rc.d", m.config.Name)
 
 	content := fmt.Sprintf(rcTemplate,
@@ -68,7 +68,7 @@ func (m *Manager) installBSD() error {
 	return nil
 }
 
-func (m *Manager) uninstallBSD() error {
+func (m *Manager) uninstall() error {
 	rcPath := filepath.Join("/usr/local/etc/rc.d", m.config.Name)
 
 	// Stop service
@@ -84,15 +84,15 @@ func (m *Manager) uninstallBSD() error {
 	return nil
 }
 
-func (m *Manager) controlBSD(action string) error {
+func (m *Manager) control(action string) error {
 	return runCommand("service", m.config.Name, action)
 }
 
-func (m *Manager) disableBSD() error {
+func (m *Manager) disable() error {
 	fmt.Printf("Please manually set '%s_enable=\"NO\"' in /etc/rc.conf\n", m.config.Name)
 	return runCommand("service", m.config.Name, "stop")
 }
 
-func (m *Manager) statusBSD() error {
+func (m *Manager) status() error {
 	return runCommand("service", m.config.Name, "status")
 }

@@ -32,7 +32,7 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 	}
 
 	// Dectect error
-	var eTmp429 *netshare.ErrTooManyRequests
+	var eTmp429 *netshare.RateLimitError
 
 	if e == netshare.ErrBadRequest {
 		errData.Code = 400
