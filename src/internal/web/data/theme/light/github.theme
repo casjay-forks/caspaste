@@ -20,7 +20,7 @@ color.Element          = #F6F8FA
 color.Red  = #D1242F
 color.Grey = #656D76
 
-color.Border = #D1D9E0
+color.Border = #8A94A0
 color.Link   = #0969DA
 
 color.Button           = #F6F8FA

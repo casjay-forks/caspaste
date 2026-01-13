@@ -18,17 +18,17 @@ color.FocusOutline     = #2196F3
 color.Element          = #EEEEEE
 
 color.Red  = #F44336
-color.Grey = #757575
+color.Grey = #6E6E6E
 
-color.Border = #E0E0E0
-color.Link   = #1976D2
+color.Border = #888888
+color.Link   = #1565C0
 
 color.Button           = #E0E0E0
 color.ButtonHover      = #2196F3
 color.ButtonFont       = #212121
 color.ButtonGreen      = #4CAF50
 color.ButtonGreenHover = #66BB6A
-color.ButtonGreenFont  = #FFFFFF
+color.ButtonGreenFont  = #212121
 
 color.InputHover       = #BDBDBD
-color.InputPlaceholder = #9E9E9E
+color.InputPlaceholder = #686868

@@ -10,17 +10,17 @@ highlight.Theme = onedark
 color.Font             = #ABB2BF
 color.SVG              = #ABB2BF
 color.BackgroundBody   = #282C34
-color.Header           = #61AFEF
-color.HeaderFont       = #ABB2BF
+color.Header           = #282C34
+color.HeaderFont       = #FFFFFF
 color.Article          = #2C323C
 color.BackgroundBlack  = #21252B
 color.FocusOutline     = #C678DD
 color.Element          = #3E4451
 
 color.Red  = #E06C75
-color.Grey = #5C6370
+color.Grey = #9BA3B0
 
-color.Border = #3E4451
+color.Border = #6E7581
 color.Link   = #61AFEF
 
 color.Button           = #3E4451
@@ -31,4 +31,4 @@ color.ButtonGreenHover = #56B6C2
 color.ButtonGreenFont  = #282C34
 
 color.InputHover       = #3E4451
-color.InputPlaceholder = #5C6370
+color.InputPlaceholder = #B0B8C2

@@ -7,28 +7,28 @@ font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
 
 highlight.Theme = solarized-light
 
-color.Font             = #657B83
-color.SVG              = #657B83
+color.Font             = #073642
+color.SVG              = #073642
 color.BackgroundBody   = #FDF6E3
-color.Header           = #268BD2
-color.HeaderFont       = #FDF6E3
+color.Header           = #33A4E6
+color.HeaderFont       = #002B36
 color.Article          = #EEE8D5
 color.BackgroundBlack  = #FDF6E3
 color.FocusOutline     = #268BD2
-color.Element          = #EEE8D5
+color.Element          = #E4DCCF
 
 color.Red  = #DC322F
-color.Grey = #93A1A1
+color.Grey = #3E5460
 
-color.Border = #EEE8D5
-color.Link   = #268BD2
+color.Border = #8A8078
+color.Link   = #1265A8
 
-color.Button           = #EEE8D5
+color.Button           = #E4DCCF
 color.ButtonHover      = #268BD2
-color.ButtonFont       = #657B83
+color.ButtonFont       = #073642
 color.ButtonGreen      = #859900
 color.ButtonGreenHover = #719E07
-color.ButtonGreenFont  = #FDF6E3
+color.ButtonGreenFont  = #002B36
 
-color.InputHover       = #93A1A1
-color.InputPlaceholder = #93A1A1
+color.InputHover       = #D9D2C2
+color.InputPlaceholder = #445964

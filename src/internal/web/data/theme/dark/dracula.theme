@@ -18,9 +18,9 @@ color.FocusOutline     = #BD93F9
 color.Element          = #383A4A
 
 color.Red  = #FF5555
-color.Grey = #6272A4
+color.Grey = #9BA8D0
 
-color.Border = #44475A
+color.Border = #676A82
 color.Link   = #8BE9FD
 
 color.Button           = #44475A
@@ -31,4 +31,4 @@ color.ButtonGreenHover = #69FF94
 color.ButtonGreenFont  = #282A36
 
 color.InputHover       = #4A4D61
-color.InputPlaceholder = #6272A4
+color.InputPlaceholder = #A3AEC8

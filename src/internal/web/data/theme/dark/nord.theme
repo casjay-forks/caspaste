@@ -10,7 +10,7 @@ highlight.Theme = nord
 color.Font             = #ECEFF4
 color.SVG              = #ECEFF4
 color.BackgroundBody   = #2E3440
-color.Header           = #5E81AC
+color.Header           = #2E3440
 color.HeaderFont       = #ECEFF4
 color.Article          = #3B4252
 color.BackgroundBlack  = #2E3440
@@ -18,9 +18,9 @@ color.FocusOutline     = #88C0D0
 color.Element          = #434C5E
 
 color.Red  = #BF616A
-color.Grey = #4C566A
+color.Grey = #A5AFB8
 
-color.Border = #4C566A
+color.Border = #747E92
 color.Link   = #88C0D0
 
 color.Button           = #4C566A
@@ -31,4 +31,4 @@ color.ButtonGreenHover = #8FBCBB
 color.ButtonGreenFont  = #2E3440
 
 color.InputHover       = #4C566A
-color.InputPlaceholder = #4C566A
+color.InputPlaceholder = #B5BDC9

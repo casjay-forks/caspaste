@@ -11,17 +11,17 @@ color.Font             = #EBDBB2
 color.SVG              = #EBDBB2
 color.BackgroundBody   = #282828
 color.Header           = #458588
-color.HeaderFont       = #EBDBB2
+color.HeaderFont       = #FFFFFF
 color.Article          = #3C3836
 color.BackgroundBlack  = #1D2021
 color.FocusOutline     = #83A598
 color.Element          = #504945
 
 color.Red  = #FB4934
-color.Grey = #928374
+color.Grey = #C7B89A
 
-color.Border = #504945
-color.Link   = #83A598
+color.Border = #75716D
+color.Link   = #A3C5B8
 
 color.Button           = #504945
 color.ButtonHover      = #665C54
@@ -31,4 +31,4 @@ color.ButtonGreenHover = #98971A
 color.ButtonGreenFont  = #282828
 
 color.InputHover       = #504945
-color.InputPlaceholder = #928374
+color.InputPlaceholder = #D4C5A9
