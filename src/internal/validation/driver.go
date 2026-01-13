@@ -63,16 +63,54 @@ func NormalizeDriver(driver string) string {
 	return driver
 }
 
-// NormalizeConnectionString normalizes connection strings
-// sqlite:///path → /path
-// Other drivers: keep as-is
+// NormalizeConnectionString normalizes connection strings to driver-specific format
+// - sqlite://path → /path
+// - mysql://user:pass@host:port/db → user:pass@tcp(host:port)/db
+// - postgres://... stays as-is (pq driver supports it)
 func NormalizeConnectionString(driver, source string) string {
-	// Remove sqlite:// prefix
-	if driver == "sqlite" && strings.HasPrefix(source, "sqlite://") {
-		return strings.TrimPrefix(source, "sqlite://")
+	// SQLite: Remove sqlite:// prefix
+	if driver == "sqlite" {
+		if strings.HasPrefix(source, "sqlite://") {
+			return strings.TrimPrefix(source, "sqlite://")
+		}
+		if strings.HasPrefix(source, "sqlite3://") {
+			return strings.TrimPrefix(source, "sqlite3://")
+		}
+		return source
 	}
-	if driver == "sqlite" && strings.HasPrefix(source, "sqlite3://") {
-		return strings.TrimPrefix(source, "sqlite3://")
+
+	// PostgreSQL: postgres:// URLs are supported by lib/pq driver, keep as-is
+	if driver == "postgres" {
+		return source
+	}
+
+	// MySQL/MariaDB: Convert mysql://user:pass@host:port/db to user:pass@tcp(host:port)/db
+	// The go-sql-driver/mysql expects tcp() format, not URL format
+	if driver == "mysql" {
+		// Convert mysql://user:pass@host:port/db → user:pass@tcp(host:port)/db
+		if strings.HasPrefix(source, "mysql://") || strings.HasPrefix(source, "mariadb://") {
+			source = strings.TrimPrefix(source, "mysql://")
+			source = strings.TrimPrefix(source, "mariadb://")
+
+			// Parse: user:pass@host:port/db
+			if strings.Contains(source, "@") {
+				parts := strings.SplitN(source, "@", 2)
+				userPass := parts[0]
+				rest := parts[1]
+
+				// Extract host:port and /db
+				if strings.Contains(rest, "/") {
+					hostParts := strings.SplitN(rest, "/", 2)
+					hostPort := hostParts[0]
+					dbname := "/" + hostParts[1]
+
+					// Return as: user:pass@tcp(host:port)/db
+					return userPass + "@tcp(" + hostPort + ")" + dbname
+				}
+			}
+		}
+
+		return source
 	}
 
 	return source

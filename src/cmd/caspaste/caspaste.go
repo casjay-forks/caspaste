@@ -197,8 +197,72 @@ func ensureDirectories(dataDir, configDir, dbDir, backupDir, cacheDir, logsDir s
 	return nil
 }
 
+// formatDatabaseDisplay formats database info for display (masks sensitive data)
+// NEVER shows passwords - only driver type and hostname
+func formatDatabaseDisplay(driver, source string) string {
+	driver = strings.ToUpper(driver)
+
+	// URL format: postgres://, mysql://, mariadb://
+	// Format: scheme://user:password@host:port/db
+	if strings.Contains(source, "://") {
+		if strings.Contains(source, "@") {
+			parts := strings.Split(source, "@")
+			if len(parts) >= 2 {
+				hostPart := parts[1]
+				// Extract hostname before /
+				if strings.Contains(hostPart, "/") {
+					host := strings.Split(hostPart, "/")[0]
+					return fmt.Sprintf("%s (%s)", driver, host)
+				}
+				return fmt.Sprintf("%s (%s)", driver, hostPart)
+			}
+		}
+		return driver
+	}
+
+	// MySQL/MariaDB format: user:password@tcp(host:port)/dbname
+	// or: user:password@unix(/path/socket)/dbname
+	if strings.Contains(source, "@") {
+		parts := strings.Split(source, "@")
+		if len(parts) >= 2 {
+			// Extract host from tcp(host:port) or unix(/path)
+			hostPart := parts[1]
+
+			// tcp(host:port)/dbname → host:port
+			if strings.HasPrefix(hostPart, "tcp(") {
+				if idx := strings.Index(hostPart, ")"); idx > 0 {
+					host := hostPart[4:idx] // Extract content between tcp( and )
+					return fmt.Sprintf("%s (%s)", driver, host)
+				}
+			}
+
+			// unix(/path/socket) → unix socket
+			if strings.HasPrefix(hostPart, "unix(") {
+				return fmt.Sprintf("%s (unix socket)", driver)
+			}
+
+			// user:pass@host/db format (simple)
+			if strings.Contains(hostPart, "/") {
+				host := strings.Split(hostPart, "/")[0]
+				return fmt.Sprintf("%s (%s)", driver, host)
+			}
+
+			return fmt.Sprintf("%s (%s)", driver, hostPart)
+		}
+	}
+
+	// For file paths (SQLite), show driver and filename
+	if strings.Contains(source, "/") {
+		filename := source[strings.LastIndex(source, "/")+1:]
+		return fmt.Sprintf("%s (%s)", driver, filename)
+	}
+
+	// Fallback - just show driver
+	return driver
+}
+
 // printStartupBanner displays a formatted startup banner with server information
-func printStartupBanner(version, fqdn, title string, httpPort, httpsPort int) {
+func printStartupBanner(version, fqdn, title, database string, httpPort, httpsPort int) {
 	fmt.Println()
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
 	fmt.Printf("║  %-58s║\n", title)
@@ -220,7 +284,7 @@ func printStartupBanner(version, fqdn, title string, httpPort, httpsPort int) {
 	}
 	fmt.Println("╠════════════════════════════════════════════════════════════╣")
 	fmt.Println("║  User:        caspaste (UID:GID 642:642)                   ║")
-	fmt.Println("║  Database:    SQLite                                       ║")
+	fmt.Printf("║  Database:    %-45s║\n", database)
 	fmt.Println("║  Status:      Ready                                        ║")
 	fmt.Println("╚════════════════════════════════════════════════════════════╝")
 	fmt.Println()
@@ -1538,8 +1602,9 @@ func main() {
 		}
 	}
 
-	// Print startup banner
-	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, httpPort, httpsPort)
+	// Print startup banner with database info
+	dbDisplay := formatDatabaseDisplay(yamlCfg.Database.Driver, yamlCfg.Database.Source)
+	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, dbDisplay, httpPort, httpsPort)
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{
