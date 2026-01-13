@@ -725,15 +725,19 @@ func performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, filename 
 
 // setMaintenanceMode enables or disables maintenance mode
 func setMaintenanceMode(dataDir, mode string) error {
-	maintenanceFile := dataDir
-	if maintenanceFile == "" {
-		maintenanceFile = "."
+	// Ensure data directory exists
+	if dataDir == "" {
+		dataDir = "."
 	}
-	maintenanceFile = maintenanceFile + "/.maintenance"
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		return fmt.Errorf("failed to create data directory: %w", err)
+	}
+	
+	maintenanceFile := filepath.Join(dataDir, ".maintenance")
 
 	switch mode {
 	case "enabled", "enable", "on":
-		err := os.WriteFile(maintenanceFile, []byte("maintenance mode enabled"), 0644)
+		err := os.WriteFile(maintenanceFile, []byte("maintenance mode enabled\n"+time.Now().Format(time.RFC3339)), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to enable maintenance mode: %w", err)
 		}
@@ -742,10 +746,14 @@ func setMaintenanceMode(dataDir, mode string) error {
 		return nil
 
 	case "disabled", "disable", "off":
-		if err := os.Remove(maintenanceFile); err != nil && !os.IsNotExist(err) {
+		err := os.Remove(maintenanceFile)
+		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("failed to disable maintenance mode: %w", err)
 		}
 		fmt.Println("Maintenance mode: DISABLED")
+		if err != nil && os.IsNotExist(err) {
+			fmt.Println("(Maintenance mode was already disabled)")
+		}
 		return nil
 
 	default:
@@ -1087,6 +1095,12 @@ func main() {
 	}
 
 	// Merge cache/logs directories from CLI (override config if specified)
+	if *flagDataDir != "" {
+		yamlCfg.Directories.Data = *flagDataDir
+	}
+	if *flagConfigDir != "" {
+		yamlCfg.Directories.Config = *flagConfigDir
+	}
 	if *flagCacheDir != "" {
 		yamlCfg.Directories.Cache = *flagCacheDir
 	}
@@ -1357,6 +1371,16 @@ func main() {
 		}
 	}
 
+	// Save all determined directories to config NOW (before any privilege changes)
+	yamlCfg.Directories.Data = *flagDataDir
+	yamlCfg.Directories.Config = *flagConfigDir
+	yamlCfg.Directories.Db = dbDir
+	yamlCfg.Directories.Cache = cacheDir
+	yamlCfg.Directories.Logs = logsDir
+	if err := config.SaveYAMLConfig(configFilePath, yamlCfg); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to save directories to config: %v\n", err)
+	}
+
 	// Setup user (Linux/BSD/macOS only) - must be done before creating directories
 	var uid, gid int
 	if runtime.GOOS != "windows" {
@@ -1389,10 +1413,62 @@ func main() {
 		}
 	}
 
-	// Note: --status and --service handled earlier (line 804-861)
-	// Handle --maintenance command (exits after operation, needs backupDir)
+	// Note: --status and --service handled earlier (line 880-1036)
+	// Handle --maintenance command (reads from config, no flags needed)
 	if *flagMaintenance != "" {
-		handleMaintenanceCommand(*flagMaintenance, yamlCfg.Database.Driver, yamlCfg.Database.Source, *flagDataDir, *flagConfigDir, backupDir)
+		// Load config to get all paths
+		configPath := "./caspaste.yml"
+		if *flagConfigDir != "" {
+			configPath = *flagConfigDir + "/caspaste.yml"
+		} else {
+			// Try to find config in standard locations
+			if _, err := os.Stat("/etc/caspaste/caspaste.yml"); err == nil {
+				configPath = "/etc/caspaste/caspaste.yml"
+			} else if _, err := os.Stat("/config/caspaste.yml"); err == nil {
+				configPath = "/config/caspaste.yml"
+			}
+		}
+		
+		cfg, err := config.LoadYAMLConfig(configPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to load config for maintenance operation: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Config path: %s\n", configPath)
+			fmt.Fprintf(os.Stderr, "Maintenance operations require an existing configuration.\n")
+			os.Exit(1)
+		}
+		
+		// Determine directories from config
+		dataDir := *flagDataDir
+		if dataDir == "" {
+			dataDir = "/var/lib/caspaste"
+		}
+		
+		cfgDir := *flagConfigDir
+		if cfgDir == "" {
+			cfgDir = filepath.Dir(configPath)
+		}
+		
+		// Determine backup directory
+		backupDirPath := ""
+		if _, err := os.Stat("/mnt/Backups/caspaste"); err == nil {
+			backupDirPath = "/mnt/Backups/caspaste"
+		} else {
+			home := os.Getenv("HOME")
+			if home != "" {
+				backupDirPath = home + "/.local/backups/caspaste"
+			} else {
+				backupDirPath = dataDir + "/backups"
+			}
+		}
+		os.MkdirAll(backupDirPath, 0755)
+		
+		fmt.Printf("Using configuration from: %s\n", configPath)
+		fmt.Printf("Data directory: %s\n", dataDir)
+		fmt.Printf("Config directory: %s\n", cfgDir)
+		fmt.Printf("Backup directory: %s\n", backupDirPath)
+		fmt.Println()
+		
+		handleMaintenanceCommand(*flagMaintenance, cfg.Database.Driver, cfg.Database.Source, dataDir, cfgDir, backupDirPath)
 		return
 	}
 
@@ -1688,6 +1764,14 @@ func main() {
 		} else {
 			configFilePath = "./caspaste.yml"
 		}
+		
+		// Save all determined directories to config
+		yamlCfg.Directories.Data = *flagDataDir
+		yamlCfg.Directories.Config = filepath.Dir(configFilePath)
+		yamlCfg.Directories.Db = dbDir
+		yamlCfg.Directories.Cache = cacheDir
+		yamlCfg.Directories.Logs = logsDir
+		
 		if err := config.SaveYAMLConfig(configFilePath, yamlCfg); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to save port to config: %v\n", err)
 		} else {

@@ -90,8 +90,11 @@ type YAMLConfig struct {
 	} `yaml:"content"`
 
 	Directories struct {
-		Cache string `yaml:"cache"`
-		Logs  string `yaml:"logs"`
+		Data   string `yaml:"data"`
+		Config string `yaml:"config"`
+		Db     string `yaml:"db"`
+		Cache  string `yaml:"cache"`
+		Logs   string `yaml:"logs"`
 	} `yaml:"directories"`
 }
 
@@ -188,6 +191,9 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Content.Security = ""
 
 	// Directory defaults (platform-specific, empty = auto-detect)
+	defaultConfig.Directories.Data = ""
+	defaultConfig.Directories.Config = ""
+	defaultConfig.Directories.Db = ""
 	defaultConfig.Directories.Cache = ""
 	defaultConfig.Directories.Logs = ""
 

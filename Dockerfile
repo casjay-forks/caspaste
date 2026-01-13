@@ -85,5 +85,5 @@ EXPOSE 80
 # Use non-root user (created by the app itself)
 # The app drops privileges to caspaste:caspaste (UID:GID 642:642)
 
-ENTRYPOINT ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste", "--logs", "/var/log/caspaste"]
+CMD ["caspaste", "--config", "/config", "--data", "/data"]
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 CMD caspaste --status || exit 1
