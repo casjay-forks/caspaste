@@ -15,7 +15,7 @@ color.HeaderFont       = #F8F8F2
 color.Article          = #282A36
 color.BackgroundBlack  = #191A21
 color.FocusOutline     = #BD93F9
-color.Element          = #44475A
+color.Element          = #383A4A
 
 color.Red  = #FF5555
 color.Grey = #6272A4
@@ -30,5 +30,5 @@ color.ButtonGreen      = #50FA7B
 color.ButtonGreenHover = #69FF94
 color.ButtonGreenFont  = #282A36
 
-color.InputHover       = #6272A4
+color.InputHover       = #4A4D61
 color.InputPlaceholder = #6272A4

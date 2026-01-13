@@ -40,30 +40,74 @@ document.addEventListener("DOMContentLoaded", () => {
 	
 	var styleSheet = document.createElement("style");
 	styleSheet.innerText = `
+	.form-group {
+		position: relative;
+	}
+
 	#editor {
-		margin-left: 60px;
+		margin-left: 65px;
 		resize: none;
-		
-		width: calc(100% - 60px);
-		min-width: calc(100% - 60px);
-		max-width: calc(100% - 60px);
+		width: calc(100% - 65px);
+		min-width: calc(100% - 65px);
+		max-width: calc(100% - 65px);
+		line-height: 1.5;
+		padding: 0.875rem;
 	}
 
 	#editorLines {
 		display: flex;
 		user-select: none;
-
 		text-align: right;
 		position: absolute;
 		resize: none;
 		overflow-y: hidden;
-		width: 60px;
-		max-width: 60px;
-		min-width: 60px;
+		overflow-x: hidden;
+		width: 50px;
+		max-width: 50px;
+		min-width: 50px;
+		padding: 0.875rem 0.5rem;
+		padding-right: 0.75rem;
+		line-height: 1.5;
+		border-right: 2px solid;
+		background: transparent;
+		color: inherit;
+		opacity: 0.5;
+		pointer-events: none;
 	}
 
 	#editor:focus-visible, #editorLines:focus-visible {
 		outline: 0;
+	}
+	
+	.char-counter-container {
+		margin-top: 0.5rem;
+		text-align: right;
+		font-size: 0.875rem;
+		opacity: 0.7;
+	}
+	
+	.file-input {
+		display: none;
+	}
+	
+	.file-label {
+		display: inline-block;
+		padding: 0.75rem 1.5rem;
+		background: var(--color-element, #44475A);
+		color: var(--color-font, #F8F8F2);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+	
+	.file-label:hover {
+		background: var(--color-input-hover, #6272A4);
+	}
+	
+	.form-help {
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		opacity: 0.7;
 	}
 `;
 	document.head.appendChild(styleSheet);

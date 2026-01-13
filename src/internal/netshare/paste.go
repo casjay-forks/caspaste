@@ -30,8 +30,14 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		return "", 0, 0, err
 	}
 
-	// Read form
-	req.ParseMultipartForm(52428800) // 50MB max
+	// Parse form data (both URL-encoded and multipart)
+	// ParseForm handles application/x-www-form-urlencoded
+	err = req.ParseForm()
+	if err != nil {
+		return "", 0, 0, err
+	}
+	// ParseMultipartForm handles multipart/form-data (includes file uploads)
+	req.ParseMultipartForm(52428800) // 50MB max - ignores error as it's optional for non-multipart
 
 	paste := storage.Paste{
 		Title:       req.PostFormValue("title"),
