@@ -99,9 +99,9 @@ type Data struct {
 	UiDefaultTheme    string
 }
 
-// loadContentWithOverride loads content from embedded FS or overrides from file
+// LoadContentWithOverride loads content from embedded FS or overrides from file
 // If overridePath is specified and file exists, uses that; otherwise uses embedded
-func loadContentWithOverride(embeddedPath, overridePath string) (string, error) {
+func LoadContentWithOverride(embeddedPath, overridePath string) (string, error) {
 	var content []byte
 	var err error
 
@@ -325,6 +325,11 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Server", config.Software+"/"+data.Version)
 
 	switch req.URL.Path {
+	// Health checks
+	case "/healthz":
+		err = data.healthzHand(rw, req)
+	case "/api/healthz":
+		err = data.apiHealthzHand(rw, req)
 	// Search engines
 	case "/robots.txt":
 		err = data.robotsTxtHand(rw, req)

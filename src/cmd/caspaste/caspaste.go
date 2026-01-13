@@ -1258,41 +1258,35 @@ func main() {
 		exitOnError(fmt.Errorf("failed to determine server address: %w", err))
 	}
 
-	// Load content with embedded defaults + variable replacement
-	// Content files: embedded defaults in src/internal/web/data/
-	// Can be overridden via config paths
-	serverAbout := ""
-	if yamlCfg.Content.About != "" {
-		serverAbout, err = readFile(yamlCfg.Content.About)
-		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.about: %w", err))
-		}
+	// Load content with embedded defaults + file override
+	// Embedded files in src/internal/web/data/ are used by default
+	// Config paths override embedded content if specified and file exists
+	serverAbout, err := web.LoadContentWithOverride("data/about.txt", yamlCfg.Content.About)
+	if err != nil {
+		// Log warning but continue with empty content
+		fmt.Fprintf(os.Stderr, "Warning: failed to load about content: %v\n", err)
+		serverAbout = ""
 	}
 
-	serverRules := ""
-	if yamlCfg.Content.Rules != "" {
-		serverRules, err = readFile(yamlCfg.Content.Rules)
-		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.rules: %w", err))
-		}
+	serverRules, err := web.LoadContentWithOverride("data/rules.txt", yamlCfg.Content.Rules)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load rules content: %v\n", err)
+		serverRules = ""
 	}
 
-	serverTermsOfUse := ""
-	if yamlCfg.Content.Terms != "" {
-		if serverRules == "" {
-			exitOnError(errors.New("content.terms requires content.rules to also be set"))
-		}
-		serverTermsOfUse, err = readFile(yamlCfg.Content.Terms)
-		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.terms: %w", err))
-		}
+	serverTermsOfUse, err := web.LoadContentWithOverride("data/terms.txt", yamlCfg.Content.Terms)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load terms content: %v\n", err)
+		serverTermsOfUse = ""
 	}
 
+	// security.txt is auto-generated, not embedded
 	securityTxt := ""
 	if yamlCfg.Content.Security != "" {
 		securityTxt, err = readFile(yamlCfg.Content.Security)
 		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.security: %w", err))
+			fmt.Fprintf(os.Stderr, "Warning: failed to read content.security: %v\n", err)
+			securityTxt = ""
 		}
 	}
 
@@ -1453,9 +1447,6 @@ func main() {
 	var httpPort, httpsPort int
 	var configFilePath string
 
-	// Note: httpsPort is parsed but not currently used (reserved for future HTTPS support)
-	_ = httpsPort
-
 	// Check for PORT environment variable override
 	portEnv := os.Getenv("PORT")
 	if portEnv == "" {
@@ -1510,13 +1501,36 @@ func main() {
 	}
 	*flagAddress = net.JoinHostPort(host, strconv.Itoa(httpPort))
 
-	// Create listener (must be done as root for ports < 1024 on Unix)
-	listener, err := net.Listen("tcp", *flagAddress)
+	// Create HTTP listener (must be done as root for ports < 1024 on Unix)
+	httpAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpPort))
+	httpListener, err := net.Listen("tcp", httpAddr)
 	if err != nil {
-		exitOnError(fmt.Errorf("failed to bind to %s: %w", *flagAddress, err))
+		exitOnError(fmt.Errorf("failed to bind HTTP to %s: %w", httpAddr, err))
 	}
 
-	// Drop privileges after binding to port (uid/gid set earlier during directory creation)
+	// Create HTTPS listener if dual port configured
+	var httpsListener net.Listener
+	var tlsCert *validation.TLSCertPaths
+	if httpsPort > 0 {
+		httpsAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpsPort))
+		httpsListener, err = net.Listen("tcp", httpsAddr)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to bind HTTPS to %s: %w", httpsAddr, err))
+		}
+
+		// Auto-detect Let's Encrypt certificates
+		tlsCert, err = validation.FindLetsEncryptCerts(fqdn)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: HTTPS port configured but no TLS cert found: %v\n", err)
+			fmt.Fprintf(os.Stderr, "HTTPS server will not start. Configure TLS cert or remove HTTPS port.\n")
+			httpsListener.Close()
+			httpsListener = nil
+		} else {
+			fmt.Printf("Found TLS certificate for domain: %s\n", tlsCert.Domain)
+		}
+	}
+
+	// Drop privileges after binding to ports (uid/gid set earlier during directory creation)
 	if runtime.GOOS != "windows" && uid > 0 && gid > 0 {
 		if err := privilege.DropPrivileges(uid, gid); err != nil {
 			log.Error(fmt.Errorf("failed to drop privileges: %w", err))
@@ -1540,17 +1554,41 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
-	// Start server in a goroutine using the already-created listener
-	serverErrors := make(chan error, 1)
+	// Start HTTP server in a goroutine
+	httpErrors := make(chan error, 1)
 	go func() {
 		displayAddr := getDisplayAddress(*flagAddress)
 		log.Info("Run HTTP server on " + displayAddr)
-		serverErrors <- srv.Serve(listener)
+		httpErrors <- srv.Serve(httpListener)
 	}()
+
+	// Start HTTPS server if configured and cert available
+	var httpsErrors chan error
+	var srvHTTPS *http.Server
+	if httpsListener != nil && tlsCert != nil {
+		httpsErrors = make(chan error, 1)
+		srvHTTPS = &http.Server{
+			Handler:      handler,
+			ReadTimeout:  15 * time.Second,
+			WriteTimeout: 15 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		}
+
+		go func() {
+			httpsAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpsPort))
+			log.Info("Run HTTPS server on " + httpsAddr)
+			httpsErrors <- srvHTTPS.ServeTLS(httpsListener, tlsCert.CertFile, tlsCert.KeyFile)
+		}()
+	}
 
 	// Wait for interrupt signal or server error
 	select {
-	case err := <-serverErrors:
+	case err := <-httpErrors:
+		if err != nil && err != http.ErrServerClosed {
+			exitOnError(err)
+		}
+
+	case err := <-httpsErrors:
 		if err != nil && err != http.ErrServerClosed {
 			exitOnError(err)
 		}
@@ -1562,11 +1600,17 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		// Attempt graceful shutdown
+		// Attempt graceful shutdown for both servers
 		if err := srv.Shutdown(ctx); err != nil {
-			log.Error(fmt.Errorf("server shutdown error: %w", err))
-			// Force close if graceful shutdown fails
+			log.Error(fmt.Errorf("HTTP server shutdown error: %w", err))
 			srv.Close()
+		}
+
+		if srvHTTPS != nil {
+			if err := srvHTTPS.Shutdown(ctx); err != nil {
+				log.Error(fmt.Errorf("HTTPS server shutdown error: %w", err))
+				srvHTTPS.Close()
+			}
 		}
 
 		log.Info("Server stopped")

@@ -31,6 +31,7 @@ services:
       - CASPASTE_NEW_PASTES_PER_15MIN=60
       - CASPASTE_NEW_PASTES_PER_1HOUR=120
       - CASPASTE_DB_DRIVER=sqlite
+      # PORT is set to 80 in Dockerfile ENV, override only if needed
     ports:
       - '172.17.0.1:59093:80'
     volumes:

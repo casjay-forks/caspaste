@@ -37,10 +37,11 @@ COPY --from=builder /caspaste /usr/local/bin/caspaste
 WORKDIR /data
 
 # Set environment variables for Docker deployment
-ENV CASPASTE_DB_DIR=/data/db/sqlite
+ENV CASPASTE_DB_DIR=/data/db/sqlite \
+    PORT=80
 
-# Expose default port range
-EXPOSE 64000-65535
+# Expose HTTP port
+EXPOSE 80
 
 # Health check - uses builtin --status flag
 # Exit codes: 0=healthy, 1=unhealthy, 2=degraded

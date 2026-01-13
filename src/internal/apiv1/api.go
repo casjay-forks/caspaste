@@ -84,7 +84,10 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Server", config.Software+"/"+data.Version)
 
 	switch req.URL.Path {
-	// Search engines
+	// Health check
+	case "/api/healthz":
+		err = data.healthzHand(rw, req)
+	// API v1 endpoints
 	case "/api/v1/new":
 		err = data.newHand(rw, req)
 	case "/api/v1/get":
