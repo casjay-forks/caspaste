@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -861,18 +862,104 @@ func main() {
 	})
 
 	// Special commands (don't require full setup)
+	flagHelp := c.AddBoolVar("help", "Show help message and exit")
+	flagVersion := c.AddBoolVar("version", "Show version information and exit")
+	flagDaemon := c.AddBoolVar("daemon", "Start in background (daemon mode)")
+	flagDebug := c.AddBoolVar("debug", "Enable debug logging to debug.log")
 	flagStatus := c.AddBoolVar("status", "Check server health and database connectivity. Exit codes: 0=healthy, 1=unhealthy, 2=error")
-	flagService := c.AddStringVar("service", "", "Service management: start, stop, restart, reload, --install, --uninstall, --disable, --help", nil)
+	flagService := c.AddStringVar("service", "", "Service management: start, stop, restart, reload, install, uninstall, disable, help", nil)
 	flagMaintenance := c.AddStringVar("maintenance", "", "Maintenance mode: backup [filename], restore [filename], mode {enabled|disabled}", nil)
 
 	// Directory flags
 	flagPort := c.AddStringVar("port", "", "Port to listen on (alternative to specifying in --address). Examples: 80, 8080, 443.", nil)
+	flagLog := c.AddStringVar("log", "", "Log directory for access.log and debug.log. Default: /var/log/caspaste", nil)
 	flagDataDir := c.AddStringVar("data", "", "Data directory. Examples: /var/lib/caspaste, ~/.local/share/caspaste", nil)
 	flagConfigDir := c.AddStringVar("config", "", "Configuration directory. Examples: /etc/caspaste, ~/.config/caspaste", nil)
 	flagCacheDir := c.AddStringVar("cache", "", "Cache directory. Examples: /var/cache/caspaste, ~/.cache/caspaste", nil)
-	flagLogsDir := c.AddStringVar("logs", "", "Logs directory. Examples: /var/log/caspaste, ~/.local/log/caspaste", nil)
+	flagLogsDir := c.AddStringVar("logs", "", "Logs directory (alias for --log). Examples: /var/log/caspaste, ~/.local/log/caspaste", nil)
 
 	c.Parse()
+
+	// Handle --help first
+	if *flagHelp {
+		fmt.Printf("CasPaste v%s - Self-hosted pastebin service\n\n", Version)
+		fmt.Println("Usage: caspaste [flags]")
+		fmt.Println("\nCommon Flags:")
+		fmt.Println("  --help              Show this help message")
+		fmt.Println("  --version           Show version information")
+		fmt.Println("  --daemon            Start in background (daemon mode)")
+		fmt.Println("  --debug             Enable debug logging")
+		fmt.Println("\nServer Configuration:")
+		fmt.Println("  --address ADDR      Listen address (default: :80)")
+		fmt.Println("  --port PORT         Listen port (alternative to --address)")
+		fmt.Println("\nDirectories:")
+		fmt.Println("  --data DIR          Data directory")
+		fmt.Println("  --config DIR        Configuration directory")
+		fmt.Println("  --log DIR           Log directory")
+		fmt.Println("  --cache DIR         Cache directory")
+		fmt.Println("\nCommands:")
+		fmt.Println("  --status            Check server health")
+		fmt.Println("  --service CMD       Service management (start|stop|restart|reload|install|uninstall|disable)")
+		fmt.Println("  --maintenance CMD   Maintenance operations (backup|restore|mode)")
+		fmt.Println("\nFor more information: https://github.com/casjay-forks/caspaste")
+		os.Exit(0)
+	}
+
+	// Handle --version
+	if *flagVersion {
+		fmt.Printf("CasPaste v%s\n", Version)
+		fmt.Printf("Built with Go %s on %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
+		os.Exit(0)
+	}
+
+	// Setup log directory (needed early for daemon mode)
+	if *flagLog == "" && *flagLogsDir != "" {
+		*flagLog = *flagLogsDir
+	}
+	if *flagLog == "" {
+		*flagLog = "/var/log/caspaste"
+	}
+	os.MkdirAll(*flagLog, 0755)
+
+	// Handle --daemon mode (fork process and exit)
+	if *flagDaemon {
+		if *flagDataDir == "" {
+			*flagDataDir = "/var/lib/caspaste"
+		}
+		os.MkdirAll(*flagDataDir, 0755)
+		
+		// Build args without --daemon flag
+		args := []string{}
+		for _, arg := range os.Args[1:] {
+			if arg != "--daemon" && arg != "-daemon" {
+				args = append(args, arg)
+			}
+		}
+		
+		// Start child process
+		cmd := exec.Command(os.Args[0], args...)
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		cmd.Stdin = nil
+		
+		if err := cmd.Start(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to start daemon: %v\n", err)
+			os.Exit(1)
+		}
+		
+		// Write PID file
+		pidFile := filepath.Join(*flagDataDir, "caspaste.pid")
+		if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d\n", cmd.Process.Pid)), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to write PID file: %v\n", err)
+		}
+		
+		fmt.Printf("CasPaste started in background (PID: %d)\n", cmd.Process.Pid)
+		fmt.Printf("Logs: %s/access.log\n", *flagLog)
+		if *flagDebug {
+			fmt.Printf("Debug: %s/debug.log\n", *flagLog)
+		}
+		os.Exit(0)
+	}
 
 	// Declare yamlCfg at function scope (used throughout)
 	var yamlCfg *config.YAMLConfig
@@ -1005,6 +1092,10 @@ func main() {
 	}
 	if *flagLogsDir != "" {
 		yamlCfg.Directories.Logs = *flagLogsDir
+	}
+	// Use --log flag value if provided (takes precedence over --logs)
+	if *flagLog != "" {
+		yamlCfg.Directories.Logs = *flagLog
 	}
 
 	// Auto-detect driver from connection string if not specified
@@ -1402,8 +1493,47 @@ func main() {
 	yamlCfg.Server.Administrator.From = adminFrom
 	yamlCfg.Web.Security.Contact.Email = securityEmail
 
-	// Settings
+	// Create access log file (keep open for application lifetime)
+	accessLogPath := filepath.Join(logsDir, "access.log")
+	accessLogFile, err := os.OpenFile(accessLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		exitOnError(fmt.Errorf("failed to open access.log: %w", err))
+	}
+	// Note: Do NOT defer close - these files must stay open for the entire application lifetime
+
+	// Create logger with appropriate outputs
+	var logWriter io.Writer
+	var debugLogFile *os.File
+	if *flagDebug {
+		debugLogPath := filepath.Join(logsDir, "debug.log")
+		debugLogFile, err = os.OpenFile(debugLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to open debug.log: %w", err))
+		}
+		// Note: Do NOT defer close - these files must stay open for the entire application lifetime
+		
+		// Write to access log, debug log, and stdout
+		logWriter = io.MultiWriter(accessLogFile, debugLogFile, os.Stdout)
+	} else {
+		logWriter = io.MultiWriter(accessLogFile, os.Stdout)
+	}
+	
 	log := logger.New("2006/01/02 15:04:05")
+	log.SetWriter(logWriter)
+	
+	if *flagDebug {
+		log.Info("Debug logging enabled: " + filepath.Join(logsDir, "debug.log"))
+	}
+	log.Info("Access logging enabled: " + accessLogPath)
+	
+	// Setup cleanup handler to close log files on shutdown
+	cleanupLogFiles := func() {
+		accessLogFile.Close()
+		if debugLogFile != nil {
+			debugLogFile.Close()
+		}
+	}
+	defer cleanupLogFiles()
 
 	db, err := storage.NewPool(yamlCfg.Database.Driver, yamlCfg.Database.Source, yamlCfg.Database.MaxOpenConns, yamlCfg.Database.MaxIdleConns, *flagDataDir)
 	if err != nil {
