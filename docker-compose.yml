@@ -34,8 +34,12 @@ services:
     ports:
       - '172.17.0.1:59093:80'
     volumes:
-      - './rootfs/data:/data'
-      - './rootfs/config:/config'
+      - './rootfs/config/caspaste:/config/caspaste'
+      - './rootfs/data/caspaste:/data/caspaste'
+      - './rootfs/data/db/sqlite:/data/db/sqlite'
+      - './rootfs/data/backups:/data/backups'
+      - './rootfs/cache:/cache'
+      - './rootfs/logs:/logs'
     networks:
       - caspaste
 

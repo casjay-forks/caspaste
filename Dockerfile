@@ -39,24 +39,26 @@ WORKDIR /data
 # Set environment variables for Docker deployment
 ENV CASPASTE_DB_DIR=/data/db/sqlite
 
-# Expose default port
-EXPOSE 80
+# Expose default port range
+EXPOSE 64000-65535
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+# Health check - uses builtin --status flag
+# Exit codes: 0=healthy, 1=unhealthy, 2=degraded
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD caspaste --config /config/caspaste --data /data/caspaste --status
 
 # Entrypoint with default arguments
 # Container Paths:
-#   - Config: /config/caspaste.yml (auto-generated on first run)
-#   - Data: /data/ (application data)
+#   - Config: /config/caspaste/caspaste.yml (auto-generated)
+#   - Data: /data/caspaste/ (application data)
 #   - Database: /data/db/sqlite/caspaste.db (SQLite)
 #   - Backups: /data/backups/
-#   - Cache: Auto-detected
-#   - Logs: Auto-detected
+#   - Cache: /cache/
+#   - Logs: /logs/
 # Host Mounts (from docker-compose.yml):
-#   - ./rootfs/data:/data
-#   - ./rootfs/config:/config (optional)
+#   - ./rootfs/config/caspaste:/config/caspaste
+#   - ./rootfs/data/caspaste:/data/caspaste
+#   - ./rootfs/data/db/sqlite:/data/db/sqlite
 # Privilege Escalation:
 #   - Creates user caspaste (UID:GID 642:642)
 #   - Binds to port as root
@@ -64,4 +66,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Security:
 #   - Auto-trusts reverse proxy headers from private IPs
 #   - Prevents IP spoofing from public IPs
-ENTRYPOINT ["caspaste", "--config", "/config", "--data", "/data"]
+ENTRYPOINT ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste"]

@@ -798,6 +798,70 @@ func main() {
 
 	c.Parse()
 
+	// Declare yamlCfg at function scope (used throughout)
+	var yamlCfg *config.YAMLConfig
+
+	// Handle --status command FIRST (health check - must exit before port binding)
+	if *flagStatus {
+
+		// Minimal config loading for health check
+		if *flagConfigDir != "" {
+			os.MkdirAll(*flagConfigDir, 0755)
+		}
+
+		configPath := "./caspaste.yml"
+		if *flagConfigDir != "" {
+			configPath = *flagConfigDir + "/caspaste.yml"
+		}
+
+		cfg, err := config.LoadYAMLConfig(configPath)
+		if err != nil {
+			// Config doesn't exist, create default
+			config.GenerateDefaultYAMLConfig(configPath)
+			cfg, _ = config.LoadYAMLConfig(configPath)
+		}
+
+		// Apply env overrides and normalize
+		config.ApplyEnvironmentOverrides(cfg)
+		cfg.Database.Driver = validation.NormalizeDriver(cfg.Database.Driver)
+
+		// Process SQLite path
+		if cfg.Database.Driver == "sqlite" && !strings.HasPrefix(cfg.Database.Source, "/") && *flagDataDir != "" {
+			dbDir := os.Getenv("CASPASTE_DB_DIR")
+			if dbDir == "" {
+				dbDir = *flagDataDir + "/db"
+			}
+			cfg.Database.Source = dbDir + "/caspaste.db"
+		}
+
+		// Run health check and exit
+		checkStatus(cfg.Database.Driver, cfg.Database.Source, *flagAddress)
+		os.Exit(0) // Explicit exit if checkStatus doesn't
+	}
+
+	// Handle --service command early (before heavy setup)
+	if *flagService != "" {
+		// Quick config load
+		if *flagConfigDir != "" {
+			os.MkdirAll(*flagConfigDir, 0755)
+		}
+
+		configPath := "./caspaste.yml"
+		if *flagConfigDir != "" {
+			configPath = *flagConfigDir + "/caspaste.yml"
+		}
+
+		cfg, err := config.LoadYAMLConfig(configPath)
+		if err != nil {
+			config.GenerateDefaultYAMLConfig(configPath)
+			cfg, _ = config.LoadYAMLConfig(configPath)
+		}
+
+		config.ApplyEnvironmentOverrides(cfg)
+		handleServiceCommand(*flagService, *flagAddress, cfg.Database.Source, *flagDataDir, *flagConfigDir)
+		// handleServiceCommand calls os.Exit() - this line never reached
+	}
+
 	// Create config directory first if specified (needed before generating config file)
 	if *flagConfigDir != "" {
 		if err := os.MkdirAll(*flagConfigDir, 0755); err != nil {
@@ -806,7 +870,7 @@ func main() {
 	}
 
 	// Try to load config file from config directory or current directory
-	var yamlCfg *config.YAMLConfig
+	// (yamlCfg already declared earlier for --status/--service early exit)
 	configPaths := []string{}
 	if *flagConfigDir != "" {
 		configPaths = append(configPaths, *flagConfigDir+"/caspaste.yml", *flagConfigDir+"/caspaste.yaml")
@@ -867,8 +931,21 @@ func main() {
 		yamlCfg.Directories.Logs = *flagLogsDir
 	}
 
+	// Auto-detect driver from connection string if not specified
+	if yamlCfg.Database.Driver == "" {
+		detectedDriver, err := validation.DetectDriver(yamlCfg.Database.Source)
+		if err != nil {
+			exitOnError(fmt.Errorf("could not detect database driver: %w (specify database.driver in config)", err))
+		}
+		yamlCfg.Database.Driver = detectedDriver
+		fmt.Printf("Auto-detected database driver: %s\n", detectedDriver)
+	}
+
 	// Normalize database driver name (sqlite3 → sqlite, mariadb → mysql)
-	yamlCfg.Database.Driver = normalizeDriverName(yamlCfg.Database.Driver)
+	yamlCfg.Database.Driver = validation.NormalizeDriver(yamlCfg.Database.Driver)
+
+	// Normalize connection string (remove sqlite:// prefix, etc.)
+	yamlCfg.Database.Source = validation.NormalizeConnectionString(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 
 	// Process --port flag (overrides port in --address)
 	if *flagPort != "" {
@@ -897,18 +974,16 @@ func main() {
 	// Only process file paths for SQLite databases
 	// PostgreSQL/MySQL use connection strings (postgres://, mysql://, etc.)
 	driver := yamlCfg.Database.Driver
-	if driver == "sqlite" || driver == "sqlite3" {
+	if driver == "sqlite" {
 		// If database source is relative, make it absolute based on data directory
 		if !strings.HasPrefix(dbSource, "/") && *flagDataDir != "" {
 			// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
-			// These specify the DATABASE DIRECTORY (not full path)
 			dbDir = os.Getenv("CASPASTE_DB_DIR")
 			if dbDir == "" {
 				dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
 			}
 			if dbDir == "" {
-				// Code default: {dataDir}/db
-				// Docker overrides this via ENV CASPASTE_DB_DIR=/data/db/sqlite in Dockerfile
+				// Default: {dataDir}/db
 				dbDir = *flagDataDir + "/db"
 			}
 			yamlCfg.Database.Source = dbDir + "/caspaste.db"
@@ -1147,31 +1222,15 @@ func main() {
 		}
 	}
 
-	// Handle --status command (exits after checking)
-	if *flagStatus {
-		checkStatus(yamlCfg.Database.Driver, yamlCfg.Database.Source, *flagAddress)
-		return // checkStatus calls os.Exit, but return for safety
-	}
-
-	// Handle --service command (exits after operation)
-	if *flagService != "" {
-		handleServiceCommand(*flagService, *flagAddress, yamlCfg.Database.Source, *flagDataDir, *flagConfigDir)
-		return
-	}
-
-	// Handle --maintenance command (exits after operation)
+	// Note: --status and --service handled earlier (line 804-861)
+	// Handle --maintenance command (exits after operation, needs backupDir)
 	if *flagMaintenance != "" {
 		handleMaintenanceCommand(*flagMaintenance, yamlCfg.Database.Driver, yamlCfg.Database.Source, *flagDataDir, *flagConfigDir, backupDir)
 		return
 	}
 
-	// Auto-detect and perform database migration if driver changed
-	if *flagDataDir != "" {
-		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, backupDir, yamlCfg.Database.Driver, yamlCfg.Database.Source)
-		if err != nil {
-			exitOnError(err)
-		}
-	}
+	// Note: Database migration moved to AFTER database initialization (after InitDB)
+	// This ensures destination database exists before attempting migration
 
 	// Validate body max length from config
 	if yamlCfg.Limits.BodyMaxLength == 0 {
@@ -1319,6 +1378,16 @@ func main() {
 	err = storage.InitDB(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 	if err != nil {
 		exitOnError(err)
+	}
+
+	// Auto-detect and perform database migration if driver changed
+	// NOW safe to migrate since destination database is initialized
+	if *flagDataDir != "" {
+		err := checkAndMigrateDatabase(*flagDataDir, *flagConfigDir, backupDir, yamlCfg.Database.Driver, yamlCfg.Database.Source)
+		if err != nil {
+			// Log error but don't fail startup - migration is optional
+			fmt.Fprintf(os.Stderr, "Warning: database migration failed: %v\n", err)
+		}
 	}
 
 	// Chown directories AGAIN after database initialization to ensure DB file has correct ownership

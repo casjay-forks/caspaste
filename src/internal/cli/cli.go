@@ -298,7 +298,8 @@ func (c *CLI) Parse() {
 					if v.cliFlagName == normalizedArg {
 						switch v.value.(type) {
 						case *bool:
-							// pass
+							// Boolean flag - set to true immediately
+							*(v.value.(*bool)) = true
 						default:
 							varInProgress = &v
 						}
