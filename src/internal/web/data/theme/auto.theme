@@ -1,6 +1,6 @@
-theme.Name.en = Dracula
-theme.Name.de = Dracula
-theme.Name.ru = Дракула
+theme.Name.en = Auto (System)
+theme.Name.de = Auto (System)
+theme.Name.ru = Авто (Система)
 
 font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
 font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
@@ -19,6 +19,9 @@ color.Element          = #44475A
 
 color.Red  = #FF5555
 color.Grey = #6272A4
+
+color.Border = #6272A4
+color.Link   = #8BE9FD
 
 color.Button           = #6272A4
 color.ButtonHover      = #BD93F9

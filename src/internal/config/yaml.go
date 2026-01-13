@@ -176,7 +176,7 @@ func GenerateDefaultYAMLConfig(path string) error {
 
 	// UI defaults
 	defaultConfig.UI.DefaultLifetime = "never"
-	defaultConfig.UI.DefaultTheme = "dracula"
+	defaultConfig.UI.DefaultTheme = "dark/dracula"
 	defaultConfig.UI.ThemesDir = ""
 
 	// Content defaults

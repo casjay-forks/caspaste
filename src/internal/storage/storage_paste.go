@@ -236,7 +236,7 @@ func (db DB) PasteList(limit int, offset int) ([]PasteListItem, error) {
 		`SELECT id, title, syntax, create_time, delete_time
 		FROM pastes
 		WHERE (delete_time > $1 OR delete_time = 0)
-		AND is_private = 0
+		AND is_private = false
 		ORDER BY create_time DESC
 		LIMIT $2 OFFSET $3`,
 		time.Now().Unix(),

@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-const baseTheme = "dark"
+const baseTheme = "dark/dracula"
 const embThemesDir = "data/theme"
 
 type Theme map[string]string
@@ -37,48 +37,57 @@ func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme strin
 
 	// Prepare load FS function
 	loadThemesFromFS := func(f fs.FS, themeDir string) error {
-		// Get theme files list
-		files, err := fs.ReadDir(f, themeDir)
-		if err != nil {
-			return errors.New("web: failed read dir '" + themeDir + "': " + err.Error())
+		// Load themes from directory recursively
+		var loadDir func(string, string) error
+		loadDir = func(dir string, prefix string) error {
+			files, err := fs.ReadDir(f, dir)
+			if err != nil {
+				return errors.New("web: failed read dir '" + dir + "': " + err.Error())
+			}
+
+			for _, fileInfo := range files {
+				// Check file
+				if fileInfo.IsDir() {
+					// Recursively load subdirectories (dark/, light/)
+					subdir := filepath.Join(dir, fileInfo.Name())
+					if err := loadDir(subdir, fileInfo.Name()+"/"); err != nil {
+						return err
+					}
+					continue
+				}
+
+				fileName := fileInfo.Name()
+				if strings.HasSuffix(fileName, ".theme") == false {
+					continue
+				}
+				themeCode := prefix + fileName[:len(fileName)-6]
+
+				// Read file
+				filePath := filepath.Join(dir, fileName)
+				fileByte, err := fs.ReadFile(f, filePath)
+				if err != nil {
+					return errors.New("web: failed open file '" + filePath + "': " + err.Error())
+				}
+
+				fileStr := bytes.NewBuffer(fileByte).String()
+
+				// Load theme
+				theme, err := readKVCfg(fileStr)
+				if err != nil {
+					return errors.New("web: failed read file '" + filePath + "': " + err.Error())
+				}
+
+				_, themeExist := themes[themeCode]
+				if themeExist {
+					return errors.New("web: theme alredy loaded: " + filePath)
+				}
+
+				themes[themeCode] = Theme(theme)
+			}
+			return nil
 		}
 
-		for _, fileInfo := range files {
-			// Check file
-			if fileInfo.IsDir() {
-				continue
-			}
-
-			fileName := fileInfo.Name()
-			if strings.HasSuffix(fileName, ".theme") == false {
-				continue
-			}
-			themeCode := fileName[:len(fileName)-6]
-
-			// Read file
-			filePath := filepath.Join(themeDir, fileName)
-			fileByte, err := fs.ReadFile(f, filePath)
-			if err != nil {
-				return errors.New("web: failed open file '" + filePath + "': " + err.Error())
-			}
-
-			fileStr := bytes.NewBuffer(fileByte).String()
-
-			// Load theme
-			theme, err := readKVCfg(fileStr)
-			if err != nil {
-				return errors.New("web: failed read file '" + filePath + "': " + err.Error())
-			}
-
-			_, themeExist := themes[themeCode]
-			if themeExist {
-				return errors.New("web: theme alredy loaded: " + filePath)
-			}
-
-			themes[themeCode] = Theme(theme)
-		}
-
-		return nil
+		return loadDir(themeDir, "")
 	}
 
 	// Load embed themes

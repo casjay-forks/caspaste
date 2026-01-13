@@ -812,6 +812,18 @@ func checkStatus(dbDriver, dbSource string, address string) {
 func main() {
 	var err error
 
+	// Set timezone from TZ environment variable (default: America/New_York)
+	tz := os.Getenv("TZ")
+	if tz == "" {
+		tz = "America/New_York"
+	}
+	location, err := time.LoadLocation(tz)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: invalid timezone '%s', using UTC: %v\n", tz, err)
+		location = time.UTC
+	}
+	time.Local = location
+
 	// Get version (from build-time, release.txt, or default)
 	Version = getVersion()
 

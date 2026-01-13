@@ -300,3 +300,15 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 });
+
+// Attach history button click handler
+document.addEventListener('DOMContentLoaded', function() {
+var historyButton = document.getElementById('js-history-button');
+if (historyButton) {
+historyButton.addEventListener('click', function(e) {
+e.preventDefault();
+historyPopUpShow();
+return false;
+});
+}
+});

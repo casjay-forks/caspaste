@@ -15,8 +15,13 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build the application
+# Build arguments
 ARG VERSION=unknown
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_URL
+
+# Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -tags netgo \
@@ -27,8 +32,35 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # Final stage
 FROM alpine:latest
 
+# OCI Standard Labels
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md
+LABEL org.opencontainers.image.title="CasPaste"
+LABEL org.opencontainers.image.description="A simple, fast, and secure self-hosted pastebin service with modern UI and 12 themes"
+LABEL org.opencontainers.image.authors="CasjaysDev <docker-admin@casjaysdev.pro>"
+LABEL org.opencontainers.image.vendor="CasjaysDev"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.url="https://github.com/casjay-forks/caspaste"
+LABEL org.opencontainers.image.documentation="https://github.com/casjay-forks/caspaste/blob/main/README.md"
+LABEL org.opencontainers.image.source="https://github.com/casjay-forks/caspaste"
+
+# Dynamic labels (set via build args)
+ARG VERSION=unknown
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VCS_URL="https://github.com/casjay-forks/caspaste"
+
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.revision="${VCS_REF}"
+
+# Additional metadata labels
+LABEL com.casjaysdev.app.name="caspaste"
+LABEL com.casjaysdev.app.version="${VERSION}"
+LABEL com.casjaysdev.app.vcs.ref="${VCS_REF}"
+LABEL com.casjaysdev.app.build.date="${BUILD_DATE}"
+
 # Install runtime dependencies
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata curl
 
 # Copy binary from builder
 COPY --from=builder /caspaste /usr/local/bin/caspaste
@@ -37,34 +69,15 @@ COPY --from=builder /caspaste /usr/local/bin/caspaste
 WORKDIR /data
 
 # Set environment variables for Docker deployment
-ENV CASPASTE_DB_DIR=/data/db/sqlite \
-    PORT=80
+ENV PORT=80 \
+    CASPASTE_DB_DIR=/data/db/sqlite \
+    TZ=America/New_York
 
 # Expose HTTP port
 EXPOSE 80
 
-# Health check - uses builtin --status flag
-# Exit codes: 0=healthy, 1=unhealthy, 2=degraded
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD caspaste --config /config/caspaste --data /data/caspaste --status
+# Use non-root user (created by the app itself)
+# The app drops privileges to caspaste:caspaste (UID:GID 642:642)
 
-# Entrypoint with default arguments
-# Container Paths:
-#   - Config: /config/caspaste/caspaste.yml (auto-generated)
-#   - Data: /data/caspaste/ (application data)
-#   - Database: /data/db/sqlite/caspaste.db (SQLite)
-#   - Backups: /data/backups/
-#   - Cache: /cache/
-#   - Logs: /logs/
-# Host Mounts (from docker-compose.yml):
-#   - ./rootfs/config/caspaste:/config/caspaste
-#   - ./rootfs/data/caspaste:/data/caspaste
-#   - ./rootfs/data/db/sqlite:/data/db/sqlite
-# Privilege Escalation:
-#   - Creates user caspaste (UID:GID 642:642)
-#   - Binds to port as root
-#   - Drops privileges to caspaste user
-# Security:
-#   - Auto-trusts reverse proxy headers from private IPs
-#   - Prevents IP spoofing from public IPs
-ENTRYPOINT ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste"]
+ENTRYPOINT ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste", "--logs", "/var/log/caspaste"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 CMD caspaste --status || exit 1

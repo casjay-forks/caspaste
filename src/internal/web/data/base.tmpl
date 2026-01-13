@@ -9,50 +9,64 @@
 */}}
 
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta name="description" content="CasPaste - A simple, self-hosted paste sharing service">
-		<title>{{template "titlePrefix" .}}{{ call .Translate `base.CasPaste` }}</title>
-		<link rel="stylesheet" type="text/css" href="/style.css">
-		<link rel="icon" href="data:,">
-
-		<!-- PWA Support -->
-		<link rel="manifest" href="/manifest.json">
-		<meta name="theme-color" content="#282a36">
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-		<meta name="apple-mobile-web-app-title" content="CasPaste">
-
-		{{template "headAppend" .}}
-		<script src="/history.js"></script>
-
-		<!-- PWA Service Worker -->
-		<script>
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('/sw.js').catch(function(error) {
-					console.log('Service Worker registration failed:', error);
-				});
-			}
-		</script>
-	</head>
-	<body>
-		<header role="banner">
-			<nav aria-label="Main navigation">
-				<a href="/" class="site-title">{{ call .Translate `base.CasPaste` }}</a>
-				<a href="/list">{{ call .Translate `base.List` }}</a>
-				<a href="/about">{{ call .Translate `base.About` }}</a>
-				<a href="/docs">{{ call .Translate `base.Docs` }}</a>
-				<a href="#" id="js-history-button" onclick="historyPopUpShow(); return false;">{{ call .Translate `base.History` }}</a>
-				<a href="/settings">{{ call .Translate `base.Settings` }}</a>
-			</nav>
-		</header>
-		<main role="main">
-			<article>{{template "article" .}}</article>
-		</main>
-		<footer role="contentinfo">
-			<p>&copy; 2024 CasPaste | <a href="/about">{{ call .Translate `base.About` }}</a> | <a href="/docs">{{ call .Translate `base.Docs` }}</a> | <a href="/about/source_code">{{ call .Translate `base.SourceCode` }}</a></p>
-		</footer>
-	</body>
+<html lang="{{.Language}}">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+	<meta name="description" content="CasPaste - A simple, self-hosted paste sharing service">
+	<meta name="color-scheme" content="light dark">
+	<title>{{template "titlePrefix" .}}{{ call .Translate `base.CasPaste` }}</title>
+	<link rel="stylesheet" href="/style.css?t={{call .Theme `theme.Name.en`}}">
+	<link rel="icon" href="data:,">
+	
+	<!-- PWA Support -->
+	<link rel="manifest" href="/manifest.json">
+	<meta name="theme-color" content="{{call .Theme `color.Header`}}">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<meta name="apple-mobile-web-app-title" content="CasPaste">
+	
+	{{template "headAppend" .}}
+	
+	<!-- PWA Service Worker -->
+	<script>
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js').catch(function(error) {
+				console.log('Service Worker registration failed:', error);
+			});
+		}
+	</script>
+</head>
+<body>
+	<a href="#main-content" class="skip-to-main">Skip to main content</a>
+	
+	<header role="banner">
+		<nav role="navigation" aria-label="Main navigation">
+			<a href="/" class="site-title" aria-label="CasPaste home">{{ call .Translate `base.CasPaste` }}</a>
+			<a href="/list" aria-label="View paste list">{{ call .Translate `base.List` }}</a>
+			<a href="/about" aria-label="About CasPaste">{{ call .Translate `base.About` }}</a>
+			<a href="/docs" aria-label="Documentation">{{ call .Translate `base.Docs` }}</a>
+			<button type="button" class="nav-button" id="js-history-button" aria-label="View paste history">{{ call .Translate `base.History` }}</button>
+			<a href="/settings" aria-label="Settings">{{ call .Translate `base.Settings` }}</a>
+		</nav>
+	</header>
+	
+	<main id="main-content" role="main">
+		<article>{{template "article" .}}</article>
+	</main>
+	
+	<footer role="contentinfo">
+		<nav aria-label="Footer navigation">
+			<p>
+				&copy; 2024 CasPaste | 
+				<a href="/about">{{ call .Translate `base.About` }}</a> | 
+				<a href="/docs">{{ call .Translate `base.Docs` }}</a> | 
+				<a href="/terms">Terms of Service</a> | 
+				<a href="/about/source_code">{{ call .Translate `base.SourceCode` }}</a>
+			</p>
+		</nav>
+	</footer>
+	
+	<script src="/history.js"></script>
+</body>
 </html>

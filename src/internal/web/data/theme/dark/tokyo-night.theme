@@ -20,6 +20,9 @@ color.Element          = #414868
 color.Red  = #F7768E
 color.Grey = #565F89
 
+color.Border = #414868
+color.Link   = #7AA2F7
+
 color.Button           = #414868
 color.ButtonHover      = #565F89
 color.ButtonFont       = #C0CAF5

@@ -110,3 +110,33 @@ document.addEventListener("DOMContentLoaded", () => {
 	editor.addEventListener("input", updateSymbolCounter);
 	updateSymbolCounter();
 });
+
+// Handle file upload and textarea mutual exclusivity
+document.addEventListener('DOMContentLoaded', function() {
+var fileInput = document.getElementById('paste-file');
+var textarea = document.getElementById('editor');
+
+if (fileInput && textarea) {
+// When file is selected, disable textarea
+fileInput.addEventListener('change', function() {
+if (this.files && this.files.length > 0) {
+textarea.disabled = true;
+textarea.required = false;
+textarea.classList.add('disabled');
+} else {
+textarea.disabled = false;
+textarea.required = false;
+textarea.classList.remove('disabled');
+}
+});
+
+// When text is entered, disable file input
+textarea.addEventListener('input', function() {
+if (this.value.trim().length > 0) {
+fileInput.disabled = true;
+} else {
+fileInput.disabled = false;
+}
+});
+}
+});

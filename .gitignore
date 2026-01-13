@@ -103,4 +103,5 @@ $RECYCLE.BIN/
 binaries/**
 releases/**
 
+# ignore the docker-compose filesystem
 rootfs/
