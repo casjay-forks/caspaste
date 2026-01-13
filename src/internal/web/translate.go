@@ -41,7 +41,7 @@ func loadLocales(f embed.FS, localeDir string) (Locales, LocalesList, error) {
 		}
 
 		fileName := fileInfo.Name()
-		if strings.HasSuffix(fileName, ".json") == false {
+		if !strings.HasSuffix(fileName, ".json") {
 			continue
 		}
 		localeCode := fileName[:len(fileName)-5]
@@ -103,7 +103,7 @@ func (locales Locales) findLocale(req *http.Request) Locale {
 	langCookie := getCookie(req, "lang")
 	if langCookie != "" {
 		locale, ok := locales[langCookie]
-		if ok == true {
+		if ok {
 			return locale
 		}
 	}
@@ -115,7 +115,7 @@ func (locales Locales) findLocale(req *http.Request) Locale {
 	var langs []string
 	for _, part := range strings.Split(acceptLanguage, ";") {
 		for _, lang := range strings.Split(part, ",") {
-			if strings.HasPrefix(lang, "q=") == false {
+			if !strings.HasPrefix(lang, "q=") {
 				langs = append(langs, lang)
 			}
 		}

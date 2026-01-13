@@ -14,88 +14,147 @@ import (
 )
 
 // YAMLConfig represents the YAML configuration file structure
+// All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
-		Address           string `yaml:"address"` // Public FQDN
-		Bind              string `yaml:"bind"`    // Bind address (::, 0.0.0.0, specific IP)
-		Port              string `yaml:"port"`    // "8080" or "8080,64453"
-		Title             string `yaml:"title"`
-		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"`
-		Administrator     struct {
-			Name  string `yaml:"name"`
-			Email string `yaml:"email"`
-			From  string `yaml:"from"`
+		Address           string `yaml:"address"`             // Public FQDN
+		Bind              string `yaml:"bind"`                // Bind address (::, 0.0.0.0, specific IP)
+		Port              string `yaml:"port"`                // "8080" or "8080,64453"
+		Title             string `yaml:"title"`               // Server title
+		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"` // Trust X-Forwarded-For headers
+		
+		Administrator struct {
+			Name  string `yaml:"name"`  // Admin name
+			Email string `yaml:"email"` // Admin email
+			From  string `yaml:"from"`  // Email from address
 		} `yaml:"administrator"`
+		
+		Timeouts struct {
+			Read  int `yaml:"read"`  // Read timeout in seconds (default: 15)
+			Write int `yaml:"write"` // Write timeout in seconds (default: 15)
+			Idle  int `yaml:"idle"`  // Idle timeout in seconds (default: 60)
+		} `yaml:"timeouts"`
 	} `yaml:"server"`
 
-	Web struct {
-		Security struct {
-			Contact struct {
-				Email string `yaml:"email"`
-				Name  string `yaml:"name"`
-			} `yaml:"contact"`
-		} `yaml:"security"`
-	} `yaml:"web"`
-
-	Site struct {
-		Robots struct {
-			Allow  string `yaml:"allow"`
-			Deny   string `yaml:"deny"`
-			Agents struct {
-				Deny []string `yaml:"deny"`
-			} `yaml:"agents"`
-		} `yaml:"robots"`
-	} `yaml:"site"`
-
-	Branding struct {
-		Logo    string `yaml:"logo"`
-		Favicon string `yaml:"favicon"`
-	} `yaml:"branding"`
-
 	Database struct {
-		Driver        string `yaml:"driver"`
-		Source        string `yaml:"source"`
-		MaxOpenConns  int    `yaml:"max_open_conns"`
-		MaxIdleConns  int    `yaml:"max_idle_conns"`
-		CleanupPeriod string `yaml:"cleanup_period"`
+		Driver        string `yaml:"driver"`         // sqlite, postgres, mysql
+		Source        string `yaml:"source"`         // Connection string
+		MaxOpenConns  int    `yaml:"max_open_conns"` // Max open connections
+		MaxIdleConns  int    `yaml:"max_idle_conns"` // Max idle connections
+		CleanupPeriod string `yaml:"cleanup_period"` // Cleanup interval (e.g. "1m", "5m")
+		
+		Backup struct {
+			Enabled  bool   `yaml:"enabled"`  // Enable backup database writes
+			Driver   string `yaml:"driver"`   // Backup DB driver
+			Source   string `yaml:"source"`   // Backup DB source
+		} `yaml:"backup"`
 	} `yaml:"database"`
 
 	Security struct {
-		PasswordFile string `yaml:"password_file"`
+		PasswordFile string `yaml:"password_file"` // Path to password file for protected pastes
+		
+		Headers struct {
+			XFrameOptions           string `yaml:"x_frame_options"`            // X-Frame-Options header
+			XContentTypeOptions     string `yaml:"x_content_type_options"`     // X-Content-Type-Options header
+			ContentSecurityPolicy   string `yaml:"content_security_policy"`    // Content-Security-Policy header
+			ReferrerPolicy          string `yaml:"referrer_policy"`            // Referrer-Policy header
+			PermissionsPolicy       string `yaml:"permissions_policy"`         // Permissions-Policy header
+			StrictTransportSecurity string `yaml:"strict_transport_security"`  // Strict-Transport-Security header
+		} `yaml:"headers"`
+		
+		TLS struct {
+			MinVersion   string   `yaml:"min_version"`   // Minimum TLS version: 1.0, 1.1, 1.2, 1.3
+			CipherSuites []string `yaml:"cipher_suites"` // Allowed cipher suites
+			CertFile     string   `yaml:"cert_file"`     // TLS certificate file path (optional, auto-detected)
+			KeyFile      string   `yaml:"key_file"`      // TLS key file path (optional, auto-detected)
+		} `yaml:"tls"`
+		
+		Upload struct {
+			MaxFileSize int64    `yaml:"max_file_size"`      // Max upload size in bytes
+			AllowedMIME []string `yaml:"allowed_mime_types"` // Allowed MIME types
+		} `yaml:"upload"`
+		
+		CORS struct {
+			Enabled        bool     `yaml:"enabled"`          // Enable CORS
+			AllowedOrigins []string `yaml:"allowed_origins"`  // Allowed origins (* for all)
+			AllowedMethods []string `yaml:"allowed_methods"`  // Allowed HTTP methods
+			AllowedHeaders []string `yaml:"allowed_headers"`  // Allowed headers
+			MaxAge         int      `yaml:"max_age"`          // Preflight cache duration in seconds
+		} `yaml:"cors"`
 	} `yaml:"security"`
 
+	Web struct {
+		UI struct {
+			DefaultLifetime string `yaml:"default_lifetime"` // Default paste lifetime
+			DefaultTheme    string `yaml:"default_theme"`    // Default theme (e.g. "dracula")
+			ThemesDir       string `yaml:"themes_dir"`       // Custom themes directory
+		} `yaml:"ui"`
+		
+		Content struct {
+			About    string `yaml:"about"`    // Path to custom about page
+			Rules    string `yaml:"rules"`    // Path to custom rules page
+			Terms    string `yaml:"terms"`    // Path to custom terms page
+			Security string `yaml:"security"` // Path to custom security.txt
+		} `yaml:"content"`
+		
+		Branding struct {
+			Logo    string `yaml:"logo"`    // Logo URL/path
+			Favicon string `yaml:"favicon"` // Favicon URL/path
+		} `yaml:"branding"`
+		
+		Security struct {
+			Contact struct {
+				Email string `yaml:"email"` // Security contact email
+				Name  string `yaml:"name"`  // Security contact name
+			} `yaml:"contact"`
+		} `yaml:"security"`
+		
+		SEO struct {
+			Robots struct {
+				Allow  string `yaml:"allow"` // Paths to allow in robots.txt
+				Deny   string `yaml:"deny"`  // Paths to deny in robots.txt
+				Agents struct {
+					Deny []string `yaml:"deny"` // User agents to deny
+				} `yaml:"agents"`
+			} `yaml:"robots"`
+		} `yaml:"seo"`
+	} `yaml:"web"`
+
 	Limits struct {
-		TitleMaxLength    int    `yaml:"title_max_length"`
-		BodyMaxLength     int    `yaml:"body_max_length"`
-		MaxPasteLifetime  string `yaml:"max_paste_lifetime"`
-		GetPastesPer5Min  uint   `yaml:"get_pastes_per_5min"`
-		GetPastesPer15Min uint   `yaml:"get_pastes_per_15min"`
-		GetPastesPer1Hour uint   `yaml:"get_pastes_per_1hour"`
-		NewPastesPer5Min  uint   `yaml:"new_pastes_per_5min"`
-		NewPastesPer15Min uint   `yaml:"new_pastes_per_15min"`
-		NewPastesPer1Hour uint   `yaml:"new_pastes_per_1hour"`
+		TitleMaxLength    int    `yaml:"title_max_length"`   // Max title length
+		BodyMaxLength     int    `yaml:"body_max_length"`    // Max paste body length
+		MaxPasteLifetime  string `yaml:"max_paste_lifetime"` // Max paste lifetime (e.g. "30d", "never")
+		
+		RateLimit struct {
+			GetPastes struct {
+				Per5Min  uint `yaml:"per_5min"`  // GET requests per 5 minutes
+				Per15Min uint `yaml:"per_15min"` // GET requests per 15 minutes
+				Per1Hour uint `yaml:"per_1hour"` // GET requests per 1 hour
+			} `yaml:"get_pastes"`
+			
+			NewPastes struct {
+				Per5Min  uint `yaml:"per_5min"`  // POST requests per 5 minutes
+				Per15Min uint `yaml:"per_15min"` // POST requests per 15 minutes
+				Per1Hour uint `yaml:"per_1hour"` // POST requests per 1 hour
+			} `yaml:"new_pastes"`
+		} `yaml:"rate_limit"`
 	} `yaml:"limits"`
 
-	UI struct {
-		DefaultLifetime string `yaml:"default_lifetime"`
-		DefaultTheme    string `yaml:"default_theme"`
-		ThemesDir       string `yaml:"themes_dir"`
-	} `yaml:"ui"`
-
-	Content struct {
-		About    string `yaml:"about"`
-		Rules    string `yaml:"rules"`
-		Terms    string `yaml:"terms"`
-		Security string `yaml:"security"`
-	} `yaml:"content"`
-
 	Directories struct {
-		Data   string `yaml:"data"`
-		Config string `yaml:"config"`
-		Db     string `yaml:"db"`
-		Cache  string `yaml:"cache"`
-		Logs   string `yaml:"logs"`
+		Data   string `yaml:"data"`   // Data directory
+		Config string `yaml:"config"` // Config directory
+		Db     string `yaml:"db"`     // Database directory
+		Cache  string `yaml:"cache"`  // Cache directory
+		Logs   string `yaml:"logs"`   // Logs directory
 	} `yaml:"directories"`
+	
+	Logging struct {
+		Level     string `yaml:"level"`      // Log level: debug, info, warn, error
+		Format    string `yaml:"format"`     // Log format: text, json
+		AccessLog string `yaml:"access_log"` // Access log file path (Apache format)
+		ErrorLog  string `yaml:"error_log"`  // Error log file path
+		DebugLog  string `yaml:"debug_log"`  // Debug log file path (when --debug enabled)
+	} `yaml:"logging"`
 }
 
 // LoadYAMLConfig loads configuration from YAML file
@@ -114,28 +173,135 @@ func LoadYAMLConfig(path string) (*YAMLConfig, error) {
 	return &cfg, nil
 }
 
-// GenerateDefaultYAMLConfig generates a default configuration file
+// SaveYAMLConfig saves configuration to YAML file
+func SaveYAMLConfig(path string, cfg *YAMLConfig) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
+}
+
+// GenerateDefaultYAMLConfig generates a default configuration file with sane defaults
 func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig := YAMLConfig{}
 
-	// Server defaults
-	defaultConfig.Server.Address = ""  // Auto-detected
-	defaultConfig.Server.Bind = "::"   // IPv4 + IPv6
-	defaultConfig.Server.Port = ""     // Random port in 64xxx range
+	// ============================================================================
+	// SERVER CONFIGURATION
+	// ============================================================================
+	defaultConfig.Server.Address = ""  // Auto-detected FQDN
+	defaultConfig.Server.Bind = "::"   // IPv4 + IPv6 (dual stack)
+	defaultConfig.Server.Port = ""     // Empty = random port in 64xxx range
 	defaultConfig.Server.Title = "CasPaste"
 	defaultConfig.Server.TrustReverseProxy = false
-	defaultConfig.Server.Administrator.Name = "CasPaste"
+	
+	defaultConfig.Server.Administrator.Name = "CasPaste Administrator"
 	defaultConfig.Server.Administrator.Email = "administrator@{fqdn}"
 	defaultConfig.Server.Administrator.From = "\"CasPaste\" <no-reply@{fqdn}>"
+	
+	defaultConfig.Server.Timeouts.Read = 15
+	defaultConfig.Server.Timeouts.Write = 15
+	defaultConfig.Server.Timeouts.Idle = 60
 
-	// Web defaults
-	defaultConfig.Web.Security.Contact.Email = "administrator@{fqdn}"
-	defaultConfig.Web.Security.Contact.Name = "Server Administrator"
+	// ============================================================================
+	// DATABASE CONFIGURATION
+	// ============================================================================
+	// Using modernc.org/sqlite (pure Go, no CGo)
+	// Source path is relative - converted to absolute at runtime
+	defaultConfig.Database.Driver = "sqlite"
+	defaultConfig.Database.Source = "caspaste.db"
+	defaultConfig.Database.MaxOpenConns = 25
+	defaultConfig.Database.MaxIdleConns = 5
+	defaultConfig.Database.CleanupPeriod = "1m"
+	
+	// Backup database (optional)
+	defaultConfig.Database.Backup.Enabled = false
+	defaultConfig.Database.Backup.Driver = ""
+	defaultConfig.Database.Backup.Source = ""
 
-	// Site defaults
-	defaultConfig.Site.Robots.Allow = "*"
-	defaultConfig.Site.Robots.Deny = "/settings,/history"
-	defaultConfig.Site.Robots.Agents.Deny = []string{
+	// ============================================================================
+	// SECURITY CONFIGURATION
+	// ============================================================================
+	defaultConfig.Security.PasswordFile = ""
+	
+	// HTTP Security Headers
+	defaultConfig.Security.Headers.XFrameOptions = "DENY"
+	defaultConfig.Security.Headers.XContentTypeOptions = "nosniff"
+	defaultConfig.Security.Headers.ContentSecurityPolicy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'"
+	defaultConfig.Security.Headers.ReferrerPolicy = "strict-origin-when-cross-origin"
+	defaultConfig.Security.Headers.PermissionsPolicy = "geolocation=(), microphone=(), camera=()"
+	defaultConfig.Security.Headers.StrictTransportSecurity = "max-age=31536000; includeSubDomains"
+	
+	// TLS Configuration
+	defaultConfig.Security.TLS.MinVersion = "1.2"
+	defaultConfig.Security.TLS.CipherSuites = []string{
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+		"TLS_CHACHA20_POLY1305_SHA256",
+	}
+	defaultConfig.Security.TLS.CertFile = "" // Auto-detected from Let's Encrypt
+	defaultConfig.Security.TLS.KeyFile = ""  // Auto-detected from Let's Encrypt
+	
+	// Upload Security
+	defaultConfig.Security.Upload.MaxFileSize = 52428800 // 50MB
+	defaultConfig.Security.Upload.AllowedMIME = []string{
+		"text/plain",
+		"text/markdown",
+		"text/html",
+		"text/css",
+		"text/javascript",
+		"application/json",
+		"application/xml",
+		"application/pdf",
+		"image/jpeg",
+		"image/png",
+		"image/gif",
+		"image/svg+xml",
+		"image/webp",
+	}
+	
+	// CORS Configuration
+	defaultConfig.Security.CORS.Enabled = true
+	defaultConfig.Security.CORS.AllowedOrigins = []string{"*"}
+	defaultConfig.Security.CORS.AllowedMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
+	defaultConfig.Security.CORS.AllowedHeaders = []string{"Content-Type", "Authorization", "X-Requested-With"}
+	defaultConfig.Security.CORS.MaxAge = 86400 // 24 hours
+
+	// ============================================================================
+	// WEB CONFIGURATION
+	// ============================================================================
+	
+	// UI Settings
+	defaultConfig.Web.UI.DefaultLifetime = "never"
+	defaultConfig.Web.UI.DefaultTheme = "dark"  // Accepts: "dark" (dracula), "light" (github), "auto", or full path like "dark/dracula"
+	defaultConfig.Web.UI.ThemesDir = ""
+	
+	// Content Pages
+	defaultConfig.Web.Content.About = ""    // Empty = use embedded default
+	defaultConfig.Web.Content.Rules = ""    // Empty = use embedded default
+	defaultConfig.Web.Content.Terms = ""    // Empty = use embedded default
+	defaultConfig.Web.Content.Security = "" // Empty = auto-generated security.txt
+	
+	// Branding
+	defaultConfig.Web.Branding.Logo = ""
+	defaultConfig.Web.Branding.Favicon = ""
+	
+	// Security Contact (for security.txt)
+	defaultConfig.Web.Security.Contact.Email = "security@{fqdn}"
+	defaultConfig.Web.Security.Contact.Name = "Security Team"
+	
+	// SEO / Robots
+	defaultConfig.Web.SEO.Robots.Allow = "*"
+	defaultConfig.Web.SEO.Robots.Deny = "/settings,/history"
+	defaultConfig.Web.SEO.Robots.Agents.Deny = []string{
 		"GPTBot",
 		"ChatGPT-User",
 		"Google-Extended",
@@ -148,84 +314,51 @@ func GenerateDefaultYAMLConfig(path string) error {
 		"Diffbot",
 	}
 
-	// Branding defaults
-	defaultConfig.Branding.Logo = ""
-	defaultConfig.Branding.Favicon = ""
-
-	// Database defaults
-	// Note: Using "sqlite" (modernc.org/sqlite - pure Go, no CGo)
-	// Source is relative - converted to absolute at runtime:
-	//   Docker (--data /data): /data/db/sqlite/caspaste.db
-	//   Standalone: {data_dir}/db/caspaste.db
-	defaultConfig.Database.Driver = "sqlite"
-	defaultConfig.Database.Source = "caspaste.db"
-	defaultConfig.Database.MaxOpenConns = 25
-	defaultConfig.Database.MaxIdleConns = 5
-	defaultConfig.Database.CleanupPeriod = "1m"
-
-	// Security defaults
-	defaultConfig.Security.PasswordFile = ""
-
-	// Limits defaults
+	// ============================================================================
+	// LIMITS & RATE LIMITING
+	// ============================================================================
 	defaultConfig.Limits.TitleMaxLength = 100
 	defaultConfig.Limits.BodyMaxLength = 52428800 // 50MB
 	defaultConfig.Limits.MaxPasteLifetime = "never"
-	defaultConfig.Limits.GetPastesPer5Min = 50
-	defaultConfig.Limits.GetPastesPer15Min = 100
-	defaultConfig.Limits.GetPastesPer1Hour = 500
-	defaultConfig.Limits.NewPastesPer5Min = 15
-	defaultConfig.Limits.NewPastesPer15Min = 30
-	defaultConfig.Limits.NewPastesPer1Hour = 40
+	
+	// Rate limiting for GET requests
+	defaultConfig.Limits.RateLimit.GetPastes.Per5Min = 50
+	defaultConfig.Limits.RateLimit.GetPastes.Per15Min = 100
+	defaultConfig.Limits.RateLimit.GetPastes.Per1Hour = 500
+	
+	// Rate limiting for POST requests
+	defaultConfig.Limits.RateLimit.NewPastes.Per5Min = 15
+	defaultConfig.Limits.RateLimit.NewPastes.Per15Min = 30
+	defaultConfig.Limits.RateLimit.NewPastes.Per1Hour = 40
 
-	// UI defaults
-	defaultConfig.UI.DefaultLifetime = "never"
-	defaultConfig.UI.DefaultTheme = "dark/dracula"
-	defaultConfig.UI.ThemesDir = ""
-
-	// Content defaults
-	// Empty = use embedded defaults with variable replacement
-	// Set path to override with custom file
-	defaultConfig.Content.About = ""
-	defaultConfig.Content.Rules = ""
-	defaultConfig.Content.Terms = ""
-	defaultConfig.Content.Security = ""
-
-	// Directory defaults (platform-specific, empty = auto-detect)
+	// ============================================================================
+	// DIRECTORIES
+	// ============================================================================
+	// Empty = auto-detected based on platform and user permissions
 	defaultConfig.Directories.Data = ""
 	defaultConfig.Directories.Config = ""
 	defaultConfig.Directories.Db = ""
 	defaultConfig.Directories.Cache = ""
 	defaultConfig.Directories.Logs = ""
 
-	// Marshal to YAML
-	data, err := yaml.Marshal(&defaultConfig)
-	if err != nil {
-		return err
-	}
+	// ============================================================================
+	// LOGGING
+	// ============================================================================
+	defaultConfig.Logging.Level = "info"
+	defaultConfig.Logging.Format = "text"
+	defaultConfig.Logging.AccessLog = "access.log"  // Apache Common Log Format
+	defaultConfig.Logging.ErrorLog = "error.log"
+	defaultConfig.Logging.DebugLog = "debug.log"    // Only used with --debug flag
 
 	// Write to file
-	return os.WriteFile(path, data, 0644)
-}
-
-// SaveYAMLConfig saves configuration to YAML file
-// Uses atomic write (temp file + rename) to prevent corruption
-func SaveYAMLConfig(path string, cfg *YAMLConfig) error {
-	// Marshal to YAML
-	data, err := yaml.Marshal(cfg)
+	data, err := yaml.Marshal(defaultConfig)
 	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
+		return fmt.Errorf("failed to marshal default config: %w", err)
 	}
 
-	// Write to temp file first
-	tempPath := path + ".tmp"
-	if err := os.WriteFile(tempPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write temp config: %w", err)
-	}
-
-	// Atomic rename
-	if err := os.Rename(tempPath, path); err != nil {
-		os.Remove(tempPath) // Clean up temp file
-		return fmt.Errorf("failed to save config: %w", err)
+	err = os.WriteFile(path, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write default config: %w", err)
 	}
 
 	return nil

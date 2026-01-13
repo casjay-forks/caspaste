@@ -14,7 +14,7 @@ import (
 )
 
 // POST /edit/{id} - Edit an editable paste
-func (data *Data) editPasteHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleEditPaste(rw http.ResponseWriter, req *http.Request) error {
 	// Check method
 	if req.Method != "POST" {
 		return netshare.ErrMethodNotAllowed

@@ -38,17 +38,17 @@ func (data *Data) newHand(rw http.ResponseWriter, req *http.Request) error {
 			return netshare.ErrTooManyRequests
 		}
 
-		authOk := false
+		isAuthenticated := false
 
-		user, pass, authExist := req.BasicAuth()
-		if authExist == true {
-			authOk, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
+		user, pass, authProvided := req.BasicAuth()
+		if authProvided {
+			isAuthenticated, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
 			if err != nil {
 				return err
 			}
 		}
 
-		if authOk == false {
+		if !isAuthenticated {
 			// Record failed attempt
 			if data.BruteForce != nil {
 				data.BruteForce.RecordFailure(clientIP)

@@ -11,7 +11,7 @@ import (
 )
 
 // Pattern: /manifest.json
-func (data *Data) manifestHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleManifest(rw http.ResponseWriter, req *http.Request) error {
 	manifestJSON, err := embFS.ReadFile("data/manifest.json")
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func (data *Data) manifestHand(rw http.ResponseWriter, req *http.Request) error 
 }
 
 // Pattern: /sw.js
-func (data *Data) serviceWorkerHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleServiceWorker(rw http.ResponseWriter, req *http.Request) error {
 	swJS, err := embFS.ReadFile("data/sw.js")
 	if err != nil {
 		return err

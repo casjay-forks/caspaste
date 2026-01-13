@@ -23,11 +23,13 @@ type embTmpl struct {
 	Body          template.HTML
 
 	ErrorNotFound bool
+	Language      string
+	Theme         func(string) string
 	Translate     func(string, ...interface{}) template.HTML
 }
 
 // Pattern: /emb/
-func (data *Data) embeddedHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleEmbedded(rw http.ResponseWriter, req *http.Request) error {
 	errorNotFound := false
 
 	// Check rate limit
@@ -62,6 +64,8 @@ func (data *Data) embeddedHand(rw http.ResponseWriter, req *http.Request) error 
 		Body:          tryHighlight(paste.Body, paste.Syntax, "monokai"),
 
 		ErrorNotFound: errorNotFound,
+		Language:      getCookie(req, "lang"),
+		Theme:         data.getThemeFunc(req),
 		Translate:     data.Locales.findLocale(req).translate,
 	}
 

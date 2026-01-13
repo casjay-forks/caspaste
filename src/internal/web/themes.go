@@ -28,6 +28,16 @@ type ThemesListPart map[string]string
 type ThemesList map[string]ThemesListPart
 
 func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme string) (Themes, ThemesList, error) {
+	// Normalize default theme aliases before loading
+	themeAliases := map[string]string{
+		"dark":  "dark/dracula",
+		"light": "light/github",
+		"auto":  "dark/dracula", // fallback for auto
+	}
+	if normalized, exists := themeAliases[defaultTheme]; exists {
+		defaultTheme = normalized
+	}
+
 	themes := make(Themes)
 	themesList := make(ThemesList)
 
@@ -57,7 +67,7 @@ func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme strin
 				}
 
 				fileName := fileInfo.Name()
-				if strings.HasSuffix(fileName, ".theme") == false {
+				if !strings.HasSuffix(fileName, ".theme") {
 					continue
 				}
 				themeCode := prefix + fileName[:len(fileName)-6]
@@ -77,8 +87,8 @@ func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme strin
 					return errors.New("web: failed read file '" + filePath + "': " + err.Error())
 				}
 
-				_, themeExist := themes[themeCode]
-				if themeExist {
+				_, exists := themes[themeCode]
+				if exists {
 					return errors.New("web: theme alredy loaded: " + filePath)
 				}
 
@@ -152,8 +162,32 @@ func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme strin
 
 	// Check default theme exist
 	_, ok := themes[defaultTheme]
-	if ok == false {
+	if !ok {
 		return nil, nil, errors.New("web: default theme '" + defaultTheme + "' not found")
+	}
+
+	// Create theme aliases for convenience
+	// "dark" → "dark/dracula", "light" → "light/github", "auto" → special auto-switch theme
+	if _, exists := themes["dark/dracula"]; exists {
+		themes["dark"] = themes["dark/dracula"]
+		for localeCode := range themesList {
+			if name, ok := themesList[localeCode]["dark/dracula"]; ok {
+				themesList[localeCode]["dark"] = name + " (alias)"
+			}
+		}
+	}
+	if _, exists := themes["light/github"]; exists {
+		themes["light"] = themes["light/github"]
+		for localeCode := range themesList {
+			if name, ok := themesList[localeCode]["light/github"]; ok {
+				themesList[localeCode]["light"] = name + " (alias)"
+			}
+		}
+	}
+	// "auto" will be handled by client-side JavaScript
+	themes["auto"] = themes[defaultTheme] // fallback to default
+	for localeCode := range themesList {
+		themesList[localeCode]["auto"] = "Auto (System)"
 	}
 
 	return themes, themesList, nil
@@ -164,7 +198,7 @@ func (themesList ThemesList) getForLocale(req *http.Request) ThemesListPart {
 	langCookie := getCookie(req, "lang")
 	if langCookie != "" {
 		theme, ok := themesList[langCookie]
-		if ok == true {
+		if ok {
 			return theme
 		}
 	}
@@ -179,7 +213,7 @@ func (themes Themes) findTheme(req *http.Request, defaultTheme string) Theme {
 	themeCookie := getCookie(req, "theme")
 	if themeCookie != "" {
 		theme, ok := themes[themeCookie]
-		if ok == true {
+		if ok {
 			return theme
 		}
 	}

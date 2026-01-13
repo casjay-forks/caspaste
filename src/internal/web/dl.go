@@ -15,7 +15,7 @@ import (
 )
 
 // Pattern: /dl/
-func (data *Data) dlHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleDownload(rw http.ResponseWriter, req *http.Request) error {
 	// Check rate limit
 	err := data.RateLimitGet.CheckAndUse(netshare.GetClientAddr(req))
 	if err != nil {
@@ -31,7 +31,7 @@ func (data *Data) dlHand(rw http.ResponseWriter, req *http.Request) error {
 	}
 
 	// If "one use" paste
-	if paste.OneUse == true {
+	if paste.OneUse {
 		// Delete paste
 		err = data.DB.PasteDelete(pasteID)
 		if err != nil {
@@ -50,7 +50,7 @@ func (data *Data) dlHand(rw http.ResponseWriter, req *http.Request) error {
 
 	// Get file extension
 	fileExt := chromaLexers.Get(paste.Syntax).Config().Filenames[0][1:]
-	if strings.HasSuffix(fileName, fileExt) == false {
+	if !strings.HasSuffix(fileName, fileExt) {
 		fileName = fileName + fileExt
 	}
 

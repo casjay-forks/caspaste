@@ -14,7 +14,7 @@ import (
 )
 
 // GET /qr/{id} - QR code for paste URL
-func (data *Data) qrCodeHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleQRCode(rw http.ResponseWriter, req *http.Request) error {
 	// Check method
 	if req.Method != "GET" {
 		return netshare.ErrMethodNotAllowed

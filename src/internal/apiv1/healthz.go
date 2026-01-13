@@ -22,7 +22,7 @@ type healthzResponse struct {
 var startTime = time.Now()
 
 // GET /api/healthz
-func (data *Data) healthzHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleHealthz(rw http.ResponseWriter, req *http.Request) error {
 	if req.Method != "GET" {
 		rw.Header().Set("Allow", "GET")
 		rw.WriteHeader(http.StatusMethodNotAllowed)

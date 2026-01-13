@@ -18,7 +18,7 @@
 			<label for="lang-select">{{ call .Translate `settings.Language` }}</label>
 			<select id="lang-select" name="lang" tabindex="1">
 				<option value="">{{call .Translate `settings.LanguageDefault`}}</option>
-				{{ $language := .Language }}
+				{{ $language := .LanguageCode }}
 				{{range $key, $value := .LanguageSelector}}
 				<option value="{{$key}}"{{if eq $key $language}} selected="selected"{{end}}>{{$value}}</option>
 				{{end}}
@@ -28,7 +28,7 @@
 		<div class="form-group">
 			<label for="theme-select">{{ call .Translate `settings.Theme` }}</label>
 			<select id="theme-select" name="theme" tabindex="2">
-				{{ $theme := .Theme }}
+				{{ $theme := .ThemeCode }}
 				{{range $key, $value := .ThemeSelector}}
 				<option value="{{$key}}"{{if eq $key $theme}} selected="selected"{{end}}>{{$value}}</option>
 				{{end}}
@@ -36,7 +36,7 @@
 		</div>
 	</fieldset>
 	
-	{{if eq .AuthOk true}}
+	{{if .AuthOk}}
 	<fieldset>
 		<legend>{{ call .Translate `main.AdvancedParameters` }}</legend>
 		<div class="form-group">

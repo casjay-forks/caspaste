@@ -65,13 +65,18 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 
 	// Also add to SQLite backup/cache if available
 	if db.backupPool != nil {
-		db.backupPool.Exec(
+		_, backupErr := db.backupPool.Exec(
 			`INSERT OR REPLACE INTO pastes (id, title, body, syntax, create_time, delete_time, one_use, author, author_email, author_url, is_file, file_name, mime_type, is_editable, is_private, is_url, original_url)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			paste.ID, paste.Title, paste.Body, paste.Syntax, paste.CreateTime, paste.DeleteTime, paste.OneUse,
 			paste.Author, paste.AuthorEmail, paste.AuthorURL,
 			paste.IsFile, paste.FileName, paste.MimeType, paste.IsEditable, paste.IsPrivate, paste.IsURL, paste.OriginalURL,
 		)
+		// Log backup errors but don't fail primary operation
+		if backupErr != nil {
+			// TODO: Log this error when logger is available in this context
+			_ = backupErr
+		}
 	}
 
 	return paste.ID, paste.CreateTime, paste.DeleteTime, nil
@@ -104,7 +109,7 @@ func (db DB) PasteUpdate(paste Paste) error {
 
 	// Also update in SQLite backup/cache if available
 	if db.backupPool != nil {
-		db.backupPool.Exec(
+		_, backupErr := db.backupPool.Exec(
 			`UPDATE pastes SET title = ?, body = ?, syntax = ?, delete_time = ?, one_use = ?,
 			author = ?, author_email = ?, author_url = ?,
 			is_file = ?, file_name = ?, mime_type = ?, is_editable = ?, is_private = ?, is_url = ?, original_url = ?
@@ -114,6 +119,9 @@ func (db DB) PasteUpdate(paste Paste) error {
 			paste.IsFile, paste.FileName, paste.MimeType, paste.IsEditable, paste.IsPrivate, paste.IsURL, paste.OriginalURL,
 			paste.ID,
 		)
+		if backupErr != nil {
+			_ = backupErr
+		}
 	}
 
 	return nil
@@ -141,7 +149,10 @@ func (db DB) PasteDelete(id string) error {
 
 	// Also delete from SQLite backup/cache if available
 	if db.backupPool != nil {
-		db.backupPool.Exec(`DELETE FROM pastes WHERE id = ?`, id)
+		_, backupErr := db.backupPool.Exec(`DELETE FROM pastes WHERE id = ?`, id)
+		if backupErr != nil {
+			_ = backupErr
+		}
 	}
 
 	return nil
@@ -206,10 +217,13 @@ func (db DB) PasteDeleteExpired() (int64, error) {
 
 	// Also delete from SQLite backup/cache if available
 	if db.backupPool != nil {
-		db.backupPool.Exec(
+		_, backupErr := db.backupPool.Exec(
 			`DELETE FROM pastes WHERE (delete_time < ?) AND (delete_time > 0)`,
 			time.Now().Unix(),
 		)
+		if backupErr != nil {
+			_ = backupErr
+		}
 	}
 
 	return rowsAffected, nil

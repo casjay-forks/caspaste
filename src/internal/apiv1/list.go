@@ -14,7 +14,7 @@ import (
 )
 
 // GET /api/v1/list
-func (data *Data) listHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleList(rw http.ResponseWriter, req *http.Request) error {
 	// Check method
 	if req.Method != "GET" {
 		return netshare.ErrMethodNotAllowed

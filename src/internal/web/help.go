@@ -20,12 +20,14 @@ type embHelpTmpl struct {
 	Protocol string
 	Host     string
 
+	Language  string
+	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
 	Highlight func(string, string) template.HTML
 }
 
 // Pattern: /emb_help/
-func (data *Data) embeddedHelpHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleEmbeddedHelp(rw http.ResponseWriter, req *http.Request) error {
 	// Check rate limit
 	err := data.RateLimitGet.CheckAndUse(netshare.GetClientAddr(req))
 	if err != nil {
@@ -48,6 +50,8 @@ func (data *Data) embeddedHelpHand(rw http.ResponseWriter, req *http.Request) er
 		OneUse:     paste.OneUse,
 		Protocol:   netshare.GetProtocol(req),
 		Host:       netshare.GetHost(req),
+		Language:   getCookie(req, "lang"),
+		Theme:      data.getThemeFunc(req),
 		Translate:  data.Locales.findLocale(req).translate,
 		Highlight:  data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight,
 	}

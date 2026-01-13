@@ -25,7 +25,7 @@ type healthzResponse struct {
 var startTime = time.Now()
 
 // Pattern: /api/healthz
-func (data *Data) apiHealthzHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleAPIHealthz(rw http.ResponseWriter, req *http.Request) error {
 	resp := healthzResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().Unix(),
@@ -50,7 +50,7 @@ func (data *Data) apiHealthzHand(rw http.ResponseWriter, req *http.Request) erro
 }
 
 // Pattern: /healthz
-func (data *Data) healthzHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleHealthz(rw http.ResponseWriter, req *http.Request) error {
 	uptime := int64(time.Since(startTime).Seconds())
 	uptimeStr := formatUptime(uptime)
 

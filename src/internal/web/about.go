@@ -24,6 +24,9 @@ type aboutTmpl struct {
 	AdminName string
 	AdminMail string
 
+	Language  string
+	Theme     func(string) string
+
 	Highlight func(string, string) template.HTML
 	Translate func(string, ...interface{}) template.HTML
 }
@@ -33,7 +36,20 @@ type aboutMinTmp struct {
 }
 
 // Pattern: /about
-func (data *Data) aboutHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleAbout(rw http.ResponseWriter, req *http.Request) error {
+	// Get theme
+	themeName := getCookie(req, "theme")
+	if themeName == "" {
+		themeName = data.UiDefaultTheme
+	}
+	themeMap, exists := data.Themes[themeName]
+	if !exists {
+		themeMap = data.Themes[data.UiDefaultTheme]
+	}
+	themeLookup := func(key string) string {
+		return themeMap[key]
+	}
+
 	dataTmpl := aboutTmpl{
 		Version:          data.Version,
 		TitleMaxLen:      data.TitleMaxLen,
@@ -44,6 +60,8 @@ func (data *Data) aboutHand(rw http.ResponseWriter, req *http.Request) error {
 		ServerTermsExist: data.ServerTermsExist,
 		AdminName:        data.AdminName,
 		AdminMail:        data.AdminMail,
+		Language:         getCookie(req, "lang"),
+		Theme:            themeLookup,
 		Highlight:        data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight,
 		Translate:        data.Locales.findLocale(req).translate,
 	}
@@ -53,19 +71,19 @@ func (data *Data) aboutHand(rw http.ResponseWriter, req *http.Request) error {
 }
 
 // Pattern: /about/authors
-func (data *Data) authorsHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleAuthors(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	return data.Authors.Execute(rw, aboutMinTmp{Translate: data.Locales.findLocale(req).translate})
 }
 
 // Pattern: /about/license
-func (data *Data) licenseHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleLicense(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	return data.License.Execute(rw, aboutMinTmp{Translate: data.Locales.findLocale(req).translate})
 }
 
 // Pattern: /about/source_code
-func (data *Data) sourceCodePageHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleSourceCodePage(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 	return data.SourceCodePage.Execute(rw, aboutMinTmp{Translate: data.Locales.findLocale(req).translate})
 }

@@ -43,7 +43,7 @@ func (data *Data) getHand(rw http.ResponseWriter, req *http.Request) error {
 	}
 
 	// If "one use" paste
-	if paste.OneUse == true {
+	if paste.OneUse {
 		if req.Form.Get("openOneUse") == "true" {
 			// Delete paste
 			err = data.DB.PasteDelete(pasteID)

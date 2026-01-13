@@ -14,40 +14,51 @@ import (
 )
 
 type jsTmpl struct {
-	Translate func(string, ...interface{}) template.HTML
+	Language  string
 	Theme     func(string) string
+	Translate func(string, ...interface{}) template.HTML
 }
 
-func (data *Data) styleCSSHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleStyleCSS(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "text/css; charset=utf-8")
 	return data.StyleCSS.Execute(rw, jsTmpl{
+		Language:  getCookie(req, "lang"),
+		Theme:     data.getThemeFunc(req),
 		Translate: data.Locales.findLocale(req).translate,
-		Theme:     data.Themes.findTheme(req, data.UiDefaultTheme).theme,
 	})
 }
 
-func (data *Data) mainJSHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleMainJS(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
 	rw.Write(*data.MainJS)
 	return nil
 }
 
-func (data *Data) codeJSHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleCodeJS(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return data.CodeJS.Execute(rw, jsTmpl{Translate: data.Locales.findLocale(req).translate})
-}
-
-func (data *Data) historyJSHand(rw http.ResponseWriter, req *http.Request) error {
-	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return data.HistoryJS.Execute(rw, jsTmpl{
+	return data.CodeJS.Execute(rw, jsTmpl{
+		Language:  getCookie(req, "lang"),
+		Theme:     data.getThemeFunc(req),
 		Translate: data.Locales.findLocale(req).translate,
-		Theme:     data.Themes.findTheme(req, data.UiDefaultTheme).theme,
 	})
 }
 
-func (data *Data) pasteJSHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleHistoryJS(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
-	return data.PasteJS.Execute(rw, jsTmpl{Translate: data.Locales.findLocale(req).translate})
+	return data.HistoryJS.Execute(rw, jsTmpl{
+		Language:  getCookie(req, "lang"),
+		Theme:     data.getThemeFunc(req),
+		Translate: data.Locales.findLocale(req).translate,
+	})
+}
+
+func (data *Data) handlePasteJS(rw http.ResponseWriter, req *http.Request) error {
+	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	return data.PasteJS.Execute(rw, jsTmpl{
+		Language:  getCookie(req, "lang"),
+		Theme:     data.getThemeFunc(req),
+		Translate: data.Locales.findLocale(req).translate,
+	})
 }
 
 func init() {
@@ -61,7 +72,7 @@ func init() {
 	}
 
 	// Check that About link exists in header
-	if strings.Contains(string(tmp), "/about") == false {
+	if !strings.Contains(string(tmp), "/about") {
 		println(resp)
 		os.Exit(1)
 	}
@@ -73,17 +84,17 @@ func init() {
 	}
 
 	// Check that authors and license links are present
-	if strings.Contains(string(tmp), "/about/authors") == false {
+	if !strings.Contains(string(tmp), "/about/authors") {
 		println(resp)
 		os.Exit(1)
 	}
 
-	if strings.Contains(string(tmp), "/about/source_code") == false {
+	if !strings.Contains(string(tmp), "/about/source_code") {
 		println(resp)
 		os.Exit(1)
 	}
 
-	if strings.Contains(string(tmp), "/about/license") == false {
+	if !strings.Contains(string(tmp), "/about/license") {
 		println(resp)
 		os.Exit(1)
 	}
@@ -95,7 +106,7 @@ func init() {
 	}
 
 	// Check that original author credit is maintained
-	if strings.Contains(string(tmp), "Leonid Maslakov") == false {
+	if !strings.Contains(string(tmp), "Leonid Maslakov") {
 		println(resp)
 		os.Exit(1)
 	}
@@ -107,7 +118,7 @@ func init() {
 	}
 
 	// Check that original source code link is present (AGPL compliance)
-	if strings.Contains(string(tmp), "https://github.com/lcomrade/lenpaste") == false {
+	if !strings.Contains(string(tmp), "https://github.com/lcomrade/lenpaste") {
 		println(resp)
 		os.Exit(1)
 	}

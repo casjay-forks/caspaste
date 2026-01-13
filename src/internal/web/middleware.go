@@ -11,10 +11,49 @@ import (
 	"os"
 )
 
+// SecurityHeadersMiddleware adds security headers to all responses
+func SecurityHeadersMiddleware(cfg SecurityHeadersConfig) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Anti-clickjacking
+			if cfg.XFrameOptions != "" {
+				w.Header().Set("X-Frame-Options", cfg.XFrameOptions)
+			}
+			
+			// Prevent MIME-sniffing
+			if cfg.XContentTypeOptions != "" {
+				w.Header().Set("X-Content-Type-Options", cfg.XContentTypeOptions)
+			}
+			
+			// Content Security Policy
+			if cfg.ContentSecurityPolicy != "" {
+				w.Header().Set("Content-Security-Policy", cfg.ContentSecurityPolicy)
+			}
+			
+			// Referrer policy
+			if cfg.ReferrerPolicy != "" {
+				w.Header().Set("Referrer-Policy", cfg.ReferrerPolicy)
+			}
+			
+			// Permissions policy
+			if cfg.PermissionsPolicy != "" {
+				w.Header().Set("Permissions-Policy", cfg.PermissionsPolicy)
+			}
+			
+			// HSTS (only if HTTPS)
+			if r.TLS != nil && cfg.StrictTransportSecurity != "" {
+				w.Header().Set("Strict-Transport-Security", cfg.StrictTransportSecurity)
+			}
+			
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // CORSMiddleware adds CORS headers to all responses
 func CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow all origins
+		// Allow all origins (as requested by user)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")

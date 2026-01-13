@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func (data *Data) robotsTxtHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleRobotsTxt(rw http.ResponseWriter, req *http.Request) error {
 	var robotsTxt strings.Builder
 
 	// User-agent: * rules
@@ -52,7 +52,7 @@ func (data *Data) robotsTxtHand(rw http.ResponseWriter, req *http.Request) error
 	return nil
 }
 
-func (data *Data) sitemapHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleSitemap(rw http.ResponseWriter, req *http.Request) error {
 	// Check if sitemap is allowed
 	if data.SiteRobotsDeny == "/" {
 		return netshare.ErrNotFound

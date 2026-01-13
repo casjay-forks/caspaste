@@ -9,6 +9,8 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -37,6 +39,10 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 
 	db.pool.SetMaxOpenConns(maxOpenConns)
 	db.pool.SetMaxIdleConns(maxIdleConns)
+	
+	// Set connection lifetime and idle timeouts to prevent stale connections
+	db.pool.SetConnMaxLifetime(3600 * 1000000000) // 1 hour in nanoseconds
+	db.pool.SetConnMaxIdleTime(600 * 1000000000)  // 10 minutes in nanoseconds
 
 	// If using postgres/mysql, also open SQLite backup/cache
 	if driverName == "postgres" || driverName == "mysql" || driverName == "mariadb" {
@@ -53,6 +59,8 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 		} else {
 			db.backupPool.SetMaxOpenConns(10)
 			db.backupPool.SetMaxIdleConns(2)
+			db.backupPool.SetConnMaxLifetime(3600 * 1000000000)
+			db.backupPool.SetConnMaxIdleTime(600 * 1000000000)
 			// Initialize backup database schema
 			InitDB("sqlite", backupPath)
 		}
@@ -62,6 +70,13 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 }
 
 func (db DB) Close() error {
+	// Close backup pool first if it exists
+	if db.backupPool != nil {
+		if err := db.backupPool.Close(); err != nil {
+			// Log but don't fail on backup close error
+			// Continue to close primary pool
+		}
+	}
 	return db.pool.Close()
 }
 
@@ -90,40 +105,56 @@ func InitDB(driverName string, dataSourceName string) error {
 	}
 
 	// Handle database-specific column additions
+	// Define allowed columns with validation (prevents SQL injection)
+	type columnDef struct {
+		name       string
+		definition string
+	}
+	
+	var columns []columnDef
 	if driverName == "sqlite3" || driverName == "sqlite" {
 		// SQLite: ALTER TABLE ADD COLUMN (ignores duplicate errors)
-		columns := []string{
-			"author TEXT NOT NULL DEFAULT ''",
-			"author_email TEXT NOT NULL DEFAULT ''",
-			"author_url TEXT NOT NULL DEFAULT ''",
-			"is_file BOOL NOT NULL DEFAULT 0",
-			"file_name TEXT NOT NULL DEFAULT ''",
-			"mime_type TEXT NOT NULL DEFAULT ''",
-			"is_editable BOOL NOT NULL DEFAULT 0",
-			"is_private BOOL NOT NULL DEFAULT 0",
-			"is_url BOOL NOT NULL DEFAULT 0",
-			"original_url TEXT NOT NULL DEFAULT ''",
+		columns = []columnDef{
+			{"author", "TEXT NOT NULL DEFAULT ''"},
+			{"author_email", "TEXT NOT NULL DEFAULT ''"},
+			{"author_url", "TEXT NOT NULL DEFAULT ''"},
+			{"is_file", "BOOL NOT NULL DEFAULT 0"},
+			{"file_name", "TEXT NOT NULL DEFAULT ''"},
+			{"mime_type", "TEXT NOT NULL DEFAULT ''"},
+			{"is_editable", "BOOL NOT NULL DEFAULT 0"},
+			{"is_private", "BOOL NOT NULL DEFAULT 0"},
+			{"is_url", "BOOL NOT NULL DEFAULT 0"},
+			{"original_url", "TEXT NOT NULL DEFAULT ''"},
 		}
 		for _, col := range columns {
-			db.pool.Exec(`ALTER TABLE pastes ADD COLUMN ` + col)
+			// Using string formatting is safe here because column name is from hardcoded whitelist
+			_, err := db.pool.Exec(fmt.Sprintf(`ALTER TABLE pastes ADD COLUMN %s %s`, col.name, col.definition))
+			// Ignore "duplicate column" errors
+			if err != nil && !strings.Contains(err.Error(), "duplicate column") {
+				return err
+			}
 		}
 
 	} else if driverName == "mysql" || driverName == "mariadb" {
 		// MySQL/MariaDB: Use ALTER TABLE ADD COLUMN IF NOT EXISTS (MariaDB 10.0+)
-		columns := []string{
-			"author TEXT NOT NULL DEFAULT ''",
-			"author_email TEXT NOT NULL DEFAULT ''",
-			"author_url TEXT NOT NULL DEFAULT ''",
-			"is_file BOOLEAN NOT NULL DEFAULT false",
-			"file_name TEXT NOT NULL DEFAULT ''",
-			"mime_type TEXT NOT NULL DEFAULT ''",
-			"is_editable BOOLEAN NOT NULL DEFAULT false",
-			"is_private BOOLEAN NOT NULL DEFAULT false",
-			"is_url BOOLEAN NOT NULL DEFAULT false",
-			"original_url TEXT NOT NULL DEFAULT ''",
+		columns = []columnDef{
+			{"author", "TEXT NOT NULL DEFAULT ''"},
+			{"author_email", "TEXT NOT NULL DEFAULT ''"},
+			{"author_url", "TEXT NOT NULL DEFAULT ''"},
+			{"is_file", "BOOLEAN NOT NULL DEFAULT false"},
+			{"file_name", "TEXT NOT NULL DEFAULT ''"},
+			{"mime_type", "TEXT NOT NULL DEFAULT ''"},
+			{"is_editable", "BOOLEAN NOT NULL DEFAULT false"},
+			{"is_private", "BOOLEAN NOT NULL DEFAULT false"},
+			{"is_url", "BOOLEAN NOT NULL DEFAULT false"},
+			{"original_url", "TEXT NOT NULL DEFAULT ''"},
 		}
 		for _, col := range columns {
-			db.pool.Exec(`ALTER TABLE pastes ADD COLUMN IF NOT EXISTS ` + col)
+			// Using string formatting is safe here because column name is from hardcoded whitelist
+			_, err := db.pool.Exec(fmt.Sprintf(`ALTER TABLE pastes ADD COLUMN IF NOT EXISTS %s %s`, col.name, col.definition))
+			if err != nil {
+				return err
+			}
 		}
 
 	} else {

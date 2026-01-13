@@ -86,14 +86,14 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 	switch req.URL.Path {
 	// Health check
 	case "/api/healthz":
-		err = data.healthzHand(rw, req)
+		err = data.handleHealthz(rw, req)
 	// API v1 endpoints
 	case "/api/v1/new":
 		err = data.newHand(rw, req)
 	case "/api/v1/get":
 		err = data.getHand(rw, req)
 	case "/api/v1/list":
-		err = data.listHand(rw, req)
+		err = data.handleList(rw, req)
 	case "/api/v1/getServerInfo":
 		err = data.getServerInfoHand(rw, req)
 	default:

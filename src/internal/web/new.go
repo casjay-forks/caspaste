@@ -14,6 +14,8 @@ import (
 )
 
 type createTmpl struct {
+	Language          string
+	Theme             func(string) string
 	TitleMaxLen       int
 	BodyMaxLen        int
 	AuthorAllMaxLen   int
@@ -31,24 +33,24 @@ type createTmpl struct {
 	Translate func(string, ...interface{}) template.HTML
 }
 
-func (data *Data) newPasteHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleNewPaste(rw http.ResponseWriter, req *http.Request) error {
 	var err error
 
 	// Check auth
-	authOk := true
+	isAuthenticated := true
 
 	if data.CasPasswdFile != "" {
-		authOk = false
+		isAuthenticated = false
 
-		user, pass, authExist := req.BasicAuth()
-		if authExist == true {
-			authOk, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
+		user, pass, authProvided := req.BasicAuth()
+		if authProvided {
+			isAuthenticated, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
 			if err != nil {
 				return err
 			}
 		}
 
-		if authOk == false {
+		if !isAuthenticated {
 			rw.Header().Add("WWW-Authenticate", "Basic")
 			rw.WriteHeader(401)
 		}
@@ -66,8 +68,23 @@ func (data *Data) newPasteHand(rw http.ResponseWriter, req *http.Request) error 
 		return nil
 	}
 
+	// Get theme
+	themeName := getCookie(req, "theme")
+	if themeName == "" {
+		themeName = data.UiDefaultTheme
+	}
+	themeMap, exists := data.Themes[themeName]
+	if !exists {
+		themeMap = data.Themes[data.UiDefaultTheme]
+	}
+	themeLookup := func(key string) string {
+		return themeMap[key]
+	}
+
 	// Else show create page
 	tmplData := createTmpl{
+		Language:           getCookie(req, "lang"),
+		Theme:              themeLookup,
 		TitleMaxLen:        data.TitleMaxLen,
 		BodyMaxLen:         data.BodyMaxLen,
 		AuthorAllMaxLen:    netshare.MaxLengthAuthorAll,
@@ -78,7 +95,7 @@ func (data *Data) newPasteHand(rw http.ResponseWriter, req *http.Request) error 
 		AuthorDefault:      getCookie(req, "author"),
 		AuthorEmailDefault: getCookie(req, "authorEmail"),
 		AuthorURLDefault:   getCookie(req, "authorURL"),
-		AuthOk:             authOk,
+		AuthOk:             isAuthenticated,
 		Translate:          data.Locales.findLocale(req).translate,
 	}
 

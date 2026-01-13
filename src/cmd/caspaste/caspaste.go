@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -1377,7 +1378,14 @@ func main() {
 	yamlCfg.Directories.Db = dbDir
 	yamlCfg.Directories.Cache = cacheDir
 	yamlCfg.Directories.Logs = logsDir
-	if err := config.SaveYAMLConfig(configFilePath, yamlCfg); err != nil {
+	
+	// Determine config file path for saving
+	saveConfigPath := *flagConfigDir + "/caspaste.yml"
+	if *flagConfigDir == "" {
+		saveConfigPath = "./caspaste.yml"
+	}
+	
+	if err := config.SaveYAMLConfig(saveConfigPath, yamlCfg); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to save directories to config: %v\n", err)
 	}
 
@@ -1504,20 +1512,20 @@ func main() {
 	// Load content with embedded defaults + file override
 	// Embedded files in src/internal/web/data/ are used by default
 	// Config paths override embedded content if specified and file exists
-	serverAbout, err := web.LoadContentWithOverride("data/about.txt", yamlCfg.Content.About)
+	serverAbout, err := web.LoadContentWithOverride("data/about.txt", yamlCfg.Web.Content.About)
 	if err != nil {
 		// Log warning but continue with empty content
 		fmt.Fprintf(os.Stderr, "Warning: failed to load about content: %v\n", err)
 		serverAbout = ""
 	}
 
-	serverRules, err := web.LoadContentWithOverride("data/rules.txt", yamlCfg.Content.Rules)
+	serverRules, err := web.LoadContentWithOverride("data/rules.txt", yamlCfg.Web.Content.Rules)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to load rules content: %v\n", err)
 		serverRules = ""
 	}
 
-	serverTermsOfUse, err := web.LoadContentWithOverride("data/terms.txt", yamlCfg.Content.Terms)
+	serverTermsOfUse, err := web.LoadContentWithOverride("data/terms.txt", yamlCfg.Web.Content.Terms)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to load terms content: %v\n", err)
 		serverTermsOfUse = ""
@@ -1525,8 +1533,8 @@ func main() {
 
 	// security.txt is auto-generated, not embedded
 	securityTxt := ""
-	if yamlCfg.Content.Security != "" {
-		securityTxt, err = readFile(yamlCfg.Content.Security)
+	if yamlCfg.Web.Content.Security != "" {
+		securityTxt, err = readFile(yamlCfg.Web.Content.Security)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to read content.security: %v\n", err)
 			securityTxt = ""
@@ -1618,8 +1626,8 @@ func main() {
 
 	cfg := config.Config{
 		Log:               log,
-		RateLimitGet:      netshare.NewRateLimitSystem(yamlCfg.Limits.GetPastesPer5Min, yamlCfg.Limits.GetPastesPer15Min, yamlCfg.Limits.GetPastesPer1Hour),
-		RateLimitNew:      netshare.NewRateLimitSystem(yamlCfg.Limits.NewPastesPer5Min, yamlCfg.Limits.NewPastesPer15Min, yamlCfg.Limits.NewPastesPer1Hour),
+		RateLimitGet:      netshare.NewRateLimitSystem(yamlCfg.Limits.RateLimit.GetPastes.Per5Min, yamlCfg.Limits.RateLimit.GetPastes.Per15Min, yamlCfg.Limits.RateLimit.GetPastes.Per1Hour),
+		RateLimitNew:      netshare.NewRateLimitSystem(yamlCfg.Limits.RateLimit.NewPastes.Per5Min, yamlCfg.Limits.RateLimit.NewPastes.Per15Min, yamlCfg.Limits.RateLimit.NewPastes.Per1Hour),
 		Version:           Version,
 		TitleMaxLen:       yamlCfg.Limits.TitleMaxLength,
 		BodyMaxLen:        yamlCfg.Limits.BodyMaxLength,
@@ -1634,16 +1642,16 @@ func main() {
 		AdminMail:         yamlCfg.Server.Administrator.Email,
 		SecurityContactEmail: yamlCfg.Web.Security.Contact.Email,
 		SecurityContactName:  yamlCfg.Web.Security.Contact.Name,
-		SiteRobotsAllow:      yamlCfg.Site.Robots.Allow,
-		SiteRobotsDeny:       yamlCfg.Site.Robots.Deny,
-		SiteRobotsAgentsDeny: yamlCfg.Site.Robots.Agents.Deny,
-		Logo:              yamlCfg.Branding.Logo,
-		Favicon:           yamlCfg.Branding.Favicon,
-		TrustReverseProxy: yamlCfg.Server.TrustReverseProxy,
-		UiDefaultLifetime: yamlCfg.UI.DefaultLifetime,
-		UiDefaultTheme:    yamlCfg.UI.DefaultTheme,
-		UiThemesDir:       yamlCfg.UI.ThemesDir,
-		CasPasswdFile:     yamlCfg.Security.PasswordFile,
+		SiteRobotsAllow:      yamlCfg.Web.SEO.Robots.Allow,
+		SiteRobotsDeny:       yamlCfg.Web.SEO.Robots.Deny,
+		SiteRobotsAgentsDeny: yamlCfg.Web.SEO.Robots.Agents.Deny,
+		Logo:                 yamlCfg.Web.Branding.Logo,
+		Favicon:              yamlCfg.Web.Branding.Favicon,
+		TrustReverseProxy:    yamlCfg.Server.TrustReverseProxy,
+		UiDefaultLifetime:    yamlCfg.Web.UI.DefaultLifetime,
+		UiDefaultTheme:       yamlCfg.Web.UI.DefaultTheme,
+		UiThemesDir:          yamlCfg.Web.UI.ThemesDir,
+		CasPasswdFile:        yamlCfg.Security.PasswordFile,
 	}
 
 	apiv1Data := apiv1.Load(db, cfg)
@@ -1858,11 +1866,38 @@ func main() {
 	var srvHTTPS *http.Server
 	if httpsListener != nil && tlsCert != nil {
 		httpsErrors = make(chan error, 1)
+		
+		// Configure TLS security settings
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12, // Default to TLS 1.2
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+			},
+			PreferServerCipherSuites: true,
+		}
+		
+		// Apply configured TLS min version
+		switch yamlCfg.Security.TLS.MinVersion {
+		case "1.3":
+			tlsConfig.MinVersion = tls.VersionTLS13
+		case "1.2":
+			tlsConfig.MinVersion = tls.VersionTLS12
+		case "1.1":
+			tlsConfig.MinVersion = tls.VersionTLS11
+		case "1.0":
+			tlsConfig.MinVersion = tls.VersionTLS10
+		}
+		
 		srvHTTPS = &http.Server{
 			Handler:      handler,
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 			IdleTimeout:  60 * time.Second,
+			TLSConfig:    tlsConfig,
 		}
 
 		go func() {

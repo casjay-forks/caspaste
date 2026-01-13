@@ -10,6 +10,16 @@ import (
 	"net/http"
 )
 
+// SecurityHeadersConfig holds configuration for security headers
+type SecurityHeadersConfig struct {
+	XFrameOptions           string
+	XContentTypeOptions     string
+	ContentSecurityPolicy   string
+	ReferrerPolicy          string
+	PermissionsPolicy       string
+	StrictTransportSecurity string
+}
+
 func getCookie(req *http.Request, name string) string {
 	cookie, err := req.Cookie(name)
 	if err != nil {
@@ -17,4 +27,20 @@ func getCookie(req *http.Request, name string) string {
 	}
 
 	return cookie.Value
+}
+
+// getThemeFunc returns a theme lookup function for the given request
+// This is used by templates to access theme values
+func (data *Data) getThemeFunc(req *http.Request) func(string) string {
+	themeName := getCookie(req, "theme")
+	if themeName == "" {
+		themeName = data.UiDefaultTheme
+	}
+	themeMap, exists := data.Themes[themeName]
+	if !exists {
+		themeMap = data.Themes[data.UiDefaultTheme]
+	}
+	return func(key string) string {
+		return themeMap[key]
+	}
 }

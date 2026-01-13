@@ -11,7 +11,7 @@ import (
 )
 
 // Pattern: /.well-known/security.txt
-func (data *Data) securityTxtHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleSecurityTxt(rw http.ResponseWriter, req *http.Request) error {
 	var content string
 
 	// Use override if specified

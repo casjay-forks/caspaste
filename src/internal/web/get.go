@@ -31,15 +31,19 @@ type pasteTmpl struct {
 	AuthorEmail string
 	AuthorURL   string
 
+	Language  string
+	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
 }
 
 type pasteContinueTmpl struct {
 	ID        string
+	Language  string
+	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
 }
 
-func (data *Data) getPasteHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) error {
 	// Check rate limit
 	err := data.RateLimitGet.CheckAndUse(netshare.GetClientAddr(req))
 	if err != nil {
@@ -56,13 +60,15 @@ func (data *Data) getPasteHand(rw http.ResponseWriter, req *http.Request) error 
 	}
 
 	// If "one use" paste
-	if paste.OneUse == true {
+	if paste.OneUse {
 		// If continue button not pressed
 		req.ParseForm()
 
 		if req.PostForm.Get("oneUseContinue") != "true" {
 			tmplData := pasteContinueTmpl{
 				ID:        paste.ID,
+				Language:  getCookie(req, "lang"),
+				Theme:     data.getThemeFunc(req),
 				Translate: data.Locales.findLocale(req).translate,
 			}
 
@@ -96,6 +102,8 @@ func (data *Data) getPasteHand(rw http.ResponseWriter, req *http.Request) error 
 		AuthorEmail: paste.AuthorEmail,
 		AuthorURL:   paste.AuthorURL,
 
+		Language:  getCookie(req, "lang"),
+		Theme:     data.getThemeFunc(req),
 		Translate: data.Locales.findLocale(req).translate,
 	}
 

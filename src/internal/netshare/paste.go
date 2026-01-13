@@ -134,7 +134,7 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		}
 	}
 
-	if syntaxOk == false {
+	if !syntaxOk {
 		return "", 0, 0, ErrBadRequest
 	}
 

@@ -74,25 +74,25 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 		cfg.Web.Security.Contact.Name = val
 	}
 
-	// Site robots
+	// Site robots -> Web.SEO.Robots
 	if val := getEnv("SITE_ROBOTS_ALLOW"); val != "" {
-		cfg.Site.Robots.Allow = val
+		cfg.Web.SEO.Robots.Allow = val
 	}
 	if val := getEnv("SITE_ROBOTS_DENY"); val != "" {
-		cfg.Site.Robots.Deny = val
+		cfg.Web.SEO.Robots.Deny = val
 	}
 	if val := getEnv("ROBOTS_DISALLOW"); val != "" { // Legacy compatibility
 		if validation.IsTruthy(val) {
-			cfg.Site.Robots.Deny = "/"
+			cfg.Web.SEO.Robots.Deny = "/"
 		}
 	}
 
-	// Branding
+	// Branding -> Web.Branding
 	if val := getEnv("BRANDING_LOGO"); val != "" {
-		cfg.Branding.Logo = val
+		cfg.Web.Branding.Logo = val
 	}
 	if val := getEnv("BRANDING_FAVICON"); val != "" {
-		cfg.Branding.Favicon = val
+		cfg.Web.Branding.Favicon = val
 	}
 
 	// Database settings
@@ -138,69 +138,72 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("MAX_PASTE_LIFETIME"); val != "" {
 		cfg.Limits.MaxPasteLifetime = val
 	}
+	// Rate limits - GET pastes
 	if val := getEnv("GET_PASTES_PER_5MIN"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.GetPastesPer5Min = uint(num)
+			cfg.Limits.RateLimit.GetPastes.Per5Min = uint(num)
 		}
 	}
 	if val := getEnv("GET_PASTES_PER_15MIN"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.GetPastesPer15Min = uint(num)
+			cfg.Limits.RateLimit.GetPastes.Per15Min = uint(num)
 		}
 	}
 	if val := getEnv("GET_PASTES_PER_1HOUR"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.GetPastesPer1Hour = uint(num)
+			cfg.Limits.RateLimit.GetPastes.Per1Hour = uint(num)
 		}
 	}
+	
+	// Rate limits - NEW pastes
 	if val := getEnv("NEW_PASTES_PER_5MIN"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.NewPastesPer5Min = uint(num)
+			cfg.Limits.RateLimit.NewPastes.Per5Min = uint(num)
 		}
 	}
 	if val := getEnv("NEW_PASTES_PER_15MIN"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.NewPastesPer15Min = uint(num)
+			cfg.Limits.RateLimit.NewPastes.Per15Min = uint(num)
 		}
 	}
 	if val := getEnv("NEW_PASTES_PER_1HOUR"); val != "" {
 		if num, err := strconv.ParseUint(val, 10, 32); err == nil {
-			cfg.Limits.NewPastesPer1Hour = uint(num)
+			cfg.Limits.RateLimit.NewPastes.Per1Hour = uint(num)
 		}
 	}
 
-	// UI settings
+	// UI settings -> Web.UI
 	if val := getEnv("UI_DEFAULT_LIFETIME"); val != "" {
-		cfg.UI.DefaultLifetime = val
+		cfg.Web.UI.DefaultLifetime = val
 	}
 	if val := getEnv("UI_DEFAULT_THEME"); val != "" {
-		cfg.UI.DefaultTheme = val
+		cfg.Web.UI.DefaultTheme = val
 	}
 	if val := getEnv("UI_THEMES_DIR"); val != "" {
-		cfg.UI.ThemesDir = val
+		cfg.Web.UI.ThemesDir = val
 	}
 
-	// Content settings
+	// Content settings -> Web.Content
 	if val := getEnv("CONTENT_ABOUT"); val != "" {
-		cfg.Content.About = val
+		cfg.Web.Content.About = val
 	}
 	if val := getEnv("SERVER_ABOUT"); val != "" { // Legacy
-		cfg.Content.About = val
+		cfg.Web.Content.About = val
 	}
 	if val := getEnv("CONTENT_RULES"); val != "" {
-		cfg.Content.Rules = val
+		cfg.Web.Content.Rules = val
 	}
 	if val := getEnv("SERVER_RULES"); val != "" { // Legacy
-		cfg.Content.Rules = val
+		cfg.Web.Content.Rules = val
 	}
 	if val := getEnv("CONTENT_TERMS"); val != "" {
-		cfg.Content.Terms = val
+		cfg.Web.Content.Terms = val
 	}
 	if val := getEnv("SERVER_TERMS"); val != "" { // Legacy
-		cfg.Content.Terms = val
+		cfg.Web.Content.Terms = val
 	}
 	if val := getEnv("CONTENT_SECURITY"); val != "" {
-		cfg.Content.Security = val
+		cfg.Web.Content.Security = val
 	}
 
 	// Directory settings

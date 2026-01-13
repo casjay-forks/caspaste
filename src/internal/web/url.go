@@ -13,7 +13,7 @@ import (
 )
 
 // GET /u/{id} - URL shortener redirect
-func (data *Data) urlRedirectHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleURLRedirect(rw http.ResponseWriter, req *http.Request) error {
 	// Check method
 	if req.Method != "GET" {
 		return netshare.ErrMethodNotAllowed

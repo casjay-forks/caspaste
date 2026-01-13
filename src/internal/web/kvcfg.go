@@ -41,7 +41,7 @@ func readKVCfg(data string) (map[string]string, error) {
 				strPlus, isMultilinePlus := multilineCheck(strPlus)
 				val = val + strPlus
 
-				if isMultilinePlus == false {
+				if !isMultilinePlus {
 					break
 				}
 			}

@@ -16,10 +16,10 @@ import (
 const cookieMaxAge = 60 * 60 * 24 * 360 * 50 // 50 year
 
 type settingsTmpl struct {
-	Language         string
+	LanguageCode     string
 	LanguageSelector map[string]string
 
-	Theme         string
+	ThemeCode     string
 	ThemeSelector map[string]string
 
 	AuthorAllMaxLen int
@@ -29,22 +29,24 @@ type settingsTmpl struct {
 
 	AuthOk bool
 
+	Language  string
+	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
 }
 
 // Pattern: /settings
-func (data *Data) settingsHand(rw http.ResponseWriter, req *http.Request) error {
+func (data *Data) handleSettings(rw http.ResponseWriter, req *http.Request) error {
 	var err error
 
 	// Check auth
-	authOk := true
+	isAuthenticated := true
 
 	if data.CasPasswdFile != "" {
-		authOk = false
+		isAuthenticated = false
 
-		user, pass, authExist := req.BasicAuth()
-		if authExist == true {
-			authOk, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
+		user, pass, authProvided := req.BasicAuth()
+		if authProvided {
+			isAuthenticated, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
 			if err != nil {
 				return err
 			}
@@ -53,22 +55,37 @@ func (data *Data) settingsHand(rw http.ResponseWriter, req *http.Request) error 
 
 	// Show settings page
 	if req.Method != "POST" {
+		// Get theme
+		themeName := getCookie(req, "theme")
+		if themeName == "" {
+			themeName = data.UiDefaultTheme
+		}
+		themeMap, exists := data.Themes[themeName]
+		if !exists {
+			themeMap = data.Themes[data.UiDefaultTheme]
+		}
+		themeLookup := func(key string) string {
+			return themeMap[key]
+		}
+
 		// Prepare data
 		dataTmpl := settingsTmpl{
-			Language:         getCookie(req, "lang"),
+			LanguageCode:     getCookie(req, "lang"),
 			LanguageSelector: data.LocalesList,
-			Theme:            getCookie(req, "theme"),
+			ThemeCode:        getCookie(req, "theme"),
 			ThemeSelector:    data.ThemesList.getForLocale(req),
 			AuthorAllMaxLen:  netshare.MaxLengthAuthorAll,
 			Author:           getCookie(req, "author"),
 			AuthorEmail:      getCookie(req, "authorEmail"),
 			AuthorURL:        getCookie(req, "authorURL"),
-			AuthOk:           authOk,
+			AuthOk:           isAuthenticated,
+			Language:         getCookie(req, "lang"),
+			Theme:            themeLookup,
 			Translate:        data.Locales.findLocale(req).translate,
 		}
 
-		if dataTmpl.Theme == "" {
-			dataTmpl.Theme = data.UiDefaultTheme
+		if dataTmpl.ThemeCode == "" {
+			dataTmpl.ThemeCode = data.UiDefaultTheme
 		}
 
 		// Show page

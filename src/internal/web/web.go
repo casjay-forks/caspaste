@@ -327,82 +327,82 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 	switch req.URL.Path {
 	// Health checks
 	case "/healthz":
-		err = data.healthzHand(rw, req)
+		err = data.handleHealthz(rw, req)
 	case "/api/healthz":
-		err = data.apiHealthzHand(rw, req)
+		err = data.handleAPIHealthz(rw, req)
 	// Search engines
 	case "/robots.txt":
-		err = data.robotsTxtHand(rw, req)
+		err = data.handleRobotsTxt(rw, req)
 	case "/sitemap.xml":
-		err = data.sitemapHand(rw, req)
+		err = data.handleSitemap(rw, req)
 	// Security
 	case "/.well-known/security.txt":
-		err = data.securityTxtHand(rw, req)
+		err = data.handleSecurityTxt(rw, req)
 	// Resources
 	case "/style.css":
-		err = data.styleCSSHand(rw, req)
+		err = data.handleStyleCSS(rw, req)
 	case "/main.js":
-		err = data.mainJSHand(rw, req)
+		err = data.handleMainJS(rw, req)
 	case "/history.js":
-		err = data.historyJSHand(rw, req)
+		err = data.handleHistoryJS(rw, req)
 	case "/code.js":
-		err = data.codeJSHand(rw, req)
+		err = data.handleCodeJS(rw, req)
 	case "/paste.js":
-		err = data.pasteJSHand(rw, req)
+		err = data.handlePasteJS(rw, req)
 	// PWA Support
 	case "/manifest.json":
-		err = data.manifestHand(rw, req)
+		err = data.handleManifest(rw, req)
 	case "/sw.js":
-		err = data.serviceWorkerHand(rw, req)
+		err = data.handleServiceWorker(rw, req)
 	case "/about":
-		err = data.aboutHand(rw, req)
+		err = data.handleAbout(rw, req)
 	case "/about/authors":
-		err = data.authorsHand(rw, req)
+		err = data.handleAuthors(rw, req)
 	case "/about/license":
-		err = data.licenseHand(rw, req)
+		err = data.handleLicense(rw, req)
 	case "/about/source_code":
-		err = data.sourceCodePageHand(rw, req)
+		err = data.handleSourceCodePage(rw, req)
 	case "/docs":
-		err = data.docsHand(rw, req)
+		err = data.handleDocs(rw, req)
 	case "/docs/apiv1":
-		err = data.docsApiV1Hand(rw, req)
+		err = data.handleDocsAPIv1(rw, req)
 	case "/docs/libraries":
-		err = data.docsLibrariesHand(rw, req)
+		err = data.handleDocsLibraries(rw, req)
 	case "/docs/api_libs": // Redirect old URL
 		http.Redirect(rw, req, "/docs/libraries", http.StatusMovedPermanently)
 	case "/docs/customize":
-		err = data.docsCustomizeHand(rw, req)
+		err = data.handleDocsCustomize(rw, req)
 	// Pages
 	case "/":
-		err = data.newPasteHand(rw, req)
+		err = data.handleNewPaste(rw, req)
 	case "/list":
-		err = data.listHand(rw, req)
+		err = data.handleList(rw, req)
 	case "/settings":
-		err = data.settingsHand(rw, req)
+		err = data.handleSettings(rw, req)
 	case "/terms":
-		err = data.termsOfUseHand(rw, req)
+		err = data.handleTermsOfUse(rw, req)
 	// Else
 	default:
 		if strings.HasPrefix(req.URL.Path, "/dl/") {
-			err = data.dlHand(rw, req)
+			err = data.handleDownload(rw, req)
 
 		} else if strings.HasPrefix(req.URL.Path, "/emb/") {
-			err = data.embeddedHand(rw, req)
+			err = data.handleEmbedded(rw, req)
 
 		} else if strings.HasPrefix(req.URL.Path, "/emb_help/") {
-			err = data.embeddedHelpHand(rw, req)
+			err = data.handleEmbeddedHelp(rw, req)
 
 		} else if strings.HasPrefix(req.URL.Path, "/u/") {
-			err = data.urlRedirectHand(rw, req)
+			err = data.handleURLRedirect(rw, req)
 
 		} else if strings.HasPrefix(req.URL.Path, "/qr/") {
-			err = data.qrCodeHand(rw, req)
+			err = data.handleQRCode(rw, req)
 
 		} else if strings.HasPrefix(req.URL.Path, "/edit/") {
-			err = data.editPasteHand(rw, req)
+			err = data.handleEditPaste(rw, req)
 
 		} else {
-			err = data.getPasteHand(rw, req)
+			err = data.handleGetPaste(rw, req)
 		}
 	}
 

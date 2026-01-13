@@ -29,7 +29,7 @@ func (data *Data) rawHand(rw http.ResponseWriter, req *http.Request) error {
 	}
 
 	// If "one use" paste
-	if paste.OneUse == true {
+	if paste.OneUse {
 		// Delete paste
 		err = data.DB.PasteDelete(pasteID)
 		if err != nil {
