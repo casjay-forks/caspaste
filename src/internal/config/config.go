@@ -25,20 +25,34 @@ type Config struct {
 	BodyMaxLen  int
 	MaxLifeTime int64
 
+	// Content
 	ServerAbout      string
 	ServerRules      string
 	ServerTermsOfUse string
+	SecurityTxt      string
 
-	AdminName string
-	AdminMail string
+	// Server info
+	FQDN        string
+	ServerTitle string
+	AdminName   string
+	AdminMail   string
 
-	RobotsDisallow bool
+	// Security contact
+	SecurityContactEmail string
+	SecurityContactName  string
+
+	// Robots
+	SiteRobotsAllow      string
+	SiteRobotsDeny       string
+	SiteRobotsAgentsDeny []string
+
+	// Branding
+	Logo    string
+	Favicon string
 
 	CasPasswdFile string
 
 	// TrustReverseProxy controls whether to trust X-Forwarded-* and similar headers
-	// Set to true only when behind a trusted reverse proxy (nginx, caddy, etc.)
-	// WARNING: Setting to true when not behind a proxy allows IP spoofing
 	TrustReverseProxy bool
 
 	UiDefaultLifetime string

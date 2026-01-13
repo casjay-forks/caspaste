@@ -115,11 +115,17 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		paste.Syntax = "plaintext"
 	}
 
+	// Validate syntax (allow "autodetect" as special value)
 	syntaxOk := false
-	for _, name := range lexerNames {
-		if name == paste.Syntax {
-			syntaxOk = true
-			break
+	if paste.Syntax == "autodetect" {
+		syntaxOk = true
+		// Leave as "autodetect" - will be detected during display
+	} else {
+		for _, name := range lexerNames {
+			if name == paste.Syntax {
+				syntaxOk = true
+				break
+			}
 		}
 	}
 

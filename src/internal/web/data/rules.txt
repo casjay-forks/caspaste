@@ -1,0 +1,54 @@
+# Server Rules
+
+Please follow these rules when using this paste service:
+
+## Acceptable Use
+
+1. **Legal Content Only**: Do not post content that violates local, state, or federal laws
+2. **No Harmful Content**: No malware, viruses, or malicious code
+3. **No Personal Information**: Do not post private information of others without consent
+4. **No Spam**: Do not use this service for spam or unsolicited advertising
+5. **No Abuse**: Do not attempt to abuse, overload, or disrupt the service
+6. **Respect Rate Limits**: Follow the configured rate limits for paste creation and viewing
+
+## Prohibited Content
+
+The following types of content are strictly prohibited:
+
+- Child exploitation material (CSAM)
+- Copyrighted material without permission
+- Malware or exploit code intended for malicious use
+- Personal identifying information (PII) of others
+- Content that violates intellectual property rights
+- Hate speech or content promoting violence
+- Phishing or fraud attempts
+
+## Rate Limits
+
+To ensure fair use for all users, the following rate limits apply:
+
+- Paste creation: Limited per IP address
+- Paste viewing: Limited per IP address
+- Actual limits are displayed on the About page
+
+## Data Retention
+
+- Pastes are automatically deleted based on their expiration time
+- "Burn after reading" pastes are deleted immediately after first view
+- Expired pastes are cleaned up automatically
+- No paste is stored indefinitely unless explicitly set to never expire
+
+## Privacy
+
+- We log minimal information necessary for operation
+- IP addresses used for rate limiting only
+- No personal data is collected
+- No cookies used for tracking
+
+## Abuse Reporting
+
+If you discover content that violates these rules, please contact the server administrator immediately.
+
+## Changes
+
+These rules may be updated at any time. Continued use of the service constitutes acceptance of any changes.

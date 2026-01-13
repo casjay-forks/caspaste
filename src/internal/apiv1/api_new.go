@@ -17,6 +17,7 @@ import (
 
 type newPasteAnswer struct {
 	ID         string `json:"id"`
+	URL        string `json:"url"`
 	CreateTime int64  `json:"createTime"`
 	DeleteTime int64  `json:"deleteTime"`
 }
@@ -72,7 +73,15 @@ func (data *Data) newHand(rw http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
+	// Construct full URL for paste
+	url := netshare.BuildPasteURL(req, pasteID)
+
 	// Return response
 	rw.Header().Set("Content-Type", "application/json")
-	return json.NewEncoder(rw).Encode(newPasteAnswer{ID: pasteID, CreateTime: createTime, DeleteTime: deleteTime})
+	return json.NewEncoder(rw).Encode(newPasteAnswer{
+		ID:         pasteID,
+		URL:        url,
+		CreateTime: createTime,
+		DeleteTime: deleteTime,
+	})
 }

@@ -17,7 +17,19 @@ import (
 
 func tryHighlight(source string, lexer string, theme string) template.HTML {
 	// Determine lexer
-	l := lexers.Get(lexer)
+	var l chroma.Lexer
+
+	if lexer == "autodetect" || lexer == "" {
+		// Auto-detect language from source code
+		l = lexers.Analyse(source)
+		if l == nil {
+			// Couldn't detect, fallback to plaintext
+			l = lexers.Get("plaintext")
+		}
+	} else {
+		l = lexers.Get(lexer)
+	}
+
 	if l == nil {
 		return template.HTML(source)
 	}

@@ -40,18 +40,19 @@
 	<body>
 		<header role="banner">
 			<nav aria-label="Main navigation">
-				<div class="header-left">
-					<a href="/" class="site-title">{{ call .Translate `base.CasPaste` }}</a>
-					<a href="/about">{{ call .Translate `base.About` }}</a>
-					<a href="/docs">{{ call .Translate `base.Docs` }}</a>
-				</div>
-				<div class="header-right">
-					<a href="/settings">{{ call .Translate `base.Settings` }}</a>
-				</div>
+				<a href="/" class="site-title">{{ call .Translate `base.CasPaste` }}</a>
+				<a href="/list">{{ call .Translate `base.List` }}</a>
+				<a href="/about">{{ call .Translate `base.About` }}</a>
+				<a href="/docs">{{ call .Translate `base.Docs` }}</a>
+				<a href="#" id="js-history-button" onclick="historyPopUpShow(); return false;">{{ call .Translate `base.History` }}</a>
+				<a href="/settings">{{ call .Translate `base.Settings` }}</a>
 			</nav>
 		</header>
-		<main>
+		<main role="main">
 			<article>{{template "article" .}}</article>
 		</main>
+		<footer role="contentinfo">
+			<p>&copy; 2024 CasPaste | <a href="/about">{{ call .Translate `base.About` }}</a> | <a href="/docs">{{ call .Translate `base.Docs` }}</a> | <a href="/about/source_code">{{ call .Translate `base.SourceCode` }}</a></p>
+		</footer>
 	</body>
 </html>

@@ -8,6 +8,8 @@ package web
 
 import (
 	"embed"
+	"os"
+
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
 	"github.com/casjay-forks/caspaste/src/internal/config"
 	"github.com/casjay-forks/caspaste/src/internal/logger"
@@ -52,9 +54,10 @@ type Data struct {
 	License        *template.Template
 	SourceCodePage *template.Template
 
-	Docs        *template.Template
-	DocsApiV1   *template.Template
-	DocsApiLibs *template.Template
+	Docs           *template.Template
+	DocsApiV1      *template.Template
+	DocsLibraries  *template.Template
+	DocsCustomize  *template.Template
 
 	EmbeddedPage     *template.Template
 	EmbeddedHelpPage *template.Template
@@ -69,16 +72,55 @@ type Data struct {
 	ServerRules      string
 	ServerTermsExist bool
 	ServerTermsOfUse string
+	SecurityTxt      string
 
-	AdminName string
-	AdminMail string
+	// Server info
+	FQDN        string
+	ServerTitle string
+	AdminName   string
+	AdminMail   string
 
-	RobotsDisallow bool
+	// Security contact
+	SecurityContactEmail string
+	SecurityContactName  string
+
+	// Robots
+	SiteRobotsAllow      string
+	SiteRobotsDeny       string
+	SiteRobotsAgentsDeny []string
+
+	// Branding
+	Logo    string
+	Favicon string
 
 	CasPasswdFile string
 
 	UiDefaultLifeTime string
 	UiDefaultTheme    string
+}
+
+// loadContentWithOverride loads content from embedded FS or overrides from file
+// If overridePath is specified and file exists, uses that; otherwise uses embedded
+func loadContentWithOverride(embeddedPath, overridePath string) (string, error) {
+	var content []byte
+	var err error
+
+	// Try override file first if specified
+	if overridePath != "" {
+		content, err = os.ReadFile(overridePath)
+		if err == nil {
+			return string(content), nil
+		}
+		// File doesn't exist or error, fall back to embedded
+	}
+
+	// Use embedded content
+	content, err = embFS.ReadFile(embeddedPath)
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }
 
 func Load(db storage.DB, cfg config.Config) (*Data, error) {
@@ -114,7 +156,16 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	data.AdminName = cfg.AdminName
 	data.AdminMail = cfg.AdminMail
 
-	data.RobotsDisallow = cfg.RobotsDisallow
+	data.FQDN = cfg.FQDN
+	data.ServerTitle = cfg.ServerTitle
+	data.SecurityContactEmail = cfg.SecurityContactEmail
+	data.SecurityContactName = cfg.SecurityContactName
+	data.SecurityTxt = cfg.SecurityTxt
+	data.SiteRobotsAllow = cfg.SiteRobotsAllow
+	data.SiteRobotsDeny = cfg.SiteRobotsDeny
+	data.SiteRobotsAgentsDeny = cfg.SiteRobotsAgentsDeny
+	data.Logo = cfg.Logo
+	data.Favicon = cfg.Favicon
 
 	// Get Chroma lexers
 	data.Lexers = chromaLexers.Names(false)
@@ -234,8 +285,14 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 		return nil, err
 	}
 
-	// docs_api_libs.tmpl
-	data.DocsApiLibs, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_api_libs.tmpl")
+	// docs_libraries.tmpl
+	data.DocsLibraries, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_libraries.tmpl")
+	if err != nil {
+		return nil, err
+	}
+
+	// docs_customize.tmpl
+	data.DocsCustomize, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_customize.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -273,6 +330,9 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		err = data.robotsTxtHand(rw, req)
 	case "/sitemap.xml":
 		err = data.sitemapHand(rw, req)
+	// Security
+	case "/.well-known/security.txt":
+		err = data.securityTxtHand(rw, req)
 	// Resources
 	case "/style.css":
 		err = data.styleCSSHand(rw, req)
@@ -301,8 +361,12 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		err = data.docsHand(rw, req)
 	case "/docs/apiv1":
 		err = data.docsApiV1Hand(rw, req)
-	case "/docs/api_libs":
-		err = data.docsApiLibsHand(rw, req)
+	case "/docs/libraries":
+		err = data.docsLibrariesHand(rw, req)
+	case "/docs/api_libs": // Redirect old URL
+		http.Redirect(rw, req, "/docs/libraries", http.StatusMovedPermanently)
+	case "/docs/customize":
+		err = data.docsCustomizeHand(rw, req)
 	// Pages
 	case "/":
 		err = data.newPasteHand(rw, req)

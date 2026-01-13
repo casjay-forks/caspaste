@@ -10,22 +10,41 @@ import (
 	"github.com/casjay-forks/caspaste/src/internal/netshare"
 	"io"
 	"net/http"
+	"strings"
 )
 
 func (data *Data) robotsTxtHand(rw http.ResponseWriter, req *http.Request) error {
-	// Generate robots.txt
-	robotsTxt := "User-agent: *\nDisallow: /\n"
+	var robotsTxt strings.Builder
 
-	if data.RobotsDisallow == false {
-		proto := netshare.GetProtocol(req)
-		host := netshare.GetHost(req)
+	// User-agent: * rules
+	robotsTxt.WriteString("User-agent: *\n")
 
-		robotsTxt = "User-agent: *\nAllow: /\nSitemap: " + proto + "://" + host + "/sitemap.xml\n"
+	// Allow directive
+	if data.SiteRobotsAllow != "" {
+		robotsTxt.WriteString("Allow: " + data.SiteRobotsAllow + "\n")
+	}
+
+	// Disallow directive(s)
+	if data.SiteRobotsDeny != "" {
+		for _, path := range strings.Split(data.SiteRobotsDeny, ",") {
+			robotsTxt.WriteString("Disallow: " + strings.TrimSpace(path) + "\n")
+		}
+	}
+
+	// Add sitemap
+	proto := netshare.GetProtocol(req)
+	host := netshare.GetHost(req)
+	robotsTxt.WriteString("Sitemap: " + proto + "://" + host + "/sitemap.xml\n")
+
+	// Block AI bots individually
+	for _, agent := range data.SiteRobotsAgentsDeny {
+		robotsTxt.WriteString("\nUser-agent: " + agent + "\n")
+		robotsTxt.WriteString("Disallow: /\n")
 	}
 
 	// Write response
 	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, err := io.WriteString(rw, robotsTxt)
+	_, err := io.WriteString(rw, robotsTxt.String())
 	if err != nil {
 		return err
 	}
@@ -34,7 +53,8 @@ func (data *Data) robotsTxtHand(rw http.ResponseWriter, req *http.Request) error
 }
 
 func (data *Data) sitemapHand(rw http.ResponseWriter, req *http.Request) error {
-	if data.RobotsDisallow {
+	// Check if sitemap is allowed
+	if data.SiteRobotsDeny == "/" {
 		return netshare.ErrNotFound
 	}
 
@@ -48,7 +68,7 @@ func (data *Data) sitemapHand(rw http.ResponseWriter, req *http.Request) error {
 	sitemapXML = sitemapXML + "<url><loc>" + proto + "://" + host + "/" + "</loc></url>\n"
 	sitemapXML = sitemapXML + "<url><loc>" + proto + "://" + host + "/about" + "</loc></url>\n"
 	sitemapXML = sitemapXML + "<url><loc>" + proto + "://" + host + "/docs/apiv1" + "</loc></url>\n"
-	sitemapXML = sitemapXML + "<url><loc>" + proto + "://" + host + "/docs/api_libs" + "</loc></url>\n"
+	sitemapXML = sitemapXML + "<url><loc>" + proto + "://" + host + "/docs/libraries" + "</loc></url>\n"
 	sitemapXML = sitemapXML + "</urlset>\n"
 
 	// Write response

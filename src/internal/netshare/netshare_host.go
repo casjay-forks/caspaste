@@ -92,6 +92,28 @@ func GetProtocol(req *http.Request) string {
 	return "http"
 }
 
+// BuildPasteURL constructs the full URL for a paste
+// Format: {proto}://{fqdn}:{port}/{pasteID}
+// Strips port if it's 80 (http) or 443 (https)
+func BuildPasteURL(req *http.Request, pasteID string) string {
+	proto := GetProtocol(req)
+	host := GetHost(req)
+
+	// Strip standard ports (80 for http, 443 for https)
+	if strings.Contains(host, ":") {
+		parts := strings.Split(host, ":")
+		if len(parts) == 2 {
+			port := parts[1]
+			// Strip port 80 for http or port 443 for https
+			if (proto == "http" && port == "80") || (proto == "https" && port == "443") {
+				host = parts[0]
+			}
+		}
+	}
+
+	return proto + "://" + host + "/" + pasteID
+}
+
 // isPrivateIP checks if an IP address is in a private range
 func isPrivateIP(ip net.IP) bool {
 	if ip == nil {

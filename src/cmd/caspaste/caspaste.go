@@ -27,10 +27,13 @@ import (
 	"github.com/casjay-forks/caspaste/src/internal/config"
 	"github.com/casjay-forks/caspaste/src/internal/logger"
 	"github.com/casjay-forks/caspaste/src/internal/netshare"
+	"github.com/casjay-forks/caspaste/src/internal/portutil"
 	"github.com/casjay-forks/caspaste/src/internal/privilege"
 	"github.com/casjay-forks/caspaste/src/internal/raw"
 	"github.com/casjay-forks/caspaste/src/internal/service"
 	"github.com/casjay-forks/caspaste/src/internal/storage"
+	"github.com/casjay-forks/caspaste/src/internal/template"
+	"github.com/casjay-forks/caspaste/src/internal/validation"
 	"github.com/casjay-forks/caspaste/src/internal/web"
 )
 
@@ -192,6 +195,35 @@ func ensureDirectories(dataDir, configDir, dbDir, backupDir, cacheDir, logsDir s
 	}
 
 	return nil
+}
+
+// printStartupBanner displays a formatted startup banner with server information
+func printStartupBanner(version, fqdn, title string, httpPort, httpsPort int) {
+	fmt.Println()
+	fmt.Println("╔════════════════════════════════════════════════════════════╗")
+	fmt.Printf("║  %-58s║\n", title)
+	fmt.Println("╠════════════════════════════════════════════════════════════╣")
+	fmt.Printf("║  Version:     %-45s║\n", version)
+	fmt.Printf("║  FQDN:        %-45s║\n", fqdn)
+	if httpsPort > 0 {
+		fmt.Printf("║  HTTP:        http://%s:%-34d║\n", fqdn, httpPort)
+		fmt.Printf("║  HTTPS:       https://%s:%-33d║\n", fqdn, httpsPort)
+	} else {
+		portDisplay := strconv.Itoa(httpPort)
+		if httpPort == 80 {
+			fmt.Printf("║  URL:         http://%-41s║\n", fqdn)
+		} else if httpPort == 443 {
+			fmt.Printf("║  URL:         https://%-40s║\n", fqdn)
+		} else {
+			fmt.Printf("║  URL:         http://%s:%-34s║\n", fqdn, portDisplay)
+		}
+	}
+	fmt.Println("╠════════════════════════════════════════════════════════════╣")
+	fmt.Println("║  User:        caspaste (UID:GID 642:642)                   ║")
+	fmt.Println("║  Database:    SQLite                                       ║")
+	fmt.Println("║  Status:      Ready                                        ║")
+	fmt.Println("╚════════════════════════════════════════════════════════════╝")
+	fmt.Println()
 }
 
 // handleServiceCommand processes --service flag commands
@@ -819,7 +851,7 @@ func main() {
 
 	// Merge CLI flags (highest priority - override both config file and env vars)
 	if *flagPort != "" {
-		yamlCfg.Server.Port, _ = strconv.Atoi(*flagPort)
+		yamlCfg.Server.Port = *flagPort
 	}
 	if *flagAddress != ":80" {
 		yamlCfg.Server.Address = *flagAddress
@@ -1159,35 +1191,87 @@ func main() {
 		maxLifeTime = int64(duration / time.Second)
 	}
 
-	// Load server about from config
+	// Determine FQDN for variable replacement
+	// Falls back to global IP if no valid FQDN found (never localhost)
+	fqdn, err := validation.DetermineFQDN("", yamlCfg.Server.Address)
+	if err != nil {
+		// Could not determine even a global IP (highly unlikely)
+		exitOnError(fmt.Errorf("failed to determine server address: %w", err))
+	}
+
+	// Load content with embedded defaults + variable replacement
+	// Content files: embedded defaults in src/internal/web/data/
+	// Can be overridden via config paths
 	serverAbout := ""
-	if yamlCfg.Content.AboutFile != "" {
-		serverAbout, err = readFile(yamlCfg.Content.AboutFile)
+	if yamlCfg.Content.About != "" {
+		serverAbout, err = readFile(yamlCfg.Content.About)
 		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.about_file: %w", err))
+			exitOnError(fmt.Errorf("failed to read content.about: %w", err))
 		}
 	}
 
-	// Load server rules from config
 	serverRules := ""
-	if yamlCfg.Content.RulesFile != "" {
-		serverRules, err = readFile(yamlCfg.Content.RulesFile)
+	if yamlCfg.Content.Rules != "" {
+		serverRules, err = readFile(yamlCfg.Content.Rules)
 		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.rules_file: %w", err))
+			exitOnError(fmt.Errorf("failed to read content.rules: %w", err))
 		}
 	}
 
-	// Load server terms of use from config
 	serverTermsOfUse := ""
-	if yamlCfg.Content.TermsFile != "" {
+	if yamlCfg.Content.Terms != "" {
 		if serverRules == "" {
-			exitOnError(errors.New("content.terms_file requires content.rules_file to also be set"))
+			exitOnError(errors.New("content.terms requires content.rules to also be set"))
 		}
-		serverTermsOfUse, err = readFile(yamlCfg.Content.TermsFile)
+		serverTermsOfUse, err = readFile(yamlCfg.Content.Terms)
 		if err != nil {
-			exitOnError(fmt.Errorf("failed to read content.terms_file: %w", err))
+			exitOnError(fmt.Errorf("failed to read content.terms: %w", err))
 		}
 	}
+
+	securityTxt := ""
+	if yamlCfg.Content.Security != "" {
+		securityTxt, err = readFile(yamlCfg.Content.Security)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to read content.security: %w", err))
+		}
+	}
+
+	// First, apply variable replacement to config field values
+	// (they may contain {fqdn} and other variables)
+	baseVars := template.Variables{
+		FQDN:    fqdn,
+		Version: Version,
+	}
+
+	// Replace variables in config fields
+	adminEmail := template.ReplaceVariables(yamlCfg.Server.Administrator.Email, baseVars)
+	adminFrom := template.ReplaceVariables(yamlCfg.Server.Administrator.From, baseVars)
+	securityEmail := template.ReplaceVariables(yamlCfg.Web.Security.Contact.Email, baseVars)
+
+	// Now create template vars with replaced config values
+	templateVars := template.Variables{
+		FQDN:                 fqdn,
+		Version:              Version,
+		Protocol:             "https", // Default to HTTPS for security
+		ServerTitle:          yamlCfg.Server.Title,
+		ServerAdminName:      yamlCfg.Server.Administrator.Name,
+		ServerAdminEmail:     adminEmail,
+		ServerAdminFrom:      adminFrom,
+		SecurityContactEmail: securityEmail,
+		SecurityContactName:  yamlCfg.Web.Security.Contact.Name,
+	}
+
+	// Apply variable replacement to content files
+	serverAbout = template.ReplaceVariables(serverAbout, templateVars)
+	serverRules = template.ReplaceVariables(serverRules, templateVars)
+	serverTermsOfUse = template.ReplaceVariables(serverTermsOfUse, templateVars)
+	securityTxt = template.ReplaceVariables(securityTxt, templateVars)
+
+	// Use replaced values in config (not raw values with variables)
+	yamlCfg.Server.Administrator.Email = adminEmail
+	yamlCfg.Server.Administrator.From = adminFrom
+	yamlCfg.Web.Security.Contact.Email = securityEmail
 
 	// Settings
 	log := logger.New("2006/01/02 15:04:05")
@@ -1208,9 +1292,18 @@ func main() {
 		ServerAbout:       serverAbout,
 		ServerRules:       serverRules,
 		ServerTermsOfUse:  serverTermsOfUse,
-		AdminName:         yamlCfg.Server.AdminName,
-		AdminMail:         yamlCfg.Server.AdminEmail,
-		RobotsDisallow:    yamlCfg.Server.RobotsDisallow,
+		SecurityTxt:       securityTxt,
+		FQDN:              fqdn,
+		ServerTitle:       yamlCfg.Server.Title,
+		AdminName:         yamlCfg.Server.Administrator.Name,
+		AdminMail:         yamlCfg.Server.Administrator.Email,
+		SecurityContactEmail: yamlCfg.Web.Security.Contact.Email,
+		SecurityContactName:  yamlCfg.Web.Security.Contact.Name,
+		SiteRobotsAllow:      yamlCfg.Site.Robots.Allow,
+		SiteRobotsDeny:       yamlCfg.Site.Robots.Deny,
+		SiteRobotsAgentsDeny: yamlCfg.Site.Robots.Agents.Deny,
+		Logo:              yamlCfg.Branding.Logo,
+		Favicon:           yamlCfg.Branding.Favicon,
 		TrustReverseProxy: yamlCfg.Server.TrustReverseProxy,
 		UiDefaultLifetime: yamlCfg.UI.DefaultLifetime,
 		UiDefaultTheme:    yamlCfg.UI.DefaultTheme,
@@ -1287,6 +1380,67 @@ func main() {
 		}
 	}(cleanupPeriod)
 
+	// Determine ports (HTTP and optionally HTTPS)
+	var httpPort, httpsPort int
+	var configFilePath string
+
+	// Note: httpsPort is parsed but not currently used (reserved for future HTTPS support)
+	_ = httpsPort
+
+	// Check for PORT environment variable override
+	portEnv := os.Getenv("PORT")
+	if portEnv == "" {
+		portEnv = os.Getenv("CASPASTE_PORT")
+	}
+	if portEnv == "" {
+		portEnv = os.Getenv("LENPASTE_PORT")
+	}
+
+	if portEnv != "" {
+		// ENV overrides config
+		httpPort, httpsPort, err = portutil.ParsePorts(portEnv)
+		if err != nil {
+			exitOnError(fmt.Errorf("invalid PORT environment variable: %w", err))
+		}
+	} else if yamlCfg.Server.Port != "" {
+		// Use config port
+		httpPort, httpsPort, err = portutil.ParsePorts(yamlCfg.Server.Port)
+		if err != nil {
+			exitOnError(fmt.Errorf("invalid server.port in config: %w", err))
+		}
+	} else {
+		// Generate random port
+		httpPort, err = portutil.FindUnusedPort(64000, 65535)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to find unused port: %w", err))
+		}
+
+		// Save to config file
+		yamlCfg.Server.Port = strconv.Itoa(httpPort)
+		if *flagConfigDir != "" {
+			configFilePath = *flagConfigDir + "/caspaste.yml"
+		} else {
+			configFilePath = "./caspaste.yml"
+		}
+		if err := config.SaveYAMLConfig(configFilePath, yamlCfg); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to save port to config: %v\n", err)
+		} else {
+			fmt.Printf("Saved random port %d to config file\n", httpPort)
+		}
+	}
+
+	// Update flagAddress to use determined port
+	// Extract host from current address
+	host := *flagAddress
+	if strings.Contains(host, ":") {
+		parts := strings.Split(host, ":")
+		host = parts[0]
+	}
+	if host == "" {
+		host = "::"
+	}
+	*flagAddress = net.JoinHostPort(host, strconv.Itoa(httpPort))
+
 	// Create listener (must be done as root for ports < 1024 on Unix)
 	listener, err := net.Listen("tcp", *flagAddress)
 	if err != nil {
@@ -1300,6 +1454,9 @@ func main() {
 			// Continue anyway
 		}
 	}
+
+	// Print startup banner
+	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, httpPort, httpsPort)
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{

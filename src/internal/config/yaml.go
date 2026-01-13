@@ -7,6 +7,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -15,13 +16,41 @@ import (
 // YAMLConfig represents the YAML configuration file structure
 type YAMLConfig struct {
 	Server struct {
-		Port              int    `yaml:"port"`
-		Address           string `yaml:"address"`
-		AdminName         string `yaml:"admin_name"`
-		AdminEmail        string `yaml:"admin_email"`
-		RobotsDisallow    bool   `yaml:"robots_disallow"`
+		Address           string `yaml:"address"` // Public FQDN
+		Bind              string `yaml:"bind"`    // Bind address (::, 0.0.0.0, specific IP)
+		Port              string `yaml:"port"`    // "8080" or "8080,64453"
+		Title             string `yaml:"title"`
 		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"`
+		Administrator     struct {
+			Name  string `yaml:"name"`
+			Email string `yaml:"email"`
+			From  string `yaml:"from"`
+		} `yaml:"administrator"`
 	} `yaml:"server"`
+
+	Web struct {
+		Security struct {
+			Contact struct {
+				Email string `yaml:"email"`
+				Name  string `yaml:"name"`
+			} `yaml:"contact"`
+		} `yaml:"security"`
+	} `yaml:"web"`
+
+	Site struct {
+		Robots struct {
+			Allow  string `yaml:"allow"`
+			Deny   string `yaml:"deny"`
+			Agents struct {
+				Deny []string `yaml:"deny"`
+			} `yaml:"agents"`
+		} `yaml:"robots"`
+	} `yaml:"site"`
+
+	Branding struct {
+		Logo    string `yaml:"logo"`
+		Favicon string `yaml:"favicon"`
+	} `yaml:"branding"`
 
 	Database struct {
 		Driver        string `yaml:"driver"`
@@ -54,9 +83,10 @@ type YAMLConfig struct {
 	} `yaml:"ui"`
 
 	Content struct {
-		AboutFile string `yaml:"about_file"`
-		RulesFile string `yaml:"rules_file"`
-		TermsFile string `yaml:"terms_file"`
+		About    string `yaml:"about"`
+		Rules    string `yaml:"rules"`
+		Terms    string `yaml:"terms"`
+		Security string `yaml:"security"`
 	} `yaml:"content"`
 
 	Directories struct {
@@ -86,12 +116,38 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig := YAMLConfig{}
 
 	// Server defaults
-	defaultConfig.Server.Port = 8080
-	defaultConfig.Server.Address = ":8080"
-	defaultConfig.Server.AdminName = ""
-	defaultConfig.Server.AdminEmail = ""
-	defaultConfig.Server.RobotsDisallow = false
+	defaultConfig.Server.Address = ""  // Auto-detected
+	defaultConfig.Server.Bind = "::"   // IPv4 + IPv6
+	defaultConfig.Server.Port = ""     // Random port in 64xxx range
+	defaultConfig.Server.Title = "CasPaste"
 	defaultConfig.Server.TrustReverseProxy = false
+	defaultConfig.Server.Administrator.Name = "CasPaste"
+	defaultConfig.Server.Administrator.Email = "administrator@{fqdn}"
+	defaultConfig.Server.Administrator.From = "\"CasPaste\" <no-reply@{fqdn}>"
+
+	// Web defaults
+	defaultConfig.Web.Security.Contact.Email = "administrator@{fqdn}"
+	defaultConfig.Web.Security.Contact.Name = "Server Administrator"
+
+	// Site defaults
+	defaultConfig.Site.Robots.Allow = "*"
+	defaultConfig.Site.Robots.Deny = "/settings,/history"
+	defaultConfig.Site.Robots.Agents.Deny = []string{
+		"GPTBot",
+		"ChatGPT-User",
+		"Google-Extended",
+		"CCBot",
+		"anthropic-ai",
+		"Claude-Web",
+		"cohere-ai",
+		"Omgilibot",
+		"FacebookBot",
+		"Diffbot",
+	}
+
+	// Branding defaults
+	defaultConfig.Branding.Logo = ""
+	defaultConfig.Branding.Favicon = ""
 
 	// Database defaults
 	// Note: Using "sqlite" (modernc.org/sqlite - pure Go, no CGo)
@@ -124,9 +180,12 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.UI.ThemesDir = ""
 
 	// Content defaults
-	defaultConfig.Content.AboutFile = ""
-	defaultConfig.Content.RulesFile = ""
-	defaultConfig.Content.TermsFile = ""
+	// Empty = use embedded defaults with variable replacement
+	// Set path to override with custom file
+	defaultConfig.Content.About = ""
+	defaultConfig.Content.Rules = ""
+	defaultConfig.Content.Terms = ""
+	defaultConfig.Content.Security = ""
 
 	// Directory defaults (platform-specific, empty = auto-detect)
 	defaultConfig.Directories.Cache = ""
@@ -140,4 +199,28 @@ func GenerateDefaultYAMLConfig(path string) error {
 
 	// Write to file
 	return os.WriteFile(path, data, 0644)
+}
+
+// SaveYAMLConfig saves configuration to YAML file
+// Uses atomic write (temp file + rename) to prevent corruption
+func SaveYAMLConfig(path string, cfg *YAMLConfig) error {
+	// Marshal to YAML
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	// Write to temp file first
+	tempPath := path + ".tmp"
+	if err := os.WriteFile(tempPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write temp config: %w", err)
+	}
+
+	// Atomic rename
+	if err := os.Rename(tempPath, path); err != nil {
+		os.Remove(tempPath) // Clean up temp file
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return nil
 }

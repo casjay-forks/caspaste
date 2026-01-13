@@ -8,7 +8,8 @@ package config
 import (
 	"os"
 	"strconv"
-	"strings"
+
+	"github.com/casjay-forks/caspaste/src/internal/validation"
 )
 
 // getEnv tries CASPASTE_* first, then LENPASTE_* for backward compatibility
@@ -27,54 +28,71 @@ func getEnv(name string) string {
 func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	// Server settings
 	if val := getEnv("ADDRESS"); val != "" {
-		// Support format: hostname:port or :port
-		// Examples: lp.pste.us:8080, myserver.com:80, :8080
-
-		// If it's a FQDN:port format, convert to :port (bind to all interfaces)
-		// The FQDN is used for reverse proxy setups and display purposes
-		if strings.Contains(val, ":") {
-			parts := strings.Split(val, ":")
-			if len(parts) == 2 {
-				hostname := parts[0]
-				portStr := parts[1]
-
-				// If hostname part contains dots (FQDN) or is not empty, bind to all interfaces
-				if strings.Contains(hostname, ".") || (hostname != "" && hostname != "0.0.0.0" && hostname != "::") {
-					// FQDN or specific IP - bind to all interfaces on the port
-					cfg.Server.Address = ":" + portStr
-				} else {
-					// Already in :port format
-					cfg.Server.Address = val
-				}
-
-				// Extract and set port
-				if port, err := strconv.Atoi(portStr); err == nil {
-					cfg.Server.Port = port
-				}
-			}
-		} else {
-			cfg.Server.Address = val
-		}
+		cfg.Server.Address = val
+	}
+	if val := getEnv("BIND"); val != "" {
+		cfg.Server.Bind = val
 	}
 	if val := getEnv("PORT"); val != "" {
-		if port, err := strconv.Atoi(val); err == nil {
-			cfg.Server.Port = port
-		}
+		cfg.Server.Port = val // Now string format: "8080" or "8080,64453"
 	}
-	if val := getEnv("ADMIN_NAME"); val != "" {
-		cfg.Server.AdminName = val
+	if val := getEnv("SERVER_TITLE"); val != "" {
+		cfg.Server.Title = val
 	}
-	if val := getEnv("ADMIN_EMAIL"); val != "" {
-		cfg.Server.AdminEmail = val
-	}
-	if val := getEnv("ADMIN_MAIL"); val != "" { // Alternative name
-		cfg.Server.AdminEmail = val
-	}
-	if val := getEnv("ROBOTS_DISALLOW"); val != "" {
-		cfg.Server.RobotsDisallow = strings.ToLower(val) == "true" || val == "1"
+	if val := getEnv("TITLE"); val != "" { // Alternative
+		cfg.Server.Title = val
 	}
 	if val := getEnv("TRUST_REVERSE_PROXY"); val != "" {
-		cfg.Server.TrustReverseProxy = strings.ToLower(val) == "true" || val == "1"
+		cfg.Server.TrustReverseProxy = validation.IsTruthy(val)
+	}
+
+	// Server administrator
+	if val := getEnv("ADMIN_NAME"); val != "" {
+		cfg.Server.Administrator.Name = val
+	}
+	if val := getEnv("SERVER_ADMINISTRATOR_NAME"); val != "" {
+		cfg.Server.Administrator.Name = val
+	}
+	if val := getEnv("ADMIN_EMAIL"); val != "" {
+		cfg.Server.Administrator.Email = val
+	}
+	if val := getEnv("ADMIN_MAIL"); val != "" { // Alternative
+		cfg.Server.Administrator.Email = val
+	}
+	if val := getEnv("SERVER_ADMINISTRATOR_EMAIL"); val != "" {
+		cfg.Server.Administrator.Email = val
+	}
+	if val := getEnv("SERVER_ADMINISTRATOR_FROM"); val != "" {
+		cfg.Server.Administrator.From = val
+	}
+
+	// Web security contact
+	if val := getEnv("WEB_SECURITY_CONTACT_EMAIL"); val != "" {
+		cfg.Web.Security.Contact.Email = val
+	}
+	if val := getEnv("WEB_SECURITY_CONTACT_NAME"); val != "" {
+		cfg.Web.Security.Contact.Name = val
+	}
+
+	// Site robots
+	if val := getEnv("SITE_ROBOTS_ALLOW"); val != "" {
+		cfg.Site.Robots.Allow = val
+	}
+	if val := getEnv("SITE_ROBOTS_DENY"); val != "" {
+		cfg.Site.Robots.Deny = val
+	}
+	if val := getEnv("ROBOTS_DISALLOW"); val != "" { // Legacy compatibility
+		if validation.IsTruthy(val) {
+			cfg.Site.Robots.Deny = "/"
+		}
+	}
+
+	// Branding
+	if val := getEnv("BRANDING_LOGO"); val != "" {
+		cfg.Branding.Logo = val
+	}
+	if val := getEnv("BRANDING_FAVICON"); val != "" {
+		cfg.Branding.Favicon = val
 	}
 
 	// Database settings
@@ -163,23 +181,26 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	}
 
 	// Content settings
-	if val := getEnv("SERVER_ABOUT"); val != "" {
-		cfg.Content.AboutFile = val
+	if val := getEnv("CONTENT_ABOUT"); val != "" {
+		cfg.Content.About = val
 	}
-	if val := getEnv("ABOUT_FILE"); val != "" { // Alternative name
-		cfg.Content.AboutFile = val
+	if val := getEnv("SERVER_ABOUT"); val != "" { // Legacy
+		cfg.Content.About = val
 	}
-	if val := getEnv("SERVER_RULES"); val != "" {
-		cfg.Content.RulesFile = val
+	if val := getEnv("CONTENT_RULES"); val != "" {
+		cfg.Content.Rules = val
 	}
-	if val := getEnv("RULES_FILE"); val != "" { // Alternative name
-		cfg.Content.RulesFile = val
+	if val := getEnv("SERVER_RULES"); val != "" { // Legacy
+		cfg.Content.Rules = val
 	}
-	if val := getEnv("SERVER_TERMS"); val != "" {
-		cfg.Content.TermsFile = val
+	if val := getEnv("CONTENT_TERMS"); val != "" {
+		cfg.Content.Terms = val
 	}
-	if val := getEnv("TERMS_FILE"); val != "" { // Alternative name
-		cfg.Content.TermsFile = val
+	if val := getEnv("SERVER_TERMS"); val != "" { // Legacy
+		cfg.Content.Terms = val
+	}
+	if val := getEnv("CONTENT_SECURITY"); val != "" {
+		cfg.Content.Security = val
 	}
 
 	// Directory settings

@@ -40,8 +40,17 @@ func (data *Data) docsApiV1Hand(rw http.ResponseWriter, req *http.Request) error
 	})
 }
 
-// Pattern: /docs/api_libs
-func (data *Data) docsApiLibsHand(rw http.ResponseWriter, req *http.Request) error {
+// Pattern: /docs/libraries
+func (data *Data) docsLibrariesHand(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
-	return data.DocsApiLibs.Execute(rw, docsTmpl{Translate: data.Locales.findLocale(req).translate})
+	return data.DocsLibraries.Execute(rw, docsTmpl{Translate: data.Locales.findLocale(req).translate})
+}
+
+// Pattern: /docs/customize
+func (data *Data) docsCustomizeHand(rw http.ResponseWriter, req *http.Request) error {
+	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+	return data.DocsCustomize.Execute(rw, docsTmpl{
+		Translate: data.Locales.findLocale(req).translate,
+		Highlight: data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight,
+	})
 }

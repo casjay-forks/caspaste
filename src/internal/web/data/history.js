@@ -190,8 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	styleSheet.innerText = newStyleSheet
 	document.head.appendChild(styleSheet)
 
-	// Add button to header
-	document.getElementsByClassName("header-right")[0].insertAdjacentHTML("afterbegin", "<h4 id='js-history-button' onclick='historyPopUpShow()'>{{ call .Translate `historyJS.History` }}</h4>");
+	// History button is now in base.tmpl, no need to inject it
 
 	// Add history pop-up background
 	document.body.insertAdjacentHTML("afterbegin", "<div style='visibility: hidden;' id='js-history-popup-background' onclick='historyPopUpHide()'></div>")	

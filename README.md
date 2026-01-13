@@ -432,7 +432,7 @@ curl https://paste.example.com/api/v1/get?id=abc12345 | jq -r '.body'
 - **Python**: `requests` library
 - **JavaScript**: `fetch` API
 
-See `/docs/api_libs` on your instance for examples.
+See `/docs/libraries` on your instance for examples.
 
 ## Advanced Features
 

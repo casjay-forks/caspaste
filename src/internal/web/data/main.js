@@ -98,12 +98,12 @@ document.addEventListener("DOMContentLoaded", () => {
 	var symbolCounter = document.getElementById("symbolCounter");
 
 	function updateSymbolCounter() {
-		symbolCounter.textContent = editor.value.length;
-		
+		var length = editor.value.length;
+
 		if (editor.maxLength !== -1) {
-			symbolCounter.textContent = symbolCounter.textContent + "/" + editor.maxLength;
+			symbolCounter.textContent = length + "/" + editor.maxLength;
 		} else {
-			symbolCounter.textContent = symbolCounter.textContent + "/&infin;";
+			symbolCounter.textContent = length + "/∞";
 		}
 	}
 

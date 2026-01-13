@@ -45,8 +45,9 @@
 		<div>
 			<label for="syntax">{{ call .Translate `main.Syntax` }}</label
 			><select name="syntax" tabindex=4 size=1>
+				<option value="autodetect" selected="true">{{ call .Translate `main.AutoDetect` }}</option>
 				{{range .Lexers}}
-				<option value="{{.}}"{{if eq . "plaintext"}} selected="true"{{end}}>{{.}}</option>
+				<option value="{{.}}">{{.}}</option>
 				{{end}}
 			</select>
 		</div>
