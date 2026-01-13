@@ -130,10 +130,10 @@ CasPaste works best behind a reverse proxy like nginx or Caddy for TLS terminati
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name paste.example.com;
+    server_name lp.pste.us;
 
-    ssl_certificate /etc/letsencrypt/live/paste.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/paste.example.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/lp.pste.us/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/lp.pste.us/privkey.pem;
 
     location / {
         proxy_pass http://127.0.0.1:8080;
@@ -154,7 +154,7 @@ caspaste --port 8080 --data /var/lib/caspaste
 #### Caddy Configuration
 
 ```caddy
-paste.example.com {
+lp.pste.us {
     reverse_proxy :8080
 }
 ```
@@ -364,7 +364,7 @@ caspaste --maintenance "mode disabled" --data /var/lib/caspaste
 ### Create Text Paste
 
 ```bash
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -d "body=Hello World" \
   -d "syntax=plaintext" \
   -d "title=My Paste" \
@@ -375,7 +375,7 @@ curl -X POST https://paste.example.com/api/v1/new \
 ### Upload File
 
 ```bash
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -F "file=@image.png" \
   -F "title=My Image"
 ```
@@ -383,31 +383,31 @@ curl -X POST https://paste.example.com/api/v1/new \
 ### Create Short URL
 
 ```bash
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -d "url=true" \
   -d "originalURL=https://example.com/very/long/url" \
   -d "title=Short Link"
 
-# Access via: https://paste.example.com/u/abc12345
+# Access via: https://lp.pste.us/u/abc12345
 ```
 
 ### Get Paste
 
 ```bash
-curl https://paste.example.com/api/v1/get?id=abc12345
+curl https://lp.pste.us/api/v1/get?id=abc12345
 ```
 
 ### List Pastes
 
 ```bash
-curl https://paste.example.com/api/v1/list?limit=10
+curl https://lp.pste.us/api/v1/list?limit=10
 ```
 
 ### QR Code
 
 Access QR code for any paste:
 ```
-https://paste.example.com/qr/abc12345
+https://lp.pste.us/qr/abc12345
 ```
 
 Full API documentation: `/docs/apiv1`
@@ -418,12 +418,12 @@ Full API documentation: `/docs/apiv1`
 
 ```bash
 # Create paste
-echo "Hello World" | curl -X POST https://paste.example.com/api/v1/new \
+echo "Hello World" | curl -X POST https://lp.pste.us/api/v1/new \
   --data-urlencode body@- \
   -d "syntax=plaintext"
 
 # Get paste
-curl https://paste.example.com/api/v1/get?id=abc12345 | jq -r '.body'
+curl https://lp.pste.us/api/v1/get?id=abc12345 | jq -r '.body'
 ```
 
 ### Language Libraries
@@ -443,7 +443,7 @@ Upload any file type (images, documents, etc.) up to 50MB:
 ```bash
 # Via web interface: use file upload field
 # Via API:
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -F "file=@document.pdf" \
   -F "title=My Document"
 ```
@@ -455,13 +455,13 @@ Files are stored in the database and served with correct MIME types.
 Create short URLs that redirect to any destination:
 
 ```bash
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -d "url=true" \
   -d "originalURL=https://example.com/very/long/url" \
   -d "title=Short Link"
 
 # Returns: {"id": "abc123", ...}
-# Access via: https://paste.example.com/u/abc123
+# Access via: https://lp.pste.us/u/abc123
 ```
 
 ### QR Codes
@@ -469,7 +469,7 @@ curl -X POST https://paste.example.com/api/v1/new \
 Every paste automatically has a QR code available:
 
 ```
-https://paste.example.com/qr/{paste-id}
+https://lp.pste.us/qr/{paste-id}
 ```
 
 Share paste URLs easily via QR codes on mobile devices.
@@ -480,7 +480,7 @@ Create pastes that can be updated after creation:
 
 ```bash
 # Create editable paste
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -d "body=Original content" \
   -d "editable=true"
 
@@ -492,7 +492,7 @@ curl -X POST https://paste.example.com/api/v1/new \
 Create pastes that don't appear in public listings:
 
 ```bash
-curl -X POST https://paste.example.com/api/v1/new \
+curl -X POST https://lp.pste.us/api/v1/new \
   -d "body=Secret content" \
   -d "private=true"
 ```
@@ -698,7 +698,7 @@ sudo systemctl start caspaste
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT License - see [LICENSE.md](LICENSE.md)
 
 Third-party attributions and original Lenpaste (AGPLv3) attribution - see [LICENSE.md](LICENSE.md)
 
@@ -710,5 +710,5 @@ Third-party attributions and original Lenpaste (AGPLv3) attribution - see [LICEN
 ## Support
 
 - **Issues**: https://github.com/casjay-forks/caspaste/issues
-- **API Docs**: https://paste.example.com/docs/apiv1
+- **API Docs**: https://lp.pste.us/docs/apiv1
 - **Changelog**: See [CHANGELOG.md](CHANGELOG.md)
