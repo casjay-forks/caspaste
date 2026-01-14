@@ -60,7 +60,7 @@ LABEL com.casjaysdev.app.name="CasPaste" \
       com.casjaysdev.app.vcs-ref="${VCS_REF}" \
       com.casjaysdev.app.build-date="${BUILD_DATE}"
 
-RUN apk add --no-cache ca-certificates tzdata bash
+RUN apk add --no-cache ca-certificates tzdata bash shadow
 
 COPY --from=builder /caspaste /usr/local/bin/caspaste
 COPY --from=builder /caspaste-cli /usr/local/bin/caspaste-cli
