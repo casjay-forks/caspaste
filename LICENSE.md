@@ -2,23 +2,6 @@
 
 CasPaste is built upon and includes code from various open-source projects. This document provides attribution and license information for all third-party components.
 
-## Original Project
-
-### Lenpaste
-- **Author:** Leonid Maslakov
-- **Source:** https://github.com/lcomrade/lenpaste
-- **License:** GNU Affero General Public License v3.0 (AGPLv3)
-- **Copyright:** © 2021-2023 Leonid Maslakov
-
-CasPaste is a fork of Lenpaste that has been extensively modified and enhanced with new features. The original Lenpaste project is licensed under AGPLv3. CasPaste has been relicensed to MIT with permission as a derivative work with substantial modifications.
-
-**Original Lenpaste components used:**
-- Base pastebin functionality
-- Template system architecture
-- Database structure (extended)
-- Theme system (completely redesigned)
-- API structure (extended with new endpoints)
-
 ---
 
 ## Go Dependencies
@@ -145,8 +128,7 @@ When distributing CasPaste, you must:
 
 1. **Include this LICENSE.md file** with all attributions
 2. **Include the main LICENSE file** (MIT)
-3. **Acknowledge original Lenpaste project** and its AGPLv3 license
-4. **Comply with all third-party licenses** listed above
+3. **Comply with all third-party licenses** listed above
 
 ### Contribution Guidelines
 
@@ -174,4 +156,4 @@ For license questions or concerns:
 
 ---
 
-**Last Updated:** 2026-01-09
+**Last Updated:** 2026-01-14

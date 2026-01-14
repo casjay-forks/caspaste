@@ -180,3 +180,56 @@ func LoadAndCheck(path string, user string, pass string) (bool, error) {
 
 	return data.Check(user, pass), nil
 }
+
+// GenerateRandomPassword generates a random password of specified length
+func GenerateRandomPassword(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+	b := make([]byte, length)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	for i := range b {
+		b[i] = charset[int(b[i])%len(charset)]
+	}
+	return string(b), nil
+}
+
+// GenerateCredentialsFile creates a password file with auto-generated admin credentials
+// Returns the generated username and password for display to the user
+func GenerateCredentialsFile(path string) (username, password string, err error) {
+	username = "admin"
+
+	// Generate a random 16-character password
+	password, err = GenerateRandomPassword(16)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate password: %w", err)
+	}
+
+	// Hash the password
+	hash, err := HashPassword(password)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Create the password file
+	content := fmt.Sprintf("%s:%s\n", username, hash)
+	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
+		return "", "", fmt.Errorf("failed to write password file: %w", err)
+	}
+
+	return username, password, nil
+}
+
+// FileExistsAndHasUsers checks if password file exists and contains at least one user
+func FileExistsAndHasUsers(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	data, err := LoadFile(path)
+	if err != nil {
+		return false
+	}
+
+	return len(data) > 0
+}

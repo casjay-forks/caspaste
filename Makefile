@@ -8,8 +8,10 @@ GO_VERSION := alpine
 
 # Project info
 NAME := caspaste
+CLI_NAME := caspaste-cli
 ORGANIZATION := casjay-forks
 MAIN_GO := ./src/cmd/caspaste
+CLI_MAIN_GO := ./src/cmd/caspaste-cli
 
 # Version management
 VERSION_FILE := release.txt
@@ -115,24 +117,32 @@ version:
 # Build all platforms + host binary
 build: init-version
 	@mkdir -p $(BUILD_DIR)
-	@echo "Building $(NAME) v$(APP_VERSION) for all platforms..."
+	@echo "Building $(NAME) and $(CLI_NAME) v$(APP_VERSION) for all platforms..."
 
 	@# Build for host system
-	@echo "Building for host..."
+	@echo "Building server for host..."
 	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
 	@chmod +x $(BUILD_DIR)/$(NAME)
+	@echo "Building CLI for host..."
+	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(CLI_NAME) $(CLI_MAIN_GO)
+	@chmod +x $(BUILD_DIR)/$(CLI_NAME)
 
 	@# Build for all platforms
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d_ -f1); \
 		arch=$$(echo $$platform | cut -d_ -f2); \
 		output=$(BUILD_DIR)/$(NAME)-$$os-$$arch; \
+		cli_output=$(BUILD_DIR)/$(CLI_NAME)-$$os-$$arch; \
 		if [ "$$os" = "windows" ]; then \
 			output="$$output.exe"; \
+			cli_output="$$cli_output.exe"; \
 		fi; \
-		echo "Building $$os/$$arch..."; \
+		echo "Building server $$os/$$arch..."; \
 		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$output $(MAIN_GO) || exit 1; \
 		chmod +x $$output 2>/dev/null || true; \
+		echo "Building CLI $$os/$$arch..."; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$cli_output $(CLI_MAIN_GO) || exit 1; \
+		chmod +x $$cli_output 2>/dev/null || true; \
 	done
 
 	@echo "Build complete. Binaries in $(BUILD_DIR)/"
@@ -142,20 +152,26 @@ release: init-version
 	@mkdir -p $(RELEASE_DIR)
 	@echo "Preparing release v$(APP_VERSION)..."
 
-	@# Build release binaries
+	@# Build release binaries (server and CLI)
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d_ -f1); \
 		arch=$$(echo $$platform | cut -d_ -f2); \
 		output=$(RELEASE_DIR)/$(NAME)-$$os-$$arch; \
+		cli_output=$(RELEASE_DIR)/$(CLI_NAME)-$$os-$$arch; \
 		if [ "$$os" = "windows" ]; then \
 			output="$$output.exe"; \
+			cli_output="$$cli_output.exe"; \
 		fi; \
-		echo "Building $$os/$$arch for release..."; \
+		echo "Building server $$os/$$arch for release..."; \
 		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$output $(MAIN_GO) || exit 1; \
 		chmod +x $$output 2>/dev/null || true; \
+		echo "Building CLI $$os/$$arch for release..."; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$cli_output $(CLI_MAIN_GO) || exit 1; \
+		chmod +x $$cli_output 2>/dev/null || true; \
 		if echo "$$os" | grep -qE "linux|freebsd|openbsd|netbsd"; then \
 			if command -v strip >/dev/null 2>&1; then \
 				strip $$output 2>/dev/null || true; \
+				strip $$cli_output 2>/dev/null || true; \
 			fi; \
 		fi; \
 	done
@@ -181,17 +197,20 @@ release: init-version
 	@$(GH) release create v$(APP_VERSION) \
 		--title "$(NAME) v$(APP_VERSION)" \
 		--generate-notes \
-		$(RELEASE_DIR)/$(NAME)-*
+		$(RELEASE_DIR)/$(NAME)-* \
+		$(RELEASE_DIR)/$(CLI_NAME)-*
 
 	@echo "Release v$(APP_VERSION) complete!"
 
 # Build for local OS/arch only (fast development build)
 local: init-version
 	@mkdir -p $(BUILD_DIR)
-	@echo "Building $(NAME) v$(APP_VERSION) for current OS/arch..."
+	@echo "Building $(NAME) and $(CLI_NAME) v$(APP_VERSION) for current OS/arch..."
 	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
 	@chmod +x $(BUILD_DIR)/$(NAME)
-	@echo "Build complete: $(BUILD_DIR)/$(NAME)"
+	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(CLI_NAME) $(CLI_MAIN_GO)
+	@chmod +x $(BUILD_DIR)/$(CLI_NAME)
+	@echo "Build complete: $(BUILD_DIR)/$(NAME) and $(BUILD_DIR)/$(CLI_NAME)"
 
 # Build and push Docker images
 docker: init-version

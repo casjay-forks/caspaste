@@ -53,6 +53,7 @@ type Data struct {
 	Authors        *template.Template
 	License        *template.Template
 	SourceCodePage *template.Template
+	SecurityPolicy *template.Template
 
 	Docs           *template.Template
 	DocsApiV1      *template.Template
@@ -61,6 +62,7 @@ type Data struct {
 
 	EmbeddedPage     *template.Template
 	EmbeddedHelpPage *template.Template
+	Login            *template.Template
 
 	Version string
 
@@ -93,6 +95,7 @@ type Data struct {
 	Logo    string
 	Favicon string
 
+	Public        bool   // true = open/public (no auth), false = auth required
 	CasPasswdFile string
 
 	UiDefaultLifeTime string
@@ -141,6 +144,7 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	data.MaxLifeTime = cfg.MaxLifeTime
 	data.UiDefaultLifeTime = cfg.UiDefaultLifetime
 	data.UiDefaultTheme = cfg.UiDefaultTheme
+	data.Public = cfg.Public
 	data.CasPasswdFile = cfg.CasPasswdFile
 
 	data.ServerAbout = cfg.ServerAbout
@@ -273,6 +277,12 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 		return nil, err
 	}
 
+	// security_policy.tmpl
+	data.SecurityPolicy, err = template.ParseFS(embFS, "data/base.tmpl", "data/security_policy.tmpl")
+	if err != nil {
+		return nil, err
+	}
+
 	// docs.tmpl
 	data.Docs, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs.tmpl")
 	if err != nil {
@@ -315,6 +325,12 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 		return nil, err
 	}
 
+	// login.tmpl
+	data.Login, err = template.ParseFS(embFS, "data/base.tmpl", "data/login.tmpl")
+	if err != nil {
+		return nil, err
+	}
+
 	return &data, nil
 }
 
@@ -323,6 +339,14 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 	var err error
 
 	rw.Header().Set("Server", config.Software+"/"+data.Version)
+
+	// Check authentication for protected routes (when server.public=false)
+	if data.IsAuthRequired() && !IsPublicPath(req.URL.Path) {
+		if !data.requireAuth(rw, req) {
+			data.Log.HttpRequest(req, 302)
+			return
+		}
+	}
 
 	switch req.URL.Path {
 	// Health checks
@@ -362,6 +386,8 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		err = data.handleLicense(rw, req)
 	case "/about/source_code":
 		err = data.handleSourceCodePage(rw, req)
+	case "/about/security":
+		err = data.handleSecurityPolicy(rw, req)
 	case "/docs":
 		err = data.handleDocs(rw, req)
 	case "/docs/apiv1":
@@ -372,6 +398,15 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		http.Redirect(rw, req, "/docs/libraries", http.StatusMovedPermanently)
 	case "/docs/customize":
 		err = data.handleDocsCustomize(rw, req)
+	// Auth
+	case "/login":
+		if req.Method == "POST" {
+			err = data.handleLoginSubmit(rw, req)
+		} else {
+			err = data.handleLoginPage(rw, req)
+		}
+	case "/logout":
+		err = data.handleLogout(rw, req)
 	// Pages
 	case "/":
 		err = data.handleNewPaste(rw, req)

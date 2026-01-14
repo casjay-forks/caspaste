@@ -40,6 +40,7 @@ type Data struct {
 	AdminName string
 	AdminMail string
 
+	Public        bool   // true = open/public, false = auth required
 	CasPasswdFile string
 	BruteForce    *caspasswd.BruteForceProtection
 
@@ -49,9 +50,9 @@ type Data struct {
 func Load(db storage.DB, cfg config.Config) *Data {
 	lexers := chromaLexers.Names(false)
 
-	// Initialize brute force protection if authentication is enabled
+	// Initialize brute force protection if authentication is required (server.public=false)
 	var bruteForce *caspasswd.BruteForceProtection
-	if cfg.CasPasswdFile != "" {
+	if !cfg.Public && cfg.CasPasswdFile != "" {
 		// 5 failed attempts = 15 minute lockout
 		bruteForce = caspasswd.NewBruteForceProtection(5, 15*time.Minute)
 	}
@@ -71,6 +72,7 @@ func Load(db storage.DB, cfg config.Config) *Data {
 		ServerTermsOfUse:  cfg.ServerTermsOfUse,
 		AdminName:         cfg.AdminName,
 		AdminMail:         cfg.AdminMail,
+		Public:            cfg.Public,
 		CasPasswdFile:     cfg.CasPasswdFile,
 		BruteForce:        bruteForce,
 		UiDefaultLifeTime: cfg.UiDefaultLifetime,

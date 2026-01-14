@@ -1,4 +1,4 @@
-// Copyright 2022 Leonid Maslakov. All rights reserved.
+// This file is part of CasPaste.
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 

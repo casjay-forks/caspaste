@@ -1,5 +1,5 @@
 {{/*
-   Copyright (C) 2021-2023 Leonid Maslakov.
+   This file is part of CasPaste.
 
    This file is part of CasPaste.
 
@@ -12,7 +12,7 @@
 {{define "article"}}
 <h3><a href="/docs">{{ call .Translate `docs.Title` }}</a> / {{ call .Translate `docsAPIv1Libs.Title` }}</h3>
 <h4 id="libraries">{{ call .Translate `docsAPIv1Libs.Recommended` }}</h4>
-<p>CasPaste is compatible with the Lenpaste API v1 specification. You can use standard HTTP clients in any language to interact with the API.</p>
+<p>CasPaste provides a simple API v1. You can use standard HTTP clients in any language to interact with the API.</p>
 <p>See the <a href="/docs/apiv1">API v1 documentation</a> for detailed endpoint information and examples.</p>
 <h4>Example Clients</h4>
 <table>

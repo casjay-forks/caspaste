@@ -1,6 +1,6 @@
 # CasPaste
 
-A self-hosted, privacy-focused pastebin service for sharing text snippets anonymously. An enhanced fork of [Lenpaste](https://github.com/lcomrade/lenpaste) by Leonid Maslakov.
+A self-hosted, privacy-focused pastebin service for sharing text snippets anonymously.
 
 ## About
 
@@ -200,30 +200,118 @@ sudo caspaste --service start
 
 ### Authentication Setup
 
-Generate password hash:
+CasPaste is **open and public by default** (`server.public: true`). For private instances, set `public: false`.
+
+#### Quick Start (Private Instance)
 
 ```bash
+# Docker - set PUBLIC=false for private instance
+docker run -d \
+  --name caspaste \
+  -p 8080:80 \
+  -e CASPASTE_PUBLIC=false \
+  -v ./config:/config \
+  -v ./data:/data \
+  ghcr.io/casjay-forks/caspaste:latest
+```
+
+On first start, admin credentials are **auto-generated** and displayed in the logs:
+
+```
+╔════════════════════════════════════════════════════════════╗
+║  CasPaste                                                  ║
+╠════════════════════════════════════════════════════════════╣
+║  Version:     1.0.0                                        ║
+║  FQDN:        paste.example.com                            ║
+║  URL:         http://paste.example.com                     ║
+╠════════════════════════════════════════════════════════════╣
+║  Config:      ./caspaste.yml                               ║
+║  Database:    SQLITE (caspaste.db)                         ║
+║  Status:      Ready                                        ║
+╠════════════════════════════════════════════════════════════╣
+║  Mode:        Private (authentication required)           ║
+║  Username:    admin                                        ║
+║  Password:    eoYBn7I9Z&ZHGqCY                             ║
+║  ⚠ SAVE THESE CREDENTIALS - shown only once!              ║
+╚════════════════════════════════════════════════════════════╝
+```
+
+View startup output: `docker logs caspaste`
+
+#### Docker Compose
+
+```yaml
+version: "3.8"
+services:
+  caspaste:
+    image: ghcr.io/casjay-forks/caspaste:latest
+    ports:
+      - "8080:80"
+    environment:
+      - CASPASTE_PUBLIC=false
+    volumes:
+      - ./config:/config
+      - ./data:/data
+```
+
+#### Config File
+
+```yaml
+server:
+  public: false  # true = open/public, false = auth required
+```
+
+#### How It Works
+
+| Setting | Behavior |
+|---------|----------|
+| `server.public: true` (default) | Open/public - no authentication |
+| `server.public: false` | Private - login required for most routes |
+
+- **Auto-generate**: If no password file exists, admin credentials are generated on first start
+- **Session-based**: Professional login page with secure session cookies
+- **24-hour sessions**: Auto-expire after 24 hours
+- **Brute force protection**: 5 failed attempts = 15 minute lockout
+
+#### Custom Users (Optional)
+
+To create custom users instead of auto-generated admin:
+
+```bash
+# Generate password hash
 go run tools/gen-password/main.go
-# Enter username: admin
+# Enter username: myuser
 # Enter password: ********
-# Output: admin:$argon2id$v=19$m=65536,t=3,p=4$...
+# Output: myuser:$argon2id$v=19$m=65536,t=3,p=4$...
 ```
 
-Create `/etc/caspaste/passwd`:
-
-```
-admin:$argon2id$v=19$m=65536,t=3,p=4$base64salt$base64hash
-editor:$argon2id$v=19$m=65536,t=3,p=4$base64salt$base64hash
-```
-
-Start with authentication:
+Create password file before starting:
 
 ```bash
-caspaste --port 8080 \
-         --data /var/lib/caspaste \
-         --config /etc/caspaste \
-         --caspasswd-file /etc/caspaste/passwd
+echo "myuser:$argon2id$v=19$..." > ./config/.auth
 ```
+
+Then start with:
+
+```bash
+docker run -d \
+  -e CASPASTE_PUBLIC=false \
+  -e CASPASTE_PASSWORD_FILE=/config/.auth \
+  -v ./config:/config \
+  ...
+```
+
+#### Protected vs Public Routes
+
+When `server.public: false`:
+
+| Protected (require login) | Always Public |
+|---------------------------|---------------|
+| `/` - Create paste | `/about/**` - About pages |
+| `/list` - Paste list | `/docs/**` - Documentation |
+| `/{id}` - View paste | `/terms` - Terms of use |
+| `/edit/{id}` - Edit paste | `/login`, `/logout` |
+| `/api/v1/*` - All API | `/healthz`, `/robots.txt` |
 
 ### Service Management
 
@@ -358,6 +446,96 @@ caspaste --maintenance "mode disabled" --data /var/lib/caspaste
 |------|-------------|---------|
 | `--caspasswd-file` | Password file for auth | - |
 | `--robots-disallow` | Block search engines | `false` |
+
+## CLI Client
+
+CasPaste includes a command-line client (`caspaste-cli`) for interacting with CasPaste servers.
+
+### Installation
+
+The CLI is included in the Docker image and all binary releases:
+
+```bash
+# From release binary
+wget https://github.com/casjay-forks/caspaste/releases/latest/download/caspaste-cli-linux-amd64
+chmod +x caspaste-cli-linux-amd64
+sudo mv caspaste-cli-linux-amd64 /usr/local/bin/caspaste-cli
+
+# Using Docker
+docker run --rm ghcr.io/casjay-forks/caspaste:latest caspaste-cli --help
+```
+
+### Configuration
+
+Configure the CLI with your server and credentials:
+
+```bash
+# Interactive setup
+caspaste-cli login
+
+# Or use environment variables
+export CASPASTE_SERVER=https://paste.example.com
+export CASPASTE_USERNAME=admin
+export CASPASTE_PASSWORD=secret
+
+# Or create config file (~/.config/caspaste/config.yml)
+cat > ~/.config/caspaste/config.yml << EOF
+server: https://paste.example.com
+username: admin
+password: secret
+EOF
+```
+
+### Usage Examples
+
+```bash
+# Create paste from stdin
+echo "Hello World" | caspaste-cli new
+
+# Create paste from file with syntax highlighting
+caspaste-cli new -f script.py -s python -t "My Script"
+
+# Create private one-time paste
+cat secret.txt | caspaste-cli new -p -1 -l 1h
+
+# Get a paste
+caspaste-cli get abc123
+
+# Get paste content only (raw)
+caspaste-cli get abc123 -r > output.txt
+
+# List recent pastes
+caspaste-cli list -n 20
+
+# Check server health
+caspaste-cli health
+
+# Show server info
+caspaste-cli info
+```
+
+### CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `login` | Configure server and credentials interactively |
+| `config` | Show current configuration |
+| `new`, `create`, `paste` | Create a new paste |
+| `get`, `show`, `view` | Get a paste by ID |
+| `list`, `ls` | List pastes |
+| `info`, `server-info` | Get server information |
+| `health`, `healthz` | Check server health |
+
+### Create Options
+
+| Flag | Description |
+|------|-------------|
+| `-f, --file FILE` | Read content from file (default: stdin) |
+| `-t, --title TITLE` | Paste title |
+| `-s, --syntax SYNTAX` | Syntax highlighting (e.g., python, go, bash) |
+| `-l, --lifetime TIME` | Expiration time (e.g., 1h, 1d, 1w, never) |
+| `-1, --one-use` | Delete after first view |
+| `-p, --private` | Don't show in public listings |
 
 ## API Usage
 
@@ -698,14 +876,11 @@ sudo systemctl start caspaste
 
 ## License
 
-MIT License - see [LICENSE.md](LICENSE.md)
-
-Third-party attributions and original Lenpaste (AGPLv3) attribution - see [LICENSE.md](LICENSE.md)
+MIT License - see [LICENSE](LICENSE) and [LICENSE.md](LICENSE.md) for third-party attributions.
 
 ## Credits
 
-- Original project: [Lenpaste](https://github.com/lcomrade/lenpaste) by Leonid Maslakov
-- Fork maintainer: [CasJay](https://github.com/casjay-forks)
+- Maintainer: [CasjaysDev](https://github.com/casjay-forks)
 
 ## Support
 

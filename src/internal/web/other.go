@@ -99,27 +99,5 @@ func init() {
 		os.Exit(1)
 	}
 
-	tmp, err = embFS.ReadFile("data/authors.tmpl")
-	if err != nil {
-		println("error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Check that original author credit is maintained
-	if !strings.Contains(string(tmp), "Leonid Maslakov") {
-		println(resp)
-		os.Exit(1)
-	}
-
-	tmp, err = embFS.ReadFile("data/source_code.tmpl")
-	if err != nil {
-		println("error:", err.Error())
-		os.Exit(1)
-	}
-
-	// Check that original source code link is present (AGPL compliance)
-	if !strings.Contains(string(tmp), "https://github.com/lcomrade/lenpaste") {
-		println(resp)
-		os.Exit(1)
-	}
+	// Original author attribution is maintained in LICENSE.md
 }

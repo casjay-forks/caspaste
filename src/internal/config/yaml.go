@@ -17,6 +17,7 @@ import (
 // All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
+		Public bool   `yaml:"public"` // Public instance (default: true = no auth, false = auth required)
 		FQDN   string `yaml:"fqdn"`   // Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
 		Listen string `yaml:"listen"` // Listen address (all, ::, 0.0.0.0, specific IP)
 		Port   string `yaml:"port"`   // "8080" or "8080,64453"
@@ -54,7 +55,7 @@ type YAMLConfig struct {
 	} `yaml:"database"`
 
 	Security struct {
-		PasswordFile string `yaml:"password_file"` // Path to password file for protected pastes
+		PasswordFile string `yaml:"password_file"` // Path to password file (auto-generated when server.public=false)
 		
 		Headers struct {
 			XFrameOptions           string `yaml:"x_frame_options"`            // X-Frame-Options header
@@ -222,6 +223,7 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// SERVER CONFIGURATION
 	// ============================================================================
+	defaultConfig.Server.Public = true  // Default: open/public instance (no auth required)
 	defaultConfig.Server.FQDN = ""      // Empty = auto-detect from X-Forwarded-Host (trusted proxies) or hostname; Set to override
 	defaultConfig.Server.Listen = "all" // Listen on all interfaces (IPv4 + IPv6)
 	defaultConfig.Server.Port = "64365" // Default port
@@ -266,7 +268,7 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// SECURITY CONFIGURATION
 	// ============================================================================
-	defaultConfig.Security.PasswordFile = "/etc/caspaste/passwords.txt"
+	defaultConfig.Security.PasswordFile = "" // Empty = auto-generate when server.public=false
 	
 	// HTTP Security Headers
 	defaultConfig.Security.Headers.XFrameOptions = "DENY"
@@ -326,7 +328,7 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Web.Content.About = "/etc/caspaste/content/about.md"    // Empty = use embedded default
 	defaultConfig.Web.Content.Rules = "/etc/caspaste/content/rules.md"    // Empty = use embedded default
 	defaultConfig.Web.Content.Terms = "/etc/caspaste/content/terms.md"    // Empty = use embedded default
-	defaultConfig.Web.Content.Security = "/etc/caspaste/content/security.txt" // Empty = auto-generated security.txt
+	defaultConfig.Web.Content.Security = "" // Empty = auto-generated security.txt
 	
 	// Branding
 	defaultConfig.Web.Branding.Logo = "/static/logo.png"

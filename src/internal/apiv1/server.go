@@ -49,7 +49,7 @@ func (data *Data) getServerInfoHand(rw http.ResponseWriter, req *http.Request) e
 		AdminMail:         data.AdminMail,
 		Syntaxes:          data.Lexers,
 		UiDefaultLifeTime: data.UiDefaultLifeTime,
-		AuthRequired:      data.CasPasswdFile != "",
+		AuthRequired:      !data.Public,
 	}
 
 	// Return response

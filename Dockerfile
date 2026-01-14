@@ -21,13 +21,21 @@ ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_URL
 
-# Build the application
+# Build the server
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -tags netgo \
     -ldflags "-w -s -X main.Version=${VERSION} -extldflags '-static'" \
     -o /caspaste \
     ./src/cmd/caspaste
+
+# Build the CLI client
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -tags netgo \
+    -ldflags "-w -s -X main.Version=${VERSION} -extldflags '-static'" \
+    -o /caspaste-cli \
+    ./src/cmd/caspaste-cli
 
 # Final stage
 FROM alpine:latest
@@ -68,8 +76,9 @@ LABEL com.casjaysdev.app.build-date="${BUILD_DATE}"
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata curl
 
-# Copy binary from builder
+# Copy binaries from builder
 COPY --from=builder /caspaste /usr/local/bin/caspaste
+COPY --from=builder /caspaste-cli /usr/local/bin/caspaste-cli
 
 # Set working directory
 WORKDIR /data

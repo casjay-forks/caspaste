@@ -7,10 +7,10 @@
 package web
 
 import (
-	"github.com/casjay-forks/caspaste/src/internal/caspasswd"
-	"github.com/casjay-forks/caspaste/src/internal/netshare"
 	"html/template"
 	"net/http"
+
+	"github.com/casjay-forks/caspaste/src/internal/netshare"
 )
 
 type createTmpl struct {
@@ -28,34 +28,10 @@ type createTmpl struct {
 	AuthorEmailDefault string
 	AuthorURLDefault   string
 
-	AuthOk bool
-
 	Translate func(string, ...interface{}) template.HTML
 }
 
 func (data *Data) handleNewPaste(rw http.ResponseWriter, req *http.Request) error {
-	var err error
-
-	// Check auth
-	isAuthenticated := true
-
-	if data.CasPasswdFile != "" {
-		isAuthenticated = false
-
-		user, pass, authProvided := req.BasicAuth()
-		if authProvided {
-			isAuthenticated, err = caspasswd.LoadAndCheck(data.CasPasswdFile, user, pass)
-			if err != nil {
-				return err
-			}
-		}
-
-		if !isAuthenticated {
-			rw.Header().Add("WWW-Authenticate", "Basic")
-			rw.WriteHeader(401)
-		}
-	}
-
 	// Create paste if need
 	if req.Method == "POST" {
 		pasteID, _, _, err := netshare.PasteAddFromForm(req, data.DB, data.RateLimitNew, data.TitleMaxLen, data.BodyMaxLen, data.MaxLifeTime, data.Lexers)
@@ -95,7 +71,6 @@ func (data *Data) handleNewPaste(rw http.ResponseWriter, req *http.Request) erro
 		AuthorDefault:      getCookie(req, "author"),
 		AuthorEmailDefault: getCookie(req, "authorEmail"),
 		AuthorURLDefault:   getCookie(req, "authorURL"),
-		AuthOk:             isAuthenticated,
 		Translate:          data.Locales.findLocale(req).translate,
 	}
 

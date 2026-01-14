@@ -8,7 +8,6 @@ package web
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -27,9 +26,6 @@ type errorTmpl struct {
 }
 
 func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error) (int, error) {
-	// DEBUG: Print error to stdout
-	fmt.Printf("DEBUG writeError called with error: %v\n", e)
-	
 	locale := data.Locales.findLocale(req)
 	
 	// Get theme name, use default if not set

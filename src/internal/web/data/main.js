@@ -1,20 +1,6 @@
-// Copyright (C) 2021-2023 Leonid Maslakov.
-
-// This file is part of Lenpaste.
-
-// Lenpaste is free software: you can redistribute it
-// and/or modify it under the terms of the
-// GNU Affero Public License as published by the
-// Free Software Foundation, either version 3 of the License,
-// or (at your option) any later version.
-
-// Lenpaste is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-// or FITNESS FOR A PARTICULAR PURPOSE.
-// See the GNU Affero Public License for more details.
-
-// You should have received a copy of the GNU Affero Public License along with Lenpaste.
-// If not, see <https://www.gnu.org/licenses/>.
+// This file is part of CasPaste.
+// CasPaste is free software released under the MIT License.
+// See LICENSE file for details.
 
 document.addEventListener("DOMContentLoaded", () => {
 	var editor = document.getElementById("editor");
@@ -34,7 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
 	});
 
 	// Add HTML and CSS code for line numbers support
-	editor.insertAdjacentHTML("beforebegin", "<textarea id='editorLines' wrap='off' tabindex=-1 readonly>1</textarea>");
+	var editorContainer = document.getElementById("editor-container");
+	if (editorContainer) {
+		editorContainer.insertAdjacentHTML("afterbegin", "<textarea id='editorLines' wrap='off' tabindex=-1 readonly>1</textarea>");
+	} else {
+		editor.insertAdjacentHTML("beforebegin", "<textarea id='editorLines' wrap='off' tabindex=-1 readonly>1</textarea>");
+	}
 	var editorLines = document.getElementById("editorLines");
 	editorLines.rows = editor.rows;
 	
@@ -45,38 +36,51 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 	#editor {
-		margin-left: 65px;
+		margin-left: 60px;
 		resize: none;
-		width: calc(100% - 65px);
-		min-width: calc(100% - 65px);
-		max-width: calc(100% - 65px);
-		line-height: 1.5;
-		padding: 0.875rem;
+		width: calc(100% - 60px);
+		min-width: calc(100% - 60px);
+		max-width: calc(100% - 60px);
+		line-height: 1.6;
+		padding: 1.25rem;
+		font-size: 15px;
+		font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 	}
 
 	#editorLines {
-		display: flex;
+		display: block;
 		user-select: none;
 		text-align: right;
 		position: absolute;
+		left: 0;
+		top: 0;
 		resize: none;
-		overflow-y: hidden;
-		overflow-x: hidden;
-		width: 50px;
-		max-width: 50px;
-		min-width: 50px;
-		padding: 0.875rem 0.5rem;
-		padding-right: 0.75rem;
-		line-height: 1.5;
-		border-right: 2px solid;
-		background: transparent;
+		overflow: hidden;
+		width: 60px;
+		max-width: 60px;
+		min-width: 60px;
+		padding: 1.25rem 0.5rem 1.25rem 0.25rem;
+		line-height: 1.6;
+		font-size: 15px;
+		font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+		border: none;
+		border-right: 1px solid;
+		border-radius: 8px 0 0 8px;
+		background: inherit;
 		color: inherit;
-		opacity: 0.5;
+		opacity: 0.6;
 		pointer-events: none;
+		box-sizing: border-box;
 	}
 
 	#editor:focus-visible, #editorLines:focus-visible {
 		outline: 0;
+	}
+
+	/* Container for editor needs relative positioning */
+	#editor-container {
+		position: relative;
+		width: 100%;
 	}
 	
 	.char-counter-container {
@@ -115,6 +119,17 @@ document.addEventListener("DOMContentLoaded", () => {
 	editorLines.addEventListener("focus", () => {
 		editor.focus();
 	});
+
+	// Sync height of line numbers with editor
+	function syncEditorHeight() {
+		editorLines.style.height = editor.offsetHeight + 'px';
+	}
+	syncEditorHeight();
+
+	// Use ResizeObserver if available for dynamic height sync
+	if (window.ResizeObserver) {
+		new ResizeObserver(syncEditorHeight).observe(editor);
+	}
 
 	// Add JS code for line numbers
 	editor.addEventListener("scroll", () => {

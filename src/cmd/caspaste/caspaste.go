@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/casjay-forks/caspaste/src/internal/apiv1"
+	"github.com/casjay-forks/caspaste/src/internal/caspasswd"
 	"github.com/casjay-forks/caspaste/src/internal/cli"
 	"github.com/casjay-forks/caspaste/src/internal/config"
 	"github.com/casjay-forks/caspaste/src/internal/logger"
@@ -299,10 +300,10 @@ func formatDatabaseDisplay(driver, source string) string {
 }
 
 // printStartupBanner displays a formatted startup banner with server information
-func printStartupBanner(version, fqdn, title, configFile, database string, httpPort, httpsPort int) {
+func printStartupBanner(version, fqdn, title, configFile, database string, httpPort, httpsPort int, generatedUser, generatedPass string) {
 	// Get global IP address from default route
 	globalIP, _ := validation.GetGlobalIP()
-	
+
 	fmt.Println()
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
 	fmt.Printf("║  %-58s║\n", title)
@@ -330,6 +331,16 @@ func printStartupBanner(version, fqdn, title, configFile, database string, httpP
 	fmt.Printf("║  Config:      %-45s║\n", configFile)
 	fmt.Printf("║  Database:    %-45s║\n", database)
 	fmt.Println("║  Status:      Ready                                        ║")
+
+	// Show generated credentials if this is a private instance with new credentials
+	if generatedUser != "" && generatedPass != "" {
+		fmt.Println("╠════════════════════════════════════════════════════════════╣")
+		fmt.Println("║  Mode:        Private (authentication required)           ║")
+		fmt.Printf("║  Username:    %-45s║\n", generatedUser)
+		fmt.Printf("║  Password:    %-45s║\n", generatedPass)
+		fmt.Println("║  ⚠ SAVE THESE CREDENTIALS - shown only once!              ║")
+	}
+
 	fmt.Println("╚════════════════════════════════════════════════════════════╝")
 	fmt.Println()
 }
@@ -1135,6 +1146,33 @@ func main() {
 		config.ApplyEnvironmentOverrides(yamlCfg)
 	}
 
+	// ALWAYS apply security-critical environment overrides (every run)
+	// This allows containerized deployments to change auth settings without deleting config
+	config.ApplyCriticalOverrides(yamlCfg)
+
+	// Handle authentication setup
+	// If server.public=false (private instance), auto-generate admin credentials if needed
+	// These will be displayed in the startup banner
+	var generatedUser, generatedPass string
+	if !yamlCfg.Server.Public {
+		passwordFile := yamlCfg.Security.PasswordFile
+		if passwordFile == "" {
+			// Default password file location
+			passwordFile = filepath.Join(*flagConfigDir, ".auth")
+			yamlCfg.Security.PasswordFile = passwordFile
+		}
+
+		// Check if password file exists and has users
+		if !caspasswd.FileExistsAndHasUsers(passwordFile) {
+			// Auto-generate admin credentials (will be shown in startup banner)
+			var err error
+			generatedUser, generatedPass, err = caspasswd.GenerateCredentialsFile(passwordFile)
+			if err != nil {
+				exitOnError(fmt.Errorf("failed to generate credentials: %w", err))
+			}
+		}
+	}
+
 	// Merge CLI flags ONLY on first run (after that, config is source of truth)
 	if isFirstRun {
 		if *flagPort != "" {
@@ -1223,9 +1261,6 @@ func main() {
 			// Check for environment variable ONLY on first run
 			if isFirstRun {
 				dbDir = os.Getenv("CASPASTE_DB_DIR")
-				if dbDir == "" {
-					dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
-				}
 			}
 			if dbDir == "" {
 				// Default: {dataDir}/db
@@ -1248,9 +1283,6 @@ func main() {
 	var backupDir string
 	if isFirstRun {
 		backupDir = os.Getenv("CASPASTE_BACKUP_DIR")
-		if backupDir == "" {
-			backupDir = os.Getenv("LENPASTE_BACKUP_DIR") // Backward compatibility
-		}
 	}
 	if backupDir == "" && dataDir != "" {
 		// Set platform-specific defaults
@@ -1330,9 +1362,6 @@ func main() {
 	cacheDir := yamlCfg.Directories.Cache
 	if cacheDir == "" && isFirstRun {
 		cacheDir = os.Getenv("CASPASTE_CACHE_DIR")
-		if cacheDir == "" {
-			cacheDir = os.Getenv("LENPASTE_CACHE_DIR") // Backward compatibility
-		}
 	}
 	if cacheDir == "" && dataDir != "" {
 		isRoot := isRunningAsRoot()
@@ -1386,9 +1415,6 @@ func main() {
 	logsDir := yamlCfg.Directories.Logs
 	if logsDir == "" && isFirstRun {
 		logsDir = os.Getenv("CASPASTE_LOGS_DIR")
-		if logsDir == "" {
-			logsDir = os.Getenv("LENPASTE_LOGS_DIR") // Backward compatibility
-		}
 	}
 	if logsDir == "" && dataDir != "" {
 		isRoot := isRunningAsRoot()
@@ -1779,6 +1805,7 @@ func main() {
 		UiDefaultLifetime:    yamlCfg.Web.UI.DefaultLifetime,
 		UiDefaultTheme:       yamlCfg.Web.UI.DefaultTheme,
 		UiThemesDir:          yamlCfg.Web.UI.ThemesDir,
+		Public:               yamlCfg.Server.Public,
 		CasPasswdFile:        yamlCfg.Security.PasswordFile,
 	}
 
@@ -1882,9 +1909,6 @@ func main() {
 	if portEnv == "" {
 		portEnv = os.Getenv("CASPASTE_PORT")
 	}
-	if portEnv == "" {
-		portEnv = os.Getenv("LENPASTE_PORT")
-	}
 
 	if portEnv != "" {
 		// ENV overrides config
@@ -1984,7 +2008,7 @@ func main() {
 
 	// Print startup banner with database info
 	dbDisplay := formatDatabaseDisplay(yamlCfg.Database.Driver, yamlCfg.Database.Source)
-	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, configFilePath, dbDisplay, httpPort, httpsPort)
+	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, configFilePath, dbDisplay, httpPort, httpsPort, generatedUser, generatedPass)
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{

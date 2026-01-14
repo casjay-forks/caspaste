@@ -1,5 +1,5 @@
 {{/*
-   Copyright (C) 2021-2023 Leonid Maslakov.
+   This file is part of CasPaste.
 
    This file is part of CasPaste.
 
@@ -10,10 +10,6 @@
 {{define "titlePrefix"}}{{end}}
 {{define "headAppend"}}<script src="/main.js"></script><script src="/burn-after.js"></script>{{end}}
 {{define "article"}}
-{{if eq .AuthOk false}}
-<h1>{{call .Translate `main.CreatePaste`}}</h1>
-<p>{{call .Translate `main.AuthRequired`}}</p>
-{{else}}
 {{if ne .TitleMaxLen 0}}<h1>{{call .Translate `main.CreatePaste`}}</h1>{{end}}
 <form id="create-paste-form" action="/" method="post" enctype="multipart/form-data" aria-label="Create new paste">
 	<div class="form-row">
@@ -49,19 +45,21 @@
 	
 	<div class="form-group">
 		<label for="editor">{{ call .Translate `main.EnterText` }}</label>
-		<textarea
-			id="editor"
-			name="body" 
-			placeholder="{{ call .Translate `main.EnterText` }}" 
-			{{if gt .BodyMaxLen 0}}maxlength="{{.BodyMaxLen}}"{{end}}
-			autocomplete="off" 
-			autocorrect="off" 
-			spellcheck="true"
-			rows="20" 
-			wrap="off" 
-			tabindex="3" 
-			aria-label="Paste content"
-		></textarea>
+		<div id="editor-container">
+			<textarea
+				id="editor"
+				name="body"
+				placeholder="{{ call .Translate `main.EnterText` }}"
+				{{if gt .BodyMaxLen 0}}maxlength="{{.BodyMaxLen}}"{{end}}
+				autocomplete="off"
+				autocorrect="off"
+				spellcheck="true"
+				rows="20"
+				wrap="off"
+				tabindex="3"
+				aria-label="Paste content"
+			></textarea>
+		</div>
 		<div class="char-counter-container">
 			<span aria-live="polite" id="symbolCounterContainer"></span>
 		</div>
@@ -194,5 +192,4 @@
 		<button class="button-green" type="submit" tabindex="8">{{ call .Translate `main.Create` }}</button>
 	</div>
 </form>
-{{end}}
 {{end}}

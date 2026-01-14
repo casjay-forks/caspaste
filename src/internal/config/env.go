@@ -8,19 +8,14 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/casjay-forks/caspaste/src/internal/validation"
 )
 
-// getEnv tries CASPASTE_* first, then LENPASTE_* for backward compatibility
+// getEnv gets CASPASTE_* environment variables
 func getEnv(name string) string {
-	if val := os.Getenv("CASPASTE_" + name); val != "" {
-		return val
-	}
-	if val := os.Getenv("LENPASTE_" + name); val != "" {
-		return val
-	}
-	return ""
+	return os.Getenv("CASPASTE_" + name)
 }
 
 // ApplyEnvironmentOverrides applies environment variables to config
@@ -216,4 +211,35 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("LOGS_DIR"); val != "" {
 		cfg.Directories.Logs = val
 	}
+}
+
+// ApplyCriticalOverrides applies security-critical environment variables on EVERY run
+// Unlike ApplyEnvironmentOverrides which only runs on first config generation,
+// this function runs on every startup to ensure security settings can be changed
+// via environment variables in containerized deployments without deleting config
+func ApplyCriticalOverrides(cfg *YAMLConfig) {
+	// Server public mode - critical for enabling/disabling authentication
+	// PUBLIC=true (default) = open/public, PUBLIC=false = auth required
+	if val := getEnv("PUBLIC"); val != "" {
+		cfg.Server.Public = isTruthy(val)
+	}
+
+	// Password file - for custom users (optional, auto-generated if not set)
+	if val := getEnv("PASSWORD_FILE"); val != "" {
+		cfg.Security.PasswordFile = val
+	}
+	if val := getEnv("CASPASSWD_FILE"); val != "" {
+		cfg.Security.PasswordFile = val
+	}
+
+	// TLS settings - critical for HTTPS security
+	if val := getEnv("TLS_MIN_VERSION"); val != "" {
+		cfg.Security.TLS.MinVersion = val
+	}
+}
+
+// isTruthy checks if a string value represents true
+func isTruthy(val string) bool {
+	val = strings.ToLower(strings.TrimSpace(val))
+	return val == "true" || val == "1" || val == "yes" || val == "on" || val == "enabled"
 }

@@ -26,8 +26,8 @@ type newPasteAnswer struct {
 func (data *Data) newHand(rw http.ResponseWriter, req *http.Request) error {
 	var err error
 
-	// Check auth
-	if data.CasPasswdFile != "" {
+	// Check auth (required when server.public=false)
+	if !data.Public && data.CasPasswdFile != "" {
 		clientIP := netshare.GetClientAddr(req)
 
 		// Check if IP is blocked due to too many failed attempts

@@ -106,11 +106,13 @@ func loadThemes(hostThemeDir string, localesList LocalesList, defaultTheme strin
 		return nil, nil, err
 	}
 
-	// Load external themes
+	// Load external themes (if directory exists)
 	if hostThemeDir != "" {
-		err = loadThemesFromFS(os.DirFS(hostThemeDir), ".")
-		if err != nil {
-			return nil, nil, err
+		if _, statErr := os.Stat(hostThemeDir); statErr == nil {
+			err = loadThemesFromFS(os.DirFS(hostThemeDir), ".")
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
