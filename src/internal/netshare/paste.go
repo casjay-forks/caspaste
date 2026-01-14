@@ -166,9 +166,16 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		}
 	}
 
-	// Get "one use" parameter
-	if req.PostForm.Get("oneUse") == "true" {
+	// Get "one use" (burn after reading) parameter
+	// Accepts "true" for backward compatibility or numeric values for view count
+	oneUseVal := req.PostForm.Get("oneUse")
+	if oneUseVal == "true" || oneUseVal == "1" {
 		paste.OneUse = true
+	} else if oneUseVal != "" && oneUseVal != "false" {
+		// Check if it's a numeric value > 0 (custom view count)
+		if viewCount, err := strconv.Atoi(oneUseVal); err == nil && viewCount > 0 {
+			paste.OneUse = true
+		}
 	}
 
 	// Check author name, email and URL length.

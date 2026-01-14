@@ -285,5 +285,40 @@ func (cfg Logger) HttpRequest(req *http.Request, code int) {
 }
 
 func (cfg Logger) HttpError(req *http.Request, e error) {
-	fmt.Fprintln(cfg.stderr, time.Now().Format(cfg.TimeFormat), "[ERROR]  ", netshare.GetClientAddr(req).String(), req.Method, 500, req.URL.Path, "(User-Agent: "+req.UserAgent()+")", "Error:", getTrace(), e.Error())
+	clientIP := netshare.GetClientAddr(req).String()
+	path := req.URL.Path
+	if req.URL.RawQuery != "" {
+		path = path + "?" + req.URL.RawQuery
+	}
+
+	// Format the message
+	var output string
+	if cfg.Format.Error == "json" {
+		entry := map[string]interface{}{
+			"time":       time.Now().Format(time.RFC3339),
+			"level":      "ERROR",
+			"client_ip":  clientIP,
+			"method":     req.Method,
+			"path":       path,
+			"user_agent": req.UserAgent(),
+			"trace":      getTrace(),
+			"error":      e.Error(),
+		}
+		data, _ := json.Marshal(entry)
+		output = string(data)
+	} else {
+		output = fmt.Sprintf("%s [ERROR]   %s %s %s (User-Agent: %s) Error: %s%s",
+			time.Now().Format(cfg.TimeFormat), clientIP, req.Method, path,
+			req.UserAgent(), getTrace(), e.Error())
+	}
+
+	// Always write to error log file
+	if cfg.errorFile != nil {
+		fmt.Fprintln(cfg.errorFile, output)
+	}
+
+	// Write to stderr if configured
+	if cfg.stderr != nil {
+		fmt.Fprintln(cfg.stderr, output)
+	}
 }

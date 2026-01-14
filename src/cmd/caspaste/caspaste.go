@@ -1723,16 +1723,32 @@ func main() {
 	}
 	// Note: Do NOT defer close - these files must stay open for the entire application lifetime
 
+	// Apply defaults for logging stdout/stderr settings if config values are zero (not explicitly set)
+	// Default behavior: Server logs to stdout, Errors to stderr
+	serverStdout := yamlCfg.Logging.Server.Stdout
+	debugStdout := yamlCfg.Logging.Debug.Stdout
+	errorStderr := yamlCfg.Logging.Error.Stderr
+
+	// If logging section exists but all stdout/stderr are false, apply sensible defaults
+	// This handles the case where the config file doesn't have the logging section
+	if !serverStdout && !debugStdout && !errorStderr &&
+		!yamlCfg.Logging.Access.Stdout && !yamlCfg.Logging.Access.Stderr &&
+		!yamlCfg.Logging.Error.Stdout && !yamlCfg.Logging.Server.Stderr {
+		// No logging to console configured at all - use defaults
+		serverStdout = true
+		errorStderr = true
+	}
+
 	// Build console writers based on config stdout/stderr settings
 	var consoleStdout, consoleStderr io.Writer
-	
+
 	// Stdout (for INFO/WARN/DEBUG based on level)
-	if yamlCfg.Logging.Server.Stdout || yamlCfg.Logging.Debug.Stdout {
+	if serverStdout || debugStdout {
 		consoleStdout = os.Stdout
 	}
-	
+
 	// Stderr (for ERROR)
-	if yamlCfg.Logging.Error.Stderr {
+	if errorStderr {
 		consoleStderr = os.Stderr
 	}
 	

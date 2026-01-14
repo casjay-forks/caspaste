@@ -55,7 +55,7 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 		Translate: locale.translate,
 	}
 
-	// Dectect error
+	// Detect error type
 	var eTmp429 *netshare.RateLimitError
 
 	if e == netshare.ErrBadRequest {

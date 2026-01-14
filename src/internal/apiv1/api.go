@@ -107,11 +107,13 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 		data.Log.HttpRequest(req, 200)
 
 	} else {
-		code, err := data.writeError(rw, req, err)
-		if err != nil {
-			data.Log.HttpError(req, err)
-		} else {
-			data.Log.HttpRequest(req, code)
+		// Log the original error before writing HTTP response
+		data.Log.HttpError(req, err)
+
+		code, writeErr := data.writeError(rw, req, err)
+		if writeErr != nil {
+			data.Log.HttpError(req, writeErr)
 		}
+		data.Log.HttpRequest(req, code)
 	}
 }

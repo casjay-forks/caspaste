@@ -1,6 +1,8 @@
-// This file is part of CasPaste.
-// CasPaste is free software released under the MIT License.
-// See LICENSE file for details.
+/**
+ * This file is part of CasPaste.
+ * CasPaste is free software released under the MIT License.
+ * See LICENSE.md file for details.
+ */
 
 function isLocalStoageSupported() {
 	if (typeof localStorage === 'object') {
@@ -289,14 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Attach history button click handler
 document.addEventListener('DOMContentLoaded', function() {
-var historyButton = document.getElementById('js-history-button');
-if (historyButton) {
-historyButton.addEventListener('click', function(e) {
-e.preventDefault();
-historyPopUpShow();
-return false;
-});
-}
+	var historyButton = document.getElementById('js-history-button');
+	if (historyButton) {
+		historyButton.addEventListener('click', function(e) {
+			e.preventDefault();
+			historyPopUpShow();
+			return false;
+		});
+	}
 });
 
 // Mobile hamburger menu toggle
