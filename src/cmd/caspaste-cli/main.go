@@ -378,8 +378,7 @@ Options:
 Examples:
   echo "Hello" | caspaste-cli new
   caspaste-cli new -f script.py -s python -t "My Script"
-  cat log.txt | caspaste-cli new -l 1h -1
-`)
+  cat log.txt | caspaste-cli new -l 1h -1`)
 			return
 		}
 	}

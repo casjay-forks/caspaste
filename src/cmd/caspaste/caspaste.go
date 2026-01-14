@@ -188,6 +188,60 @@ func isRunningAsRoot() bool {
 	}
 }
 
+// getDefaultDataDir returns the platform-specific default data directory
+func getDefaultDataDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+			return localAppData + "\\CasPaste\\Data"
+		}
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Data"
+	case "darwin":
+		if isRunningAsRoot() {
+			return "/var/lib/caspaste"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/Library/Application Support/CasPaste"
+		}
+		return "/var/lib/caspaste"
+	default: // Linux, BSD, etc.
+		if isRunningAsRoot() {
+			return "/var/lib/caspaste"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/.local/share/caspaste"
+		}
+		return "/var/lib/caspaste"
+	}
+}
+
+// getDefaultConfigDir returns the platform-specific default config directory
+func getDefaultConfigDir() string {
+	switch runtime.GOOS {
+	case "windows":
+		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+			return localAppData + "\\CasPaste\\Config"
+		}
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Config"
+	case "darwin":
+		if isRunningAsRoot() {
+			return "/etc/caspaste"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/Library/Application Support/CasPaste/Config"
+		}
+		return "/etc/caspaste"
+	default: // Linux, BSD, etc.
+		if isRunningAsRoot() {
+			return "/etc/caspaste"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/.config/caspaste"
+		}
+		return "/etc/caspaste"
+	}
+}
+
 // ensureDirectories creates all necessary directories if they don't exist
 func ensureDirectories(dataDir, configDir, dbDir, backupDir, cacheDir, logsDir string) error {
 	// Create data directory
@@ -593,7 +647,7 @@ func normalizeDriverName(driver string) string {
 // performBackup creates a full disaster recovery backup
 func performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, filename string) error {
 	if dataDir == "" {
-		dataDir = "."
+		dataDir = getDefaultDataDir()
 	}
 
 	// Generate filename if not provided
@@ -676,7 +730,7 @@ func performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, filename s
 // performRestore performs full disaster recovery restore from backup archive
 func performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, filename string) error {
 	if dataDir == "" {
-		dataDir = "."
+		dataDir = getDefaultDataDir()
 	}
 
 	// If no filename, find latest backup
@@ -781,7 +835,7 @@ func performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, filename 
 func setMaintenanceMode(dataDir, mode string) error {
 	// Ensure data directory exists
 	if dataDir == "" {
-		dataDir = "."
+		dataDir = getDefaultDataDir()
 	}
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return fmt.Errorf("failed to create data directory: %w", err)
@@ -1034,14 +1088,16 @@ func main() {
 			os.MkdirAll(*flagConfigDir, 0755)
 		}
 
-		configPath := "./caspaste.yml"
-		if *flagConfigDir != "" {
-			configPath = *flagConfigDir + "/caspaste.yml"
+		configDir := *flagConfigDir
+		if configDir == "" {
+			configDir = getDefaultConfigDir()
 		}
+		configPath := filepath.Join(configDir, "caspaste.yml")
 
 		cfg, err := config.LoadYAMLConfig(configPath)
 		if err != nil {
 			// Config doesn't exist, create default
+			os.MkdirAll(configDir, 0755)
 			config.GenerateDefaultYAMLConfig(configPath)
 			cfg, _ = config.LoadYAMLConfig(configPath)
 		}
@@ -1051,10 +1107,14 @@ func main() {
 		cfg.Database.Driver = validation.NormalizeDriver(cfg.Database.Driver)
 
 		// Process SQLite path
-		if cfg.Database.Driver == "sqlite" && !strings.HasPrefix(cfg.Database.Source, "/") && *flagDataDir != "" {
+		dataDir := *flagDataDir
+		if dataDir == "" {
+			dataDir = getDefaultDataDir()
+		}
+		if cfg.Database.Driver == "sqlite" && !strings.HasPrefix(cfg.Database.Source, "/") {
 			dbDir := os.Getenv("CASPASTE_DB_DIR")
 			if dbDir == "" {
-				dbDir = *flagDataDir + "/db"
+				dbDir = dataDir + "/db"
 			}
 			cfg.Database.Source = dbDir + "/caspaste.db"
 		}
@@ -1067,14 +1127,13 @@ func main() {
 	// Handle --service command early (before heavy setup)
 	if *flagService != "" {
 		// Quick config load
-		if *flagConfigDir != "" {
-			os.MkdirAll(*flagConfigDir, 0755)
+		configDir := *flagConfigDir
+		if configDir == "" {
+			configDir = getDefaultConfigDir()
 		}
+		os.MkdirAll(configDir, 0755)
 
-		configPath := "./caspaste.yml"
-		if *flagConfigDir != "" {
-			configPath = *flagConfigDir + "/caspaste.yml"
-		}
+		configPath := filepath.Join(configDir, "caspaste.yml")
 
 		cfg, err := config.LoadYAMLConfig(configPath)
 		if err != nil {
@@ -1094,7 +1153,7 @@ func main() {
 		}
 	}
 
-	// Try to load config file from config directory or current directory
+	// Try to load config file from config directory or platform-specific locations
 	// (yamlCfg already declared earlier for --status/--service early exit)
 	var configFilePath string
 	configPaths := []string{}
@@ -1102,8 +1161,16 @@ func main() {
 		// When --config is explicitly set, ONLY look in that directory
 		configPaths = append(configPaths, *flagConfigDir+"/caspaste.yml", *flagConfigDir+"/caspaste.yaml")
 	} else {
-		// When --config is NOT set, search standard locations
-		configPaths = append(configPaths, "caspaste.yml", "caspaste.yaml", "/etc/caspaste/caspaste.yml", "/etc/caspaste/caspaste.yaml")
+		// When --config is NOT set, search platform-specific and standard locations
+		defaultConfigDir := getDefaultConfigDir()
+		configPaths = append(configPaths,
+			defaultConfigDir+"/caspaste.yml",
+			defaultConfigDir+"/caspaste.yaml",
+			"/etc/caspaste/caspaste.yml",
+			"/etc/caspaste/caspaste.yaml",
+			"/config/caspaste.yml",
+			"/config/caspaste.yaml",
+		)
 	}
 
 	for _, path := range configPaths {
@@ -1125,7 +1192,7 @@ func main() {
 		if *flagConfigDir != "" {
 			defaultConfigPath = *flagConfigDir + "/caspaste.yml"
 		} else {
-			defaultConfigPath = "./caspaste.yml"
+			defaultConfigPath = getDefaultConfigDir() + "/caspaste.yml"
 		}
 
 		if err := config.GenerateDefaultYAMLConfig(defaultConfigPath); err != nil {
@@ -1477,7 +1544,7 @@ func main() {
 	// Determine config file path for saving
 	saveConfigPath := *flagConfigDir + "/caspaste.yml"
 	if *flagConfigDir == "" {
-		saveConfigPath = "./caspaste.yml"
+		saveConfigPath = getDefaultConfigDir() + "/caspaste.yml"
 	}
 	
 	if err := config.SaveYAMLConfig(saveConfigPath, yamlCfg); err != nil {
@@ -1520,7 +1587,7 @@ func main() {
 	// Handle --maintenance command (reads from config, no flags needed)
 	if *flagMaintenance != "" {
 		// Load config to get all paths
-		configPath := "./caspaste.yml"
+		configPath := getDefaultConfigDir() + "/caspaste.yml"
 		if *flagConfigDir != "" {
 			configPath = *flagConfigDir + "/caspaste.yml"
 		} else {
@@ -1896,7 +1963,7 @@ func main() {
 	// Wrap with maintenance mode middleware
 	dataDirectory := *flagDataDir
 	if dataDirectory == "" {
-		dataDirectory = "."
+		dataDirectory = getDefaultDataDir()
 	}
 	// Parse cleanup period from config
 	cleanupPeriod, err := cli.ParseDuration(yamlCfg.Database.CleanupPeriod)
@@ -1959,7 +2026,7 @@ func main() {
 		if *flagConfigDir != "" {
 			configFilePath = *flagConfigDir + "/caspaste.yml"
 		} else {
-			configFilePath = "./caspaste.yml"
+			configFilePath = getDefaultConfigDir() + "/caspaste.yml"
 		}
 		
 		// Save all determined directories to config

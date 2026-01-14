@@ -9,6 +9,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -17,14 +18,16 @@ import (
 // All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
-		Public bool   `yaml:"public"` // Public instance (default: true = no auth, false = auth required)
-		FQDN   string `yaml:"fqdn"`   // Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
-		Listen string `yaml:"listen"` // Listen address (all, ::, 0.0.0.0, specific IP)
-		Port   string `yaml:"port"`   // "8080" or "8080,64453"
-		Title  string `yaml:"title"`  // Server title
-		
+		Public      bool   `yaml:"public"`      // Public instance (default: true = no auth, false = auth required)
+		FQDN        string `yaml:"fqdn"`        // Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
+		Listen      string `yaml:"listen"`      // Listen address (all, ::, 0.0.0.0, specific IP)
+		Port        string `yaml:"port"`        // Port number (empty=auto-detect available port)
+		Title       string `yaml:"title"`       // Server title
+		TagLine     string `yaml:"tagline"`     // Server tagline (short description)
+		Description string `yaml:"description"` // Server description (longer description for meta tags)
+
 		Proxy struct {
-			Allowed []string `yaml:"allowed"` // Trusted proxy IPs/CIDRs (X-Forwarded-* headers only trusted from these)
+			Allowed []string `yaml:"allowed"` // Additional trusted proxy IPs/CIDRs (appended to default private ranges)
 		} `yaml:"proxy"`
 		
 		Administrator struct {
@@ -91,19 +94,19 @@ type YAMLConfig struct {
 		UI struct {
 			DefaultLifetime string `yaml:"default_lifetime"` // Default paste lifetime
 			DefaultTheme    string `yaml:"default_theme"`    // Default theme (e.g. "dracula")
-			ThemesDir       string `yaml:"themes_dir"`       // Custom themes directory
+			ThemesDir       string `yaml:"themes_dir"`       // Themes directory (default: {data_dir}/web/themes)
 		} `yaml:"ui"`
-		
+
 		Content struct {
-			About    string `yaml:"about"`    // Path to custom about page
-			Rules    string `yaml:"rules"`    // Path to custom rules page
-			Terms    string `yaml:"terms"`    // Path to custom terms page
-			Security string `yaml:"security"` // Path to custom security.txt
+			About    string `yaml:"about"`    // Path to custom about page (empty=auto-generated, relative to {data_dir}/web/docs)
+			Rules    string `yaml:"rules"`    // Path to custom rules page (empty=auto-generated)
+			Terms    string `yaml:"terms"`    // Path to custom terms page (empty=auto-generated)
+			Security string `yaml:"security"` // Path to custom security.txt (empty=auto-generated)
 		} `yaml:"content"`
-		
+
 		Branding struct {
-			Logo    string `yaml:"logo"`    // Logo URL/path
-			Favicon string `yaml:"favicon"` // Favicon URL/path
+			Logo    string `yaml:"logo"`    // Logo path or URL (e.g. "/static/logo.png" or "https://example.com/logo.png")
+			Favicon string `yaml:"favicon"` // Favicon path or URL (e.g. "/static/favicon.ico" or "https://example.com/favicon.ico")
 		} `yaml:"branding"`
 		
 		Security struct {
@@ -216,6 +219,67 @@ func SaveYAMLConfig(path string, cfg *YAMLConfig) error {
 	return nil
 }
 
+// ResolvePlaceholders replaces placeholder values in the config with actual values
+// Placeholders: {fqdn}, {data_dir}, {config_dir}
+func ResolvePlaceholders(cfg *YAMLConfig, fqdn, dataDir, configDir string) {
+	// Helper function to replace placeholders in a string
+	replace := func(s string) string {
+		s = strings.ReplaceAll(s, "{fqdn}", fqdn)
+		s = strings.ReplaceAll(s, "{data_dir}", dataDir)
+		s = strings.ReplaceAll(s, "{config_dir}", configDir)
+		return s
+	}
+
+	// Server section
+	cfg.Server.Administrator.Email = replace(cfg.Server.Administrator.Email)
+	cfg.Server.Administrator.From = replace(cfg.Server.Administrator.From)
+
+	// Web section
+	cfg.Web.UI.ThemesDir = replace(cfg.Web.UI.ThemesDir)
+	cfg.Web.Content.About = replace(cfg.Web.Content.About)
+	cfg.Web.Content.Rules = replace(cfg.Web.Content.Rules)
+	cfg.Web.Content.Terms = replace(cfg.Web.Content.Terms)
+	cfg.Web.Content.Security = replace(cfg.Web.Content.Security)
+	cfg.Web.Branding.Logo = replace(cfg.Web.Branding.Logo)
+	cfg.Web.Branding.Favicon = replace(cfg.Web.Branding.Favicon)
+	cfg.Web.Security.Contact.Email = replace(cfg.Web.Security.Contact.Email)
+
+	// Security section
+	cfg.Security.PasswordFile = replace(cfg.Security.PasswordFile)
+	cfg.Security.TLS.CertFile = replace(cfg.Security.TLS.CertFile)
+	cfg.Security.TLS.KeyFile = replace(cfg.Security.TLS.KeyFile)
+
+	// Database section
+	cfg.Database.Source = replace(cfg.Database.Source)
+	cfg.Database.Backup.Source = replace(cfg.Database.Backup.Source)
+
+	// Set defaults for empty values that need data_dir
+	if cfg.Web.UI.ThemesDir == "" {
+		cfg.Web.UI.ThemesDir = dataDir + "/web/themes"
+	}
+}
+
+// GetDefaultPrivateProxies returns the default trusted proxy CIDR ranges
+// These are always trusted for X-Forwarded-* headers
+func GetDefaultPrivateProxies() []string {
+	return []string{
+		"10.0.0.0/8",     // Private Class A
+		"172.16.0.0/12",  // Private Class B
+		"192.168.0.0/16", // Private Class C
+		"127.0.0.0/8",    // Loopback IPv4
+		"::1",            // Loopback IPv6
+		"fc00::/7",       // Unique Local IPv6
+		"fe80::/10",      // Link-Local IPv6
+	}
+}
+
+// GetAllTrustedProxies returns all trusted proxies (defaults + configured)
+func GetAllTrustedProxies(cfg *YAMLConfig) []string {
+	proxies := GetDefaultPrivateProxies()
+	proxies = append(proxies, cfg.Server.Proxy.Allowed...)
+	return proxies
+}
+
 // GenerateDefaultYAMLConfig generates a default configuration file with sane defaults
 func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig := YAMLConfig{}
@@ -226,20 +290,15 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Server.Public = true  // Default: open/public instance (no auth required)
 	defaultConfig.Server.FQDN = ""      // Empty = auto-detect from X-Forwarded-Host (trusted proxies) or hostname; Set to override
 	defaultConfig.Server.Listen = "all" // Listen on all interfaces (IPv4 + IPv6)
-	defaultConfig.Server.Port = "64365" // Default port
+	defaultConfig.Server.Port = ""      // Empty = auto-detect available port at runtime
 	defaultConfig.Server.Title = "CasPaste"
-	
-	// Trusted reverse proxy IPs/CIDRs - X-Forwarded-* headers only trusted from these sources
-	// Default: All RFC1918 private networks + loopback
-	defaultConfig.Server.Proxy.Allowed = []string{
-		"10.0.0.0/8",      // Private Class A
-		"172.16.0.0/12",   // Private Class B
-		"192.168.0.0/16",  // Private Class C
-		"127.0.0.0/8",     // Loopback IPv4
-		"::1",             // Loopback IPv6
-		"fc00::/7",        // Unique Local IPv6
-		"fe80::/10",       // Link-Local IPv6
-	}
+	defaultConfig.Server.TagLine = "A simple paste service"
+	defaultConfig.Server.Description = "CasPaste is a simple, fast, and secure paste service for sharing code snippets and text"
+
+	// Additional trusted proxy IPs/CIDRs to append to default private ranges
+	// Default private ranges (always trusted): 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8, ::1, fc00::/7, fe80::/10
+	// Any IPs/CIDRs specified here are APPENDED to these defaults
+	defaultConfig.Server.Proxy.Allowed = []string{}
 	
 	defaultConfig.Server.Administrator.Name = "CasPaste Administrator"
 	defaultConfig.Server.Administrator.Email = "administrator@{fqdn}"
@@ -318,21 +377,22 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// WEB CONFIGURATION
 	// ============================================================================
-	
+
 	// UI Settings
 	defaultConfig.Web.UI.DefaultLifetime = "never"
-	defaultConfig.Web.UI.DefaultTheme = "dark"  // Accepts: "dark" (dracula), "light" (github), "auto", or full path like "dark/dracula"
-	defaultConfig.Web.UI.ThemesDir = "/usr/share/caspaste/themes"
-	
-	// Content Pages
-	defaultConfig.Web.Content.About = "/etc/caspaste/content/about.md"    // Empty = use embedded default
-	defaultConfig.Web.Content.Rules = "/etc/caspaste/content/rules.md"    // Empty = use embedded default
-	defaultConfig.Web.Content.Terms = "/etc/caspaste/content/terms.md"    // Empty = use embedded default
+	defaultConfig.Web.UI.DefaultTheme = "dark" // Accepts: "dark" (dracula), "light" (github), "auto", or full path like "dark/dracula"
+	defaultConfig.Web.UI.ThemesDir = ""        // Empty = {data_dir}/web/themes (resolved at runtime)
+
+	// Content Pages - all empty = auto-generated from embedded defaults
+	// If set, paths are relative to {data_dir}/web/docs unless absolute
+	defaultConfig.Web.Content.About = ""    // Empty = auto-generated
+	defaultConfig.Web.Content.Rules = ""    // Empty = auto-generated
+	defaultConfig.Web.Content.Terms = ""    // Empty = auto-generated
 	defaultConfig.Web.Content.Security = "" // Empty = auto-generated security.txt
-	
-	// Branding
-	defaultConfig.Web.Branding.Logo = "/static/logo.png"
-	defaultConfig.Web.Branding.Favicon = "/static/favicon.ico"
+
+	// Branding - can be local paths or URLs
+	defaultConfig.Web.Branding.Logo = ""    // Empty = use embedded default
+	defaultConfig.Web.Branding.Favicon = "" // Empty = use embedded default
 	
 	// Security Contact (for security.txt)
 	defaultConfig.Web.Security.Contact.Email = "security@{fqdn}"

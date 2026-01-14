@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -69,7 +70,7 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 }
 
 // getSQLiteCachePath determines the SQLite cache database path
-// Priority: CASPASTE_DB_DIR env var > dataDir/db/ > ./data/db/
+// Priority: CASPASTE_DB_DIR env var > dataDir/db/ > platform-specific default
 func getSQLiteCachePath(dataDir string) string {
 	// Check environment variable first
 	if envDbDir := os.Getenv("CASPASTE_DB_DIR"); envDbDir != "" {
@@ -79,8 +80,40 @@ func getSQLiteCachePath(dataDir string) string {
 	if dataDir != "" {
 		return dataDir + "/db/caspaste.db"
 	}
-	// Fallback to relative path
-	return "./data/db/caspaste.db"
+	// Fallback to platform-specific default
+	return getDefaultDbPath()
+}
+
+// getDefaultDbPath returns the platform-specific default database path
+func getDefaultDbPath() string {
+	switch runtime.GOOS {
+	case "windows":
+		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+			return localAppData + "\\CasPaste\\Data\\db\\caspaste.db"
+		}
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Data\\db\\caspaste.db"
+	case "darwin":
+		if isRunningAsRoot() {
+			return "/var/lib/caspaste/db/caspaste.db"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/Library/Application Support/CasPaste/db/caspaste.db"
+		}
+		return "/var/lib/caspaste/db/caspaste.db"
+	default: // Linux, BSD, etc.
+		if isRunningAsRoot() {
+			return "/var/lib/caspaste/db/caspaste.db"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/.local/share/caspaste/db/caspaste.db"
+		}
+		return "/var/lib/caspaste/db/caspaste.db"
+	}
+}
+
+// isRunningAsRoot checks if the process is running with root/admin privileges
+func isRunningAsRoot() bool {
+	return os.Geteuid() == 0
 }
 
 func (db DB) Close() error {
