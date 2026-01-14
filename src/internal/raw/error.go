@@ -19,10 +19,10 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 	var errText string
 	var errCode int
 
-	// Dectect error
+	// Detect error type
 	var eTmp429 *netshare.RateLimitError
 
-	if e == storage.ErrNotFoundID && e == netshare.ErrNotFound {
+	if e == storage.ErrNotFoundID || e == netshare.ErrNotFound {
 		errCode = 404
 		errText = "404 Not Found"
 
@@ -37,7 +37,7 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 	}
 
 	// Write response
-	rw.Header().Set("Content-type", "text/plain; charset=utf-8")
+	rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	rw.WriteHeader(errCode)
 
 	_, err := io.WriteString(rw, errText)
