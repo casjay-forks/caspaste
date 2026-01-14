@@ -1848,6 +1848,12 @@ func main() {
 				privilege.ChownPathRecursive(dir, uid, gid)
 			}
 		}
+		// Also chown the auth file if it exists (created earlier for private instances)
+		if yamlCfg.Security.PasswordFile != "" {
+			if _, err := os.Stat(yamlCfg.Security.PasswordFile); err == nil {
+				privilege.ChownPath(yamlCfg.Security.PasswordFile, uid, gid)
+			}
+		}
 	}
 
 	// Load pages
