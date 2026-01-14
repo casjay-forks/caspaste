@@ -651,6 +651,71 @@ h4 a, h5 a, h6 a {
 	text-decoration: none;
 }
 
+/* HAMBURGER MENU TOGGLE */
+.nav-toggle {
+	display: none;
+	background: transparent;
+	border: none;
+	padding: 0.5rem;
+	cursor: pointer;
+	min-height: 44px;
+	min-width: 44px;
+	align-items: center;
+	justify-content: center;
+}
+
+.nav-toggle-icon,
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+	display: block;
+	width: 24px;
+	height: 3px;
+	background: {{call .Theme `color.HeaderFont`}};
+	border-radius: 2px;
+	transition: all 0.3s ease;
+}
+
+.nav-toggle-icon {
+	position: relative;
+}
+
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+	content: '';
+	position: absolute;
+	left: 0;
+}
+
+.nav-toggle-icon::before {
+	top: -8px;
+}
+
+.nav-toggle-icon::after {
+	top: 8px;
+}
+
+/* Hamburger to X animation */
+.nav-toggle.active .nav-toggle-icon {
+	background: transparent;
+}
+
+.nav-toggle.active .nav-toggle-icon::before {
+	top: 0;
+	transform: rotate(45deg);
+}
+
+.nav-toggle.active .nav-toggle-icon::after {
+	top: 0;
+	transform: rotate(-45deg);
+}
+
+/* Nav links container - desktop */
+.nav-links {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
 /* MOBILE RESPONSIVE - Screens < 720px */
 @media screen and (max-width: 720px) {
 	header {
@@ -658,15 +723,39 @@ h4 a, h5 a, h6 a {
 	}
 
 	header nav {
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		flex-wrap: wrap;
+		justify-content: space-between;
 	}
 
 	header .site-title {
 		font-size: 1.1rem;
 		margin-right: 0;
-		margin-bottom: 0.5rem;
+	}
+
+	/* Show hamburger on mobile */
+	.nav-toggle {
+		display: flex;
+	}
+
+	/* Hide nav links by default on mobile */
+	.nav-links {
+		display: none;
+		flex-direction: column;
+		width: 100%;
+		padding-top: 1rem;
+		gap: 0.25rem;
+	}
+
+	/* Show nav links when menu is open */
+	.nav-links.open {
+		display: flex;
+	}
+
+	.nav-links a,
+	.nav-links button {
+		width: 100%;
+		text-align: center;
+		padding: 0.75rem 1rem;
 	}
 
 	main {

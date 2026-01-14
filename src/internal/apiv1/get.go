@@ -42,21 +42,12 @@ func (data *Data) getHand(rw http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	// If "one use" paste
+	// If "one use" (burn after reading) paste - delete it after returning content
 	if paste.OneUse {
-		if req.Form.Get("openOneUse") == "true" {
-			// Delete paste
-			err = data.DB.PasteDelete(pasteID)
-			if err != nil {
-				return err
-			}
-
-		} else {
-			// Remove secret data
-			paste = storage.Paste{
-				ID:     paste.ID,
-				OneUse: true,
-			}
+		// Delete paste immediately - burn after reading just works
+		err = data.DB.PasteDelete(pasteID)
+		if err != nil {
+			return err
 		}
 	}
 

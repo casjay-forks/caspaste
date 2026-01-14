@@ -298,3 +298,31 @@ return false;
 });
 }
 });
+
+// Mobile hamburger menu toggle
+document.addEventListener('DOMContentLoaded', function() {
+	var navToggle = document.getElementById('js-nav-toggle');
+	var navLinks = document.getElementById('js-nav-links');
+
+	if (navToggle && navLinks) {
+		navToggle.addEventListener('click', function() {
+			navToggle.classList.toggle('active');
+			navLinks.classList.toggle('open');
+
+			// Update aria-expanded for accessibility
+			var isExpanded = navLinks.classList.contains('open');
+			navToggle.setAttribute('aria-expanded', isExpanded);
+		});
+
+		// Close menu when clicking a link (mobile UX)
+		navLinks.querySelectorAll('a').forEach(function(link) {
+			link.addEventListener('click', function() {
+				if (window.innerWidth <= 720) {
+					navToggle.classList.remove('active');
+					navLinks.classList.remove('open');
+					navToggle.setAttribute('aria-expanded', 'false');
+				}
+			});
+		});
+	}
+});

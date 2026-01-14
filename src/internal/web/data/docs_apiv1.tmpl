@@ -146,13 +146,8 @@ print('Paste URL:', data['url'])` `python`}}
 		<td></td>
 		<td>{{call .Translate `docsAPIv1.ReqGetID`}}</td>
 	</tr>
-	<tr>
-		<td><code>openOneUse</code></td>
-		<td></td>
-		<td><code>false</code></td>
-		<td>{{call .Translate `docsAPIv1.ReqGetOpenOneUse`}}</td>
-	</tr>
 </table>
+<p><strong>Note:</strong> Burn-after-reading pastes (<code>oneUse: true</code>) are automatically deleted after retrieval. The full content is returned and the paste is immediately removed.</p>
 <p>{{call .Translate `docsAPIv1.ResponseExample`}}</p>
 {{ call .Highlight `{
 	"id": "XcmX9ON1",
@@ -165,18 +160,6 @@ print('Paste URL:', data['url'])` `python`}}
 	"author": "Anon",
 	"authorEmail": "me@example.org",
 	"authorURL": "https://example.org"
-}` `json`}}
-{{ call .Highlight `{
-	"id": "5mqqHZRg",
-	"title": "",
-	"body": "",
-	"createTime": 0,
-	"deleteTime": 0,
-	"oneUse": true,
-	"syntax": "",
-	"author": "",
-	"authorEmail": "",
-	"authorURL": ""
 }` `json`}}
 
 <details>

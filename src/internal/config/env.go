@@ -6,12 +6,102 @@
 package config
 
 import (
+	"net"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/casjay-forks/caspaste/src/internal/validation"
+	"golang.org/x/net/publicsuffix"
 )
+
+// isValidDomain checks if a string is a valid domain name using the Public Suffix List
+// This validates against all known TLDs (com, org, co.uk, com.au, etc.)
+func isValidDomain(s string) bool {
+	// Must not be empty
+	if s == "" {
+		return false
+	}
+	// Must not be an IP address
+	if net.ParseIP(s) != nil {
+		return false
+	}
+	// Must contain at least one dot
+	if !strings.Contains(s, ".") {
+		return false
+	}
+	// Use publicsuffix to get the eTLD+1 (effective TLD plus one label)
+	// If this succeeds, it's a valid domain with a known TLD
+	_, err := publicsuffix.EffectiveTLDPlusOne(s)
+	return err == nil
+}
+
+// parseAddress intelligently parses CASPASTE_ADDRESS to extract FQDN, listen, and port
+// Examples:
+//   - ":8080"                    → port=8080
+//   - "pastebin.example.com:80"  → fqdn=pastebin.example.com, port=80
+//   - "127.0.0.1"                → listen=127.0.0.1
+//   - "172.17.0.1:8091"          → listen=172.17.0.1, port=8091
+//   - "example.com"              → fqdn=example.com
+func parseAddress(addr string) (fqdn, listen, port string) {
+	addr = strings.TrimSpace(addr)
+	if addr == "" {
+		return
+	}
+
+	// Handle IPv6 addresses in brackets like [::1]:8080
+	if strings.HasPrefix(addr, "[") {
+		// IPv6 format: [ip]:port or [ip]
+		closeBracket := strings.Index(addr, "]")
+		if closeBracket == -1 {
+			return // Invalid format
+		}
+		ipv6 := addr[1:closeBracket]
+		rest := addr[closeBracket+1:]
+
+		// Check if there's a port after the bracket
+		if strings.HasPrefix(rest, ":") {
+			port = rest[1:]
+		}
+		listen = ipv6
+		return
+	}
+
+	// Check if it starts with ":" (just port)
+	if strings.HasPrefix(addr, ":") {
+		port = addr[1:]
+		return
+	}
+
+	// Try to split host:port
+	// Use net.SplitHostPort for proper parsing
+	host, p, err := net.SplitHostPort(addr)
+	if err != nil {
+		// No port specified, the whole string is the host
+		host = addr
+		p = ""
+	}
+
+	// Set port if found
+	port = p
+
+	// Determine if host is an IP or domain
+	if host != "" {
+		if net.ParseIP(host) != nil {
+			// It's an IP address → listen address
+			listen = host
+		} else if isValidDomain(host) {
+			// It's a valid domain → FQDN
+			fqdn = host
+		} else if host == "localhost" {
+			// Special case: localhost is a listen address
+			listen = host
+		}
+		// If neither IP nor valid domain, ignore it
+	}
+
+	return
+}
 
 // getEnv gets CASPASTE_* environment variables
 func getEnv(name string) string {
@@ -21,11 +111,27 @@ func getEnv(name string) string {
 // ApplyEnvironmentOverrides applies environment variables to config
 // Environment variables override config file values
 func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
-	// Server settings
-	if val := getEnv("FQDN"); val != "" {
-		cfg.Server.FQDN = val
+	// Smart ADDRESS parsing - single env var to set fqdn, listen, and/or port
+	// Examples:
+	//   CASPASTE_ADDRESS=:8080                    → port=8080
+	//   CASPASTE_ADDRESS=pastebin.example.com:80 → fqdn=pastebin.example.com, port=80
+	//   CASPASTE_ADDRESS=127.0.0.1               → listen=127.0.0.1
+	//   CASPASTE_ADDRESS=172.17.0.1:8091         → listen=172.17.0.1, port=8091
+	if val := getEnv("ADDRESS"); val != "" {
+		fqdn, listen, port := parseAddress(val)
+		if fqdn != "" {
+			cfg.Server.FQDN = fqdn
+		}
+		if listen != "" {
+			cfg.Server.Listen = listen
+		}
+		if port != "" {
+			cfg.Server.Port = port
+		}
 	}
-	if val := getEnv("ADDRESS"); val != "" { // Backward compatibility
+
+	// Individual settings (override ADDRESS parsing if both set)
+	if val := getEnv("FQDN"); val != "" {
 		cfg.Server.FQDN = val
 	}
 	if val := getEnv("LISTEN"); val != "" {
