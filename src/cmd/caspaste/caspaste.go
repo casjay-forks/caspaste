@@ -1534,19 +1534,20 @@ func main() {
 		}
 	}
 
+	// Determine config directory for saving
+	configDir := *flagConfigDir
+	if configDir == "" {
+		configDir = getDefaultConfigDir()
+	}
+	saveConfigPath := configDir + "/caspaste.yml"
+
 	// Save all determined directories to config NOW (before any privilege changes)
-	yamlCfg.Directories.Data = *flagDataDir
-	yamlCfg.Directories.Config = *flagConfigDir
+	yamlCfg.Directories.Data = dataDir
+	yamlCfg.Directories.Config = configDir
 	yamlCfg.Directories.Db = dbDir
 	yamlCfg.Directories.Cache = cacheDir
 	yamlCfg.Directories.Logs = logsDir
-	
-	// Determine config file path for saving
-	saveConfigPath := *flagConfigDir + "/caspaste.yml"
-	if *flagConfigDir == "" {
-		saveConfigPath = getDefaultConfigDir() + "/caspaste.yml"
-	}
-	
+
 	if err := config.SaveYAMLConfig(saveConfigPath, yamlCfg); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: failed to save directories to config: %v\n", err)
 	}
@@ -2021,25 +2022,13 @@ func main() {
 			exitOnError(fmt.Errorf("failed to find unused port: %w", err))
 		}
 
-		// Save to config file
+		// Save generated port to config file for persistence
 		yamlCfg.Server.Port = strconv.Itoa(httpPort)
-		if *flagConfigDir != "" {
-			configFilePath = *flagConfigDir + "/caspaste.yml"
-		} else {
-			configFilePath = getDefaultConfigDir() + "/caspaste.yml"
-		}
-		
-		// Save all determined directories to config
-		yamlCfg.Directories.Data = *flagDataDir
-		yamlCfg.Directories.Config = filepath.Dir(configFilePath)
-		yamlCfg.Directories.Db = dbDir
-		yamlCfg.Directories.Cache = cacheDir
-		yamlCfg.Directories.Logs = logsDir
-		
+
 		if err := config.SaveYAMLConfig(configFilePath, yamlCfg); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to save port to config: %v\n", err)
 		} else {
-			fmt.Printf("Saved random port %d to config file\n", httpPort)
+			fmt.Printf("Saved generated port %d to config file\n", httpPort)
 		}
 	}
 

@@ -24,26 +24,16 @@ import (
 const (
 	CasPasteUser  = "caspaste"
 	CasPasteGroup = "caspaste"
-	// UID/GID range: 200-900 (avoiding system UIDs)
-	// 642 chosen as it's rarely used and memorable (CA-SP-AS-TE on phone keypad)
-	PreferredUID = 642
-	PreferredGID = 642
 )
 
 // findAvailableUID finds first available UID in range 200-900
+// No hardcoded preference - always finds the first available on the runtime system
 func findAvailableUID() (int, error) {
-	// Try preferred UID first
-	if !isUIDInUse(PreferredUID) {
-		return PreferredUID, nil
-	}
-
-	// Search for available UID in range
 	for uid := 200; uid <= 900; uid++ {
 		if !isUIDInUse(uid) {
 			return uid, nil
 		}
 	}
-
 	return 0, fmt.Errorf("no available UID in range 200-900")
 }
 

@@ -23,25 +23,17 @@ import (
 const (
 	CasPasteUser  = "_caspaste"
 	CasPasteGroup = "_caspaste"
-	PreferredUID  = 642
-	PreferredGID  = 642
 )
 
-// findAvailableUID finds first available UID in range 200-900
+// findAvailableUID finds first available UID in range 200-500
+// On macOS, system users start with underscore and use UIDs < 500
+// No hardcoded preference - always finds the first available on the runtime system
 func findAvailableUID() (int, error) {
-	// On macOS, system users start with underscore and use UIDs < 500
-	// Check preferred UID
-	if _, err := user.LookupId(strconv.Itoa(PreferredUID)); err != nil {
-		return PreferredUID, nil
-	}
-
-	// Search for available UID
 	for uid := 200; uid <= 500; uid++ {
 		if _, err := user.LookupId(strconv.Itoa(uid)); err != nil {
 			return uid, nil
 		}
 	}
-
 	return 0, fmt.Errorf("no available UID in range 200-500")
 }
 
