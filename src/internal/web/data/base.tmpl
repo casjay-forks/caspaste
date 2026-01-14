@@ -36,39 +36,15 @@
 </head>
 <body>
 	<a href="#main-content" class="skip-to-main">Skip to main content</a>
-	
-	<header role="banner">
-		<nav role="navigation" aria-label="Main navigation">
-			<a href="/" class="site-title" aria-label="CasPaste home">{{ call .Translate `base.CasPaste` }}</a>
-			<button type="button" class="nav-toggle" id="js-nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-				<span class="nav-toggle-icon"></span>
-			</button>
-			<div class="nav-links" id="js-nav-links">
-				<a href="/list" aria-label="View paste list">{{ call .Translate `base.List` }}</a>
-				<a href="/about" aria-label="About CasPaste">{{ call .Translate `base.About` }}</a>
-				<a href="/docs" aria-label="Documentation">{{ call .Translate `base.Docs` }}</a>
-				<button type="button" class="nav-button" id="js-history-button" aria-label="View paste history">{{ call .Translate `base.History` }}</button>
-				<a href="/settings" aria-label="Settings">{{ call .Translate `base.Settings` }}</a>
-			</div>
-		</nav>
-	</header>
-	
+
+	{{template "header" .}}
+
 	<main id="main-content" role="main">
 		<article>{{template "article" .}}</article>
 	</main>
-	
-	<footer role="contentinfo">
-		<nav aria-label="Footer navigation">
-			<p>
-				&copy; 2024 CasPaste | 
-				<a href="/about">{{ call .Translate `base.About` }}</a> | 
-				<a href="/docs">{{ call .Translate `base.Docs` }}</a> | 
-				<a href="/terms">Terms of Service</a> | 
-				<a href="/about/source_code">{{ call .Translate `base.SourceCode` }}</a>
-			</p>
-		</nav>
-	</footer>
-	
+
+	{{template "footer" .}}
+
 	<script src="/history.js"></script>
 </body>
 </html>

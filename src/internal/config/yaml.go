@@ -49,12 +49,6 @@ type YAMLConfig struct {
 		MaxOpenConns  int    `yaml:"max_open_conns"` // Max open connections
 		MaxIdleConns  int    `yaml:"max_idle_conns"` // Max idle connections
 		CleanupPeriod string `yaml:"cleanup_period"` // Cleanup interval (e.g. "1m", "5m")
-		
-		Backup struct {
-			Enabled  bool   `yaml:"enabled"`  // Enable backup database writes
-			Driver   string `yaml:"driver"`   // Backup DB driver
-			Source   string `yaml:"source"`   // Backup DB source
-		} `yaml:"backup"`
 	} `yaml:"database"`
 
 	Security struct {
@@ -251,7 +245,6 @@ func ResolvePlaceholders(cfg *YAMLConfig, fqdn, dataDir, configDir string) {
 
 	// Database section
 	cfg.Database.Source = replace(cfg.Database.Source)
-	cfg.Database.Backup.Source = replace(cfg.Database.Backup.Source)
 
 	// Set defaults for empty values that need data_dir
 	if cfg.Web.UI.ThemesDir == "" {
@@ -318,11 +311,6 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Database.MaxOpenConns = 25
 	defaultConfig.Database.MaxIdleConns = 5
 	defaultConfig.Database.CleanupPeriod = "1m"
-	
-	// Backup database (optional - secondary database for redundancy)
-	defaultConfig.Database.Backup.Enabled = false
-	defaultConfig.Database.Backup.Driver = "sqlite"
-	defaultConfig.Database.Backup.Source = "/var/lib/caspaste/backup.db"
 
 	// ============================================================================
 	// SECURITY CONFIGURATION

@@ -1,10 +1,8 @@
-# CasPaste Makefile
-# Build targets: build, release, test
+# CasPaste Makefile - Local Development
+# Targets: build, release, docker, test, local, help
 
 GO ?= go
-GOFMT ?= gofmt
 GH ?= gh
-GO_VERSION := alpine
 
 # Project info
 NAME := caspaste
@@ -36,7 +34,6 @@ LDFLAGS := -w -s -X "main.Version=$(APP_VERSION)"
 STATIC_FLAGS := -tags netgo -ldflags '$(LDFLAGS) -extldflags "-static"'
 
 # Platforms: os_arch
-# Note: NetBSD removed - modernc.org/sqlite doesn't support it
 PLATFORMS := \
     linux_amd64 \
     linux_arm64 \
@@ -49,202 +46,111 @@ PLATFORMS := \
     openbsd_amd64 \
     openbsd_arm64
 
-.PHONY: all build release test clean fmt version init-version bump-patch bump-minor bump-major local docker help
+.PHONY: build release docker test local help
 
 # Default target
-all: help
-
-# Show help
 help:
 	@echo "CasPaste Makefile - Local Development"
 	@echo "====================================="
 	@echo ""
 	@echo "Targets:"
-	@echo "  make build         - Build all binaries (all OS/arch) + host binary"
-	@echo "  make local         - Build for current OS/arch only (fast)"
-	@echo "  make release       - Build production binaries and create GitHub release"
-	@echo "  make docker        - Build and push Docker images (multi-arch)"
-	@echo "  make test          - Run all tests"
-	@echo "  make version       - Show current version"
-	@echo "  make bump-patch    - Increment patch version (1.0.0 -> 1.0.1)"
-	@echo "  make bump-minor    - Increment minor version (1.0.1 -> 1.1.0)"
-	@echo "  make bump-major    - Increment major version (1.1.0 -> 2.0.0)"
-	@echo "  make clean         - Remove build artifacts"
-	@echo "  make fmt           - Format Go code"
+	@echo "  make build   - Build all binaries for all OS/arch (./binaries/)"
+	@echo "  make release - Build production binaries and create GitHub release"
+	@echo "  make docker  - Build and push Docker images to ghcr.io"
+	@echo "  make test    - Run all tests"
+	@echo "  make local   - Build for current OS/arch only (fast)"
 	@echo ""
-	@echo "Current version: $(APP_VERSION)"
+	@echo "Version: $(APP_VERSION)"
 	@echo ""
 
-# Initialize or update version file
-init-version:
-	@if [ ! -f $(VERSION_FILE) ]; then \
-		echo "$(APP_VERSION)" > $(VERSION_FILE); \
-		echo "Created $(VERSION_FILE) with version $(APP_VERSION)"; \
-	fi
-
-# Version bumping helpers
-bump-patch: init-version
-	@current=$$(cat $(VERSION_FILE)); \
-	major=$$(echo $$current | cut -d. -f1); \
-	minor=$$(echo $$current | cut -d. -f2); \
-	patch=$$(echo $$current | cut -d. -f3); \
-	new_patch=$$((patch + 1)); \
-	new_version="$$major.$$minor.$$new_patch"; \
-	echo "$$new_version" > $(VERSION_FILE); \
-	echo "Version bumped: $$current -> $$new_version"
-
-bump-minor: init-version
-	@current=$$(cat $(VERSION_FILE)); \
-	major=$$(echo $$current | cut -d. -f1); \
-	minor=$$(echo $$current | cut -d. -f2); \
-	new_minor=$$((minor + 1)); \
-	new_version="$$major.$$new_minor.0"; \
-	echo "$$new_version" > $(VERSION_FILE); \
-	echo "Version bumped: $$current -> $$new_version"
-
-bump-major: init-version
-	@current=$$(cat $(VERSION_FILE)); \
-	major=$$(echo $$current | cut -d. -f1); \
-	new_major=$$((major + 1)); \
-	new_version="$$new_major.0.0"; \
-	echo "$$new_version" > $(VERSION_FILE); \
-	echo "Version bumped: $$current -> $$new_version"
-
-# Show current version
-version:
-	@echo "$(APP_VERSION)"
-
-# Build all platforms + host binary
-build: init-version
+# Build for local OS/arch only
+local:
+	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
 	@mkdir -p $(BUILD_DIR)
-	@echo "Building $(NAME) and $(CLI_NAME) v$(APP_VERSION) for all platforms..."
-
-	@# Build for host system
-	@echo "Building server for host..."
+	@echo "Building $(NAME) v$(APP_VERSION) for current OS/arch..."
 	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
-	@chmod +x $(BUILD_DIR)/$(NAME)
-	@echo "Building CLI for host..."
 	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(CLI_NAME) $(CLI_MAIN_GO)
-	@chmod +x $(BUILD_DIR)/$(CLI_NAME)
+	@chmod +x $(BUILD_DIR)/$(NAME) $(BUILD_DIR)/$(CLI_NAME)
+	@echo "Built: $(BUILD_DIR)/$(NAME) $(BUILD_DIR)/$(CLI_NAME)"
 
-	@# Build for all platforms
+# Build all platforms
+build:
+	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
+	@mkdir -p $(BUILD_DIR)
+	@echo "Building $(NAME) v$(APP_VERSION) for all platforms..."
+	@# Host binaries
+	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
+	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(CLI_NAME) $(CLI_MAIN_GO)
+	@chmod +x $(BUILD_DIR)/$(NAME) $(BUILD_DIR)/$(CLI_NAME)
+	@# All platforms
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d_ -f1); \
 		arch=$$(echo $$platform | cut -d_ -f2); \
-		output=$(BUILD_DIR)/$(NAME)-$$os-$$arch; \
-		cli_output=$(BUILD_DIR)/$(CLI_NAME)-$$os-$$arch; \
-		if [ "$$os" = "windows" ]; then \
-			output="$$output.exe"; \
-			cli_output="$$cli_output.exe"; \
-		fi; \
-		echo "Building server $$os/$$arch..."; \
-		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$output $(MAIN_GO) || exit 1; \
-		chmod +x $$output 2>/dev/null || true; \
-		echo "Building CLI $$os/$$arch..."; \
-		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$cli_output $(CLI_MAIN_GO) || exit 1; \
-		chmod +x $$cli_output 2>/dev/null || true; \
+		ext=""; [ "$$os" = "windows" ] && ext=".exe"; \
+		echo "  $$os/$$arch..."; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) \
+			-o $(BUILD_DIR)/$(NAME)-$$os-$$arch$$ext $(MAIN_GO) || exit 1; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) \
+			-o $(BUILD_DIR)/$(CLI_NAME)-$$os-$$arch$$ext $(CLI_MAIN_GO) || exit 1; \
 	done
-
-	@echo "Build complete. Binaries in $(BUILD_DIR)/"
+	@echo "Build complete: $(BUILD_DIR)/"
 
 # Release to GitHub
-release: init-version
+release:
+	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
 	@mkdir -p $(RELEASE_DIR)
-	@echo "Preparing release v$(APP_VERSION)..."
-
-	@# Build release binaries (server and CLI)
+	@echo "Building release v$(APP_VERSION)..."
 	@for platform in $(PLATFORMS); do \
 		os=$$(echo $$platform | cut -d_ -f1); \
 		arch=$$(echo $$platform | cut -d_ -f2); \
-		output=$(RELEASE_DIR)/$(NAME)-$$os-$$arch; \
-		cli_output=$(RELEASE_DIR)/$(CLI_NAME)-$$os-$$arch; \
-		if [ "$$os" = "windows" ]; then \
-			output="$$output.exe"; \
-			cli_output="$$cli_output.exe"; \
-		fi; \
-		echo "Building server $$os/$$arch for release..."; \
-		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$output $(MAIN_GO) || exit 1; \
-		chmod +x $$output 2>/dev/null || true; \
-		echo "Building CLI $$os/$$arch for release..."; \
-		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) -o $$cli_output $(CLI_MAIN_GO) || exit 1; \
-		chmod +x $$cli_output 2>/dev/null || true; \
-		if echo "$$os" | grep -qE "linux|freebsd|openbsd|netbsd"; then \
-			if command -v strip >/dev/null 2>&1; then \
-				strip $$output 2>/dev/null || true; \
-				strip $$cli_output 2>/dev/null || true; \
-			fi; \
+		ext=""; [ "$$os" = "windows" ] && ext=".exe"; \
+		echo "  $$os/$$arch..."; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) \
+			-o $(RELEASE_DIR)/$(NAME)-$$os-$$arch$$ext $(MAIN_GO) || exit 1; \
+		CGO_ENABLED=0 GOOS=$$os GOARCH=$$arch $(GO) build -trimpath $(STATIC_FLAGS) \
+			-o $(RELEASE_DIR)/$(CLI_NAME)-$$os-$$arch$$ext $(CLI_MAIN_GO) || exit 1; \
+		if echo "$$os" | grep -qE "linux|freebsd|openbsd"; then \
+			strip $(RELEASE_DIR)/$(NAME)-$$os-$$arch$$ext 2>/dev/null || true; \
+			strip $(RELEASE_DIR)/$(CLI_NAME)-$$os-$$arch$$ext 2>/dev/null || true; \
 		fi; \
 	done
-
-	@# Create source archive (without VCS)
+	@# Source archive (no VCS)
 	@echo "Creating source archive..."
 	@mkdir -p $(RELEASE_DIR)/tmp/$(NAME)-$(APP_VERSION)
-	@rsync -a --exclude='.git' --exclude='$(BUILD_DIR)' --exclude='$(RELEASE_DIR)' \
-		--exclude='dist' --exclude='vendor' . $(RELEASE_DIR)/tmp/$(NAME)-$(APP_VERSION)/
+	@rsync -a --exclude='.git' --exclude='.github' --exclude='$(BUILD_DIR)' \
+		--exclude='$(RELEASE_DIR)' --exclude='.gitignore' --exclude='.gitattributes' \
+		. $(RELEASE_DIR)/tmp/$(NAME)-$(APP_VERSION)/
 	@tar -C $(RELEASE_DIR)/tmp -czf $(RELEASE_DIR)/$(NAME)-$(APP_VERSION)-source.tar.gz $(NAME)-$(APP_VERSION)
 	@rm -rf $(RELEASE_DIR)/tmp
-
-	@# Delete existing release/tag if exists
-	@echo "Checking for existing release..."
+	@# Delete existing tag/release
 	@$(GH) release delete v$(APP_VERSION) --yes 2>/dev/null || true
 	@git tag -d v$(APP_VERSION) 2>/dev/null || true
 	@git push origin :refs/tags/v$(APP_VERSION) 2>/dev/null || true
-
-	@# Create new release
-	@echo "Creating GitHub release v$(APP_VERSION)..."
+	@# Create release
 	@git tag -a v$(APP_VERSION) -m "Release v$(APP_VERSION)"
 	@git push origin v$(APP_VERSION)
-	@$(GH) release create v$(APP_VERSION) \
-		--title "$(NAME) v$(APP_VERSION)" \
-		--generate-notes \
-		$(RELEASE_DIR)/$(NAME)-* \
-		$(RELEASE_DIR)/$(CLI_NAME)-*
-
-	@echo "Release v$(APP_VERSION) complete!"
-
-# Build for local OS/arch only (fast development build)
-local: init-version
-	@mkdir -p $(BUILD_DIR)
-	@echo "Building $(NAME) and $(CLI_NAME) v$(APP_VERSION) for current OS/arch..."
-	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(NAME) $(MAIN_GO)
-	@chmod +x $(BUILD_DIR)/$(NAME)
-	@CGO_ENABLED=0 $(GO) build -trimpath $(STATIC_FLAGS) -o $(BUILD_DIR)/$(CLI_NAME) $(CLI_MAIN_GO)
-	@chmod +x $(BUILD_DIR)/$(CLI_NAME)
-	@echo "Build complete: $(BUILD_DIR)/$(NAME) and $(BUILD_DIR)/$(CLI_NAME)"
+	@$(GH) release create v$(APP_VERSION) --title "$(NAME) v$(APP_VERSION)" --generate-notes $(RELEASE_DIR)/*
+	@echo "Released v$(APP_VERSION)"
 
 # Build and push Docker images
-docker: init-version
-	@echo "Building Docker images v$(APP_VERSION)..."
+docker:
+	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
 	@COMMIT_ID=$$(git rev-parse --short HEAD); \
-	YYMM=$$(date +%y%m); \
+	BUILD_DATE=$$(date -u +"%Y-%m-%dT%H:%M:%SZ"); \
 	REPO="ghcr.io/$(ORGANIZATION)/$(NAME)"; \
-	echo "Building multi-arch image..."; \
+	echo "Building Docker images v$(APP_VERSION)..."; \
 	docker buildx build \
 		--platform linux/amd64,linux/arm64 \
 		--build-arg VERSION=$(APP_VERSION) \
+		--build-arg BUILD_DATE=$$BUILD_DATE \
+		--build-arg VCS_REF=$$COMMIT_ID \
 		--tag $$REPO:$(APP_VERSION) \
-		--tag $$REPO:$$YYMM \
 		--tag $$REPO:$$COMMIT_ID \
 		--tag $$REPO:latest \
-		--push \
-		. || exit 1; \
-	echo "Docker images pushed:"; \
-	echo "  - $$REPO:$(APP_VERSION)"; \
-	echo "  - $$REPO:$$YYMM"; \
-	echo "  - $$REPO:$$COMMIT_ID"; \
-	echo "  - $$REPO:latest"
+		--push . || exit 1; \
+	echo "Pushed: $$REPO:latest $$REPO:$(APP_VERSION) $$REPO:$$COMMIT_ID"
 
 # Run tests
 test:
 	@echo "Running tests..."
 	@$(GO) test -v -race -cover ./...
-	@echo "Tests complete!"
-
-# Format code
-fmt:
-	@$(GOFMT) -w $$(find . -type f -name '*.go' -not -path './vendor/*')
-
-# Clean build artifacts
-clean:
-	@rm -rf $(BUILD_DIR) $(RELEASE_DIR) ./dist
-	@echo "Cleaned build artifacts"

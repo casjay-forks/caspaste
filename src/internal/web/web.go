@@ -193,7 +193,7 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	}
 
 	// main.tmpl
-	data.Main, err = template.ParseFS(embFS, "data/base.tmpl", "data/main.tmpl")
+	data.Main, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/main.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	}
 
 	// paste.tmpl
-	data.PastePage, err = template.ParseFS(embFS, "data/base.tmpl", "data/paste.tmpl")
+	data.PastePage, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/paste.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -230,85 +230,85 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	}
 
 	// paste_continue.tmpl
-	data.PasteContinue, err = template.ParseFS(embFS, "data/base.tmpl", "data/paste_continue.tmpl")
+	data.PasteContinue, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/paste_continue.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// settings.tmpl
-	data.Settings, err = template.ParseFS(embFS, "data/base.tmpl", "data/settings.tmpl")
+	data.Settings, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/settings.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// list.tmpl
-	data.ListPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/list.tmpl")
+	data.ListPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/list.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// about.tmpl
-	data.About, err = template.ParseFS(embFS, "data/base.tmpl", "data/about.tmpl")
+	data.About, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/about.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// terms.tmpl
-	data.TermsOfUse, err = template.ParseFS(embFS, "data/base.tmpl", "data/terms.tmpl")
+	data.TermsOfUse, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/terms.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// authors.tmpl
-	data.Authors, err = template.ParseFS(embFS, "data/base.tmpl", "data/authors.tmpl")
+	data.Authors, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/authors.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// license.tmpl
-	data.License, err = template.ParseFS(embFS, "data/base.tmpl", "data/license.tmpl")
+	data.License, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/license.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// source_code.tmpl
-	data.SourceCodePage, err = template.ParseFS(embFS, "data/base.tmpl", "data/source_code.tmpl")
+	data.SourceCodePage, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/source_code.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// security_policy.tmpl
-	data.SecurityPolicy, err = template.ParseFS(embFS, "data/base.tmpl", "data/security_policy.tmpl")
+	data.SecurityPolicy, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/security_policy.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// docs.tmpl
-	data.Docs, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs.tmpl")
+	data.Docs, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/docs.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// docs_apiv1.tmpl
-	data.DocsApiV1, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_apiv1.tmpl")
+	data.DocsApiV1, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/docs_apiv1.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// docs_libraries.tmpl
-	data.DocsLibraries, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_libraries.tmpl")
+	data.DocsLibraries, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/docs_libraries.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// docs_customize.tmpl
-	data.DocsCustomize, err = template.ParseFS(embFS, "data/base.tmpl", "data/docs_customize.tmpl")
+	data.DocsCustomize, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/docs_customize.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// error.tmpl
-	data.ErrorPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/error.tmpl")
+	data.ErrorPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/error.tmpl")
 	if err != nil {
 		return nil, err
 	}
@@ -320,13 +320,13 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	}
 
 	// emb_help.tmpl
-	data.EmbeddedHelpPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/emb_help.tmpl")
+	data.EmbeddedHelpPage, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/emb_help.tmpl")
 	if err != nil {
 		return nil, err
 	}
 
 	// login.tmpl
-	data.Login, err = template.ParseFS(embFS, "data/base.tmpl", "data/login.tmpl")
+	data.Login, err = template.ParseFS(embFS, "data/base.tmpl", "data/_header.tmpl", "data/_nav.tmpl", "data/_footer.tmpl", "data/login.tmpl")
 	if err != nil {
 		return nil, err
 	}

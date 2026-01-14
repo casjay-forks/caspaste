@@ -5,25 +5,18 @@ FROM golang:alpine AS builder
 
 WORKDIR /build
 
-# Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
 
-# Copy go mod files first for caching
 COPY go.mod go.sum ./
-
-# Copy source code
 COPY . .
 
-# Download dependencies (go mod tidy updates go.sum if needed)
 RUN go mod tidy && go mod download
 
-# Build arguments
-ARG VERSION=unknown
+ARG VERSION=dev
 ARG BUILD_DATE
 ARG VCS_REF
-ARG VCS_URL
+ARG VCS_URL=https://github.com/casjay-forks/caspaste
 
-# Build the server
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -tags netgo \
@@ -31,7 +24,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /caspaste \
     ./src/cmd/caspaste
 
-# Build the CLI client
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
     -tags netgo \
@@ -42,59 +34,53 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 # Final stage
 FROM alpine:latest
 
-# OCI Standard Labels
-# https://github.com/opencontainers/image-spec/blob/main/annotations.md
-LABEL org.opencontainers.image.title="CasPaste"
-LABEL org.opencontainers.image.description="A simple, fast, and secure self-hosted pastebin service with file uploads, syntax highlighting, and burn-after-reading"
-LABEL org.opencontainers.image.authors="CasjaysDev <docker-admin@casjaysdev.pro>"
-LABEL org.opencontainers.image.vendor="CasjaysDev"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.url="https://github.com/casjay-forks/caspaste"
-LABEL org.opencontainers.image.documentation="https://github.com/casjay-forks/caspaste/blob/main/README.md"
-LABEL org.opencontainers.image.source="https://github.com/casjay-forks/caspaste"
-LABEL org.opencontainers.image.base.name="docker.io/library/alpine:latest"
-
-# Dynamic labels (set via build args)
-ARG VERSION=unknown
+ARG VERSION=dev
 ARG BUILD_DATE
 ARG VCS_REF
-ARG VCS_URL="https://github.com/casjay-forks/caspaste"
+ARG VCS_URL=https://github.com/casjay-forks/caspaste
 
-LABEL org.opencontainers.image.version="${VERSION}"
-LABEL org.opencontainers.image.created="${BUILD_DATE}"
-LABEL org.opencontainers.image.revision="${VCS_REF}"
+# OCI Labels
+LABEL org.opencontainers.image.title="CasPaste" \
+      org.opencontainers.image.description="A simple, fast, and secure self-hosted pastebin service" \
+      org.opencontainers.image.authors="CasjaysDev <docker-admin@casjaysdev.pro>" \
+      org.opencontainers.image.vendor="CasjaysDev" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.url="https://github.com/casjay-forks/caspaste" \
+      org.opencontainers.image.documentation="https://github.com/casjay-forks/caspaste/blob/main/README.md" \
+      org.opencontainers.image.source="https://github.com/casjay-forks/caspaste" \
+      org.opencontainers.image.base.name="docker.io/library/alpine:latest" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}"
 
-# Additional metadata labels
-LABEL com.casjaysdev.app.name="CasPaste"
-LABEL com.casjaysdev.app.description="Self-hosted pastebin service"
-LABEL com.casjaysdev.app.version="${VERSION}"
-LABEL com.casjaysdev.app.maintainer="CasjaysDev <docker-admin@casjaysdev.pro>"
-LABEL com.casjaysdev.app.support="https://github.com/casjay-forks/caspaste/issues"
-LABEL com.casjaysdev.app.license="MIT"
-LABEL com.casjaysdev.app.vcs-url="${VCS_URL}"
-LABEL com.casjaysdev.app.vcs-ref="${VCS_REF}"
-LABEL com.casjaysdev.app.build-date="${BUILD_DATE}"
+LABEL com.casjaysdev.app.name="CasPaste" \
+      com.casjaysdev.app.version="${VERSION}" \
+      com.casjaysdev.app.maintainer="CasjaysDev <docker-admin@casjaysdev.pro>" \
+      com.casjaysdev.app.vcs-url="${VCS_URL}" \
+      com.casjaysdev.app.vcs-ref="${VCS_REF}" \
+      com.casjaysdev.app.build-date="${BUILD_DATE}"
 
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates tzdata curl
+RUN apk add --no-cache ca-certificates tzdata bash
 
-# Copy binaries from builder
 COPY --from=builder /caspaste /usr/local/bin/caspaste
 COPY --from=builder /caspaste-cli /usr/local/bin/caspaste-cli
 
-# Set working directory
-WORKDIR /data
+RUN mkdir -p /config/caspaste /data/caspaste /data/log/caspaste /data/db/sqlite /data/backups
 
-# Set environment variables for Docker deployment
+WORKDIR /data/caspaste
+
 ENV PORT=80 \
+    CASPASTE_CONFIG_DIR=/config/caspaste \
+    CASPASTE_DATA_DIR=/data/caspaste \
+    CASPASTE_LOGS_DIR=/data/log/caspaste \
     CASPASTE_DB_DIR=/data/db/sqlite \
+    CASPASTE_BACKUP_DIR=/data/backups \
     TZ=America/New_York
 
-# Expose HTTP port
 EXPOSE 80
 
-# Use non-root user (created by the app itself)
-# The app drops privileges to caspaste:caspaste (UID:GID 642:642)
+VOLUME ["/config", "/data"]
 
-CMD ["caspaste", "--config", "/config", "--data", "/data"]
+CMD ["caspaste", "--config", "/config/caspaste", "--data", "/data/caspaste", "--logs", "/data/log/caspaste"]
+
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 CMD caspaste --status || exit 1

@@ -35,9 +35,7 @@ services:
     volumes:
       - './rootfs/data:/data'
       - './rootfs/config:/config'
-      - './rootfs/logs:/var/log/caspaste'
-      - './rootfs/db/sqlite:/data/db/sqlite'
-      - './rootfs/data/backups:/data/backups'
+      - './rootfs/backups:/data/backups'
     networks:
       - caspaste
 

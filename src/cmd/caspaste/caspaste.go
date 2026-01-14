@@ -190,6 +190,10 @@ func isRunningAsRoot() bool {
 
 // getDefaultDataDir returns the platform-specific default data directory
 func getDefaultDataDir() string {
+	// Check env var first
+	if dir := os.Getenv("CASPASTE_DATA_DIR"); dir != "" {
+		return dir
+	}
 	switch runtime.GOOS {
 	case "windows":
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
@@ -217,6 +221,10 @@ func getDefaultDataDir() string {
 
 // getDefaultConfigDir returns the platform-specific default config directory
 func getDefaultConfigDir() string {
+	// Check env var first
+	if dir := os.Getenv("CASPASTE_CONFIG_DIR"); dir != "" {
+		return dir
+	}
 	switch runtime.GOOS {
 	case "windows":
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
@@ -1355,85 +1363,61 @@ func main() {
 		backupDir = os.Getenv("CASPASTE_BACKUP_DIR")
 	}
 	if backupDir == "" && dataDir != "" {
-		// Set platform-specific defaults
-		if dataDir == "/data" {
-			// Docker container
-			backupDir = "/data/backups"
-		} else {
-			// Standalone binary - use platform-specific defaults
-			// Prefer global system directories if running as root, fallback to user directories
-			isRoot := isRunningAsRoot()
-
-			switch runtime.GOOS {
-			case "linux":
-				if isRoot {
-					// Root: Use /mnt/Backups/caspaste (global)
-					backupDir = "/mnt/Backups/caspaste"
+		// Platform-specific defaults
+		isRoot := isRunningAsRoot()
+		switch runtime.GOOS {
+		case "linux":
+			if isRoot {
+				backupDir = "/var/backups/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					backupDir = home + "/.local/share/caspaste/backups"
 				} else {
-					// User: Use ~/.local/share/caspaste/backups
-					if home := os.Getenv("HOME"); home != "" {
-						backupDir = home + "/.local/share/caspaste/backups"
-					} else {
-						backupDir = dataDir + "/backups"
-					}
+					backupDir = dataDir + "/backups"
 				}
-
-			case "darwin":
-				if isRoot {
-					// Root: Use /var/backups/caspaste (global)
-					backupDir = "/var/backups/caspaste"
-				} else {
-					// User: Use ~/Library/Application Support/CasPaste/Backups
-					if home := os.Getenv("HOME"); home != "" {
-						backupDir = home + "/Library/Application Support/CasPaste/Backups"
-					} else {
-						backupDir = dataDir + "/backups"
-					}
-				}
-
-			case "windows":
-				if isRoot {
-					// Admin: Use C:\ProgramData\CasPaste\Backups (global)
-					if programData := os.Getenv("ProgramData"); programData != "" {
-						backupDir = programData + "\\CasPaste\\Backups"
-					} else {
-						backupDir = "C:\\ProgramData\\CasPaste\\Backups"
-					}
-				} else {
-					// User: Use %APPDATA%\CasPaste\Backups
-					if appdata := os.Getenv("APPDATA"); appdata != "" {
-						backupDir = appdata + "\\CasPaste\\Backups"
-					} else {
-						backupDir = dataDir + "/backups"
-					}
-				}
-
-			case "freebsd", "openbsd":
-				if isRoot {
-					// Root: Use /var/backups/caspaste (global)
-					backupDir = "/var/backups/caspaste"
-				} else {
-					// User: Use ~/.caspaste/backups
-					if home := os.Getenv("HOME"); home != "" {
-						backupDir = home + "/.caspaste/backups"
-					} else {
-						backupDir = dataDir + "/backups"
-					}
-				}
-
-			default:
-				// Fallback
-				backupDir = dataDir + "/backups"
 			}
+		case "darwin":
+			if isRoot {
+				backupDir = "/var/backups/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					backupDir = home + "/Library/Application Support/CasPaste/Backups"
+				} else {
+					backupDir = dataDir + "/backups"
+				}
+			}
+		case "windows":
+			if isRoot {
+				if programData := os.Getenv("ProgramData"); programData != "" {
+					backupDir = programData + "\\CasPaste\\Backups"
+				} else {
+					backupDir = "C:\\ProgramData\\CasPaste\\Backups"
+				}
+			} else {
+				if appdata := os.Getenv("APPDATA"); appdata != "" {
+					backupDir = appdata + "\\CasPaste\\Backups"
+				} else {
+					backupDir = dataDir + "/backups"
+				}
+			}
+		case "freebsd", "openbsd":
+			if isRoot {
+				backupDir = "/var/backups/caspaste"
+			} else {
+				if home := os.Getenv("HOME"); home != "" {
+					backupDir = home + "/.caspaste/backups"
+				} else {
+					backupDir = dataDir + "/backups"
+				}
+			}
+		default:
+			backupDir = dataDir + "/backups"
 		}
 	}
 
-	// Determine cache directory
+	// Determine cache directory (always use standard OS/user dirs)
 	cacheDir := yamlCfg.Directories.Cache
-	if cacheDir == "" && isFirstRun {
-		cacheDir = os.Getenv("CASPASTE_CACHE_DIR")
-	}
-	if cacheDir == "" && dataDir != "" {
+	if cacheDir == "" {
 		isRoot := isRunningAsRoot()
 		switch runtime.GOOS {
 		case "linux":
