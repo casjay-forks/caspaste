@@ -1099,9 +1099,12 @@ func main() {
 	var configFilePath string
 	configPaths := []string{}
 	if *flagConfigDir != "" {
+		// When --config is explicitly set, ONLY look in that directory
 		configPaths = append(configPaths, *flagConfigDir+"/caspaste.yml", *flagConfigDir+"/caspaste.yaml")
+	} else {
+		// When --config is NOT set, search standard locations
+		configPaths = append(configPaths, "caspaste.yml", "caspaste.yaml", "/etc/caspaste/caspaste.yml", "/etc/caspaste/caspaste.yaml")
 	}
-	configPaths = append(configPaths, "caspaste.yml", "caspaste.yaml", "/etc/caspaste/caspaste.yml", "/etc/caspaste/caspaste.yaml")
 
 	for _, path := range configPaths {
 		cfg, err := config.LoadYAMLConfig(path)
