@@ -52,8 +52,8 @@ type Config struct {
 
 	CasPasswdFile string
 
-	// TrustReverseProxy controls whether to trust X-Forwarded-* and similar headers
-	TrustReverseProxy bool
+	// Trusted proxy configuration (for X-Forwarded-* headers)
+	TrustedProxies []string
 
 	UiDefaultLifetime string
 	UiDefaultTheme    string

@@ -45,7 +45,16 @@ func ValidateFQDN(fqdn string) error {
 
 	// Not localhost or variations
 	lower := strings.ToLower(fqdn)
-	forbiddenHosts := []string{"localhost", "localhost.localdomain"}
+	forbiddenHosts := []string{
+		"localhost",
+		"localhost.localdomain",
+		"localdomain",
+		"local",
+		"localhost.local",
+		"localhost6",
+		"localhost6.localdomain6",
+		"localdomain6",
+	}
 	for _, forbidden := range forbiddenHosts {
 		if lower == forbidden || strings.HasSuffix(lower, "."+forbidden) {
 			return fmt.Errorf("localhost not allowed as FQDN: %s", fqdn)
@@ -61,25 +70,10 @@ func ValidateFQDN(fqdn string) error {
 }
 
 // DetermineFQDN determines the server's FQDN or IP address
-// Priority: Reverse proxy header > Config > OS hostname > Global IP
+// Priority: Config (override if set) > Reverse proxy header > OS hostname > Global IP
 // NEVER returns localhost - uses global IP as fallback
 func DetermineFQDN(fromProxy, fromConfig string) (string, error) {
-	// Priority 1: Reverse proxy header (from X-Forwarded-Host, Forwarded, etc.)
-	if fromProxy != "" {
-		// Remove port if present
-		if strings.Contains(fromProxy, ":") {
-			parts := strings.Split(fromProxy, ":")
-			fromProxy = parts[0]
-		}
-
-		if strings.Contains(fromProxy, ".") {
-			if err := ValidateFQDN(fromProxy); err == nil {
-				return fromProxy, nil
-			}
-		}
-	}
-
-	// Priority 2: Config server.address
+	// Priority 1: Config server.fqdn (OVERRIDE - use if explicitly set)
 	if fromConfig != "" {
 		// Remove port if present
 		if strings.Contains(fromConfig, ":") {
@@ -90,6 +84,21 @@ func DetermineFQDN(fromProxy, fromConfig string) (string, error) {
 		if strings.Contains(fromConfig, ".") {
 			if err := ValidateFQDN(fromConfig); err == nil {
 				return fromConfig, nil
+			}
+		}
+	}
+
+	// Priority 2: Reverse proxy header (from X-Forwarded-Host, Forwarded, etc.)
+	if fromProxy != "" {
+		// Remove port if present
+		if strings.Contains(fromProxy, ":") {
+			parts := strings.Split(fromProxy, ":")
+			fromProxy = parts[0]
+		}
+
+		if strings.Contains(fromProxy, ".") {
+			if err := ValidateFQDN(fromProxy); err == nil {
+				return fromProxy, nil
 			}
 		}
 	}

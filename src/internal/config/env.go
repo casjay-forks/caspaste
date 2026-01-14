@@ -48,9 +48,6 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("TITLE"); val != "" { // Alternative
 		cfg.Server.Title = val
 	}
-	if val := getEnv("TRUST_REVERSE_PROXY"); val != "" {
-		cfg.Server.TrustReverseProxy = validation.IsTruthy(val)
-	}
 
 	// Server administrator
 	if val := getEnv("ADMIN_NAME"); val != "" {

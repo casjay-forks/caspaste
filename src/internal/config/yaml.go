@@ -17,11 +17,14 @@ import (
 // All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
-		FQDN              string `yaml:"fqdn"`                // Public FQDN (dynamic: auto-detected from reverse proxy headers when trust_reverse_proxy=true, fallback to hostname/IP)
-		Listen            string `yaml:"listen"`              // Listen address (all, ::, 0.0.0.0, specific IP)
-		Port              string `yaml:"port"`                // "8080" or "8080,64453"
-		Title             string `yaml:"title"`               // Server title
-		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"` // Trust X-Forwarded-Host/X-Forwarded-Proto headers for dynamic FQDN detection
+		FQDN   string `yaml:"fqdn"`   // Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
+		Listen string `yaml:"listen"` // Listen address (all, ::, 0.0.0.0, specific IP)
+		Port   string `yaml:"port"`   // "8080" or "8080,64453"
+		Title  string `yaml:"title"`  // Server title
+		
+		Proxy struct {
+			Allowed []string `yaml:"allowed"` // Trusted proxy IPs/CIDRs (X-Forwarded-* headers only trusted from these)
+		} `yaml:"proxy"`
 		
 		Administrator struct {
 			Name  string `yaml:"name"`  // Admin name
@@ -219,11 +222,22 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// SERVER CONFIGURATION
 	// ============================================================================
-	defaultConfig.Server.FQDN = ""      // Dynamic: detects from X-Forwarded-Host when trust_reverse_proxy=true, fallback to hostname/IP
+	defaultConfig.Server.FQDN = ""      // Empty = auto-detect from X-Forwarded-Host (trusted proxies) or hostname; Set to override
 	defaultConfig.Server.Listen = "all" // Listen on all interfaces (IPv4 + IPv6)
 	defaultConfig.Server.Port = "64365" // Default port
 	defaultConfig.Server.Title = "CasPaste"
-	defaultConfig.Server.TrustReverseProxy = false // Set to true when behind reverse proxy (Nginx, Caddy, Traefik, etc.)
+	
+	// Trusted reverse proxy IPs/CIDRs - X-Forwarded-* headers only trusted from these sources
+	// Default: All RFC1918 private networks + loopback
+	defaultConfig.Server.Proxy.Allowed = []string{
+		"10.0.0.0/8",      // Private Class A
+		"172.16.0.0/12",   // Private Class B
+		"192.168.0.0/16",  // Private Class C
+		"127.0.0.0/8",     // Loopback IPv4
+		"::1",             // Loopback IPv6
+		"fc00::/7",        // Unique Local IPv6
+		"fe80::/10",       // Link-Local IPv6
+	}
 	
 	defaultConfig.Server.Administrator.Name = "CasPaste Administrator"
 	defaultConfig.Server.Administrator.Email = "administrator@{fqdn}"

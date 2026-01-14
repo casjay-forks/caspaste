@@ -1775,7 +1775,7 @@ func main() {
 		SiteRobotsAgentsDeny: yamlCfg.Web.SEO.Robots.Agents.Deny,
 		Logo:                 yamlCfg.Web.Branding.Logo,
 		Favicon:              yamlCfg.Web.Branding.Favicon,
-		TrustReverseProxy:    yamlCfg.Server.TrustReverseProxy,
+		TrustedProxies:       yamlCfg.Server.Proxy.Allowed,
 		UiDefaultLifetime:    yamlCfg.Web.UI.DefaultLifetime,
 		UiDefaultTheme:       yamlCfg.Web.UI.DefaultTheme,
 		UiThemesDir:          yamlCfg.Web.UI.ThemesDir,
