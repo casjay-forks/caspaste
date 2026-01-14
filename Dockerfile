@@ -8,12 +8,14 @@ WORKDIR /build
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
 
-# Copy go mod files
+# Copy go mod files first for caching
 COPY go.mod go.sum ./
-RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Download dependencies (go mod tidy updates go.sum if needed)
+RUN go mod tidy && go mod download
 
 # Build arguments
 ARG VERSION=unknown
