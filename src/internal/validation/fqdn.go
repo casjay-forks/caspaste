@@ -109,43 +109,16 @@ func DetermineFQDN(fromProxy, fromConfig string) (string, error) {
 // GetGlobalIP returns the first non-loopback global IP address
 // Prefers IPv4, falls back to IPv6
 func GetGlobalIP() (string, error) {
-	addrs, err := net.InterfaceAddrs()
+	// Use UDP dial to determine the IP associated with the default route
+	// This doesn't actually connect, just determines which interface would be used
+	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
+		return "", fmt.Errorf("failed to determine default route IP: %w", err)
 	}
+	defer conn.Close()
 
-	var ipv6 string
-
-	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok {
-			// Skip loopback
-			if ipnet.IP.IsLoopback() {
-				continue
-			}
-
-			// Skip link-local
-			if ipnet.IP.IsLinkLocalUnicast() {
-				continue
-			}
-
-			// Prefer IPv4
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String(), nil
-			}
-
-			// Save IPv6 as fallback
-			if ipv6 == "" {
-				ipv6 = ipnet.IP.String()
-			}
-		}
-	}
-
-	// Use IPv6 if no IPv4 found
-	if ipv6 != "" {
-		return ipv6, nil
-	}
-
-	return "", fmt.Errorf("no global IP address found")
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String(), nil
 }
 
 // ValidateEmail validates an email address format

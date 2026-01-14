@@ -84,6 +84,41 @@ func exitOnError(e error) {
 	os.Exit(1)
 }
 
+// retryWithBackoff retries a function with exponential backoff
+func retryWithBackoff(operation func() error, maxAttempts int, initialDelay time.Duration, maxDelay time.Duration, description string) error {
+	var err error
+	delay := initialDelay
+	
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = operation()
+		if err == nil {
+			return nil
+		}
+		
+		// Check if it's a connection error (retryable)
+		if !strings.Contains(err.Error(), "connection refused") && 
+		   !strings.Contains(err.Error(), "no such host") &&
+		   !strings.Contains(err.Error(), "i/o timeout") {
+			// Not a connection error, fail immediately
+			return err
+		}
+		
+		if attempt < maxAttempts {
+			fmt.Fprintf(os.Stderr, "[WARN]    %s failed (attempt %d/%d): %v - retrying in %v...\n", 
+				description, attempt, maxAttempts, err, delay)
+			time.Sleep(delay)
+			
+			// Exponential backoff with max delay
+			delay = delay * 2
+			if delay > maxDelay {
+				delay = maxDelay
+			}
+		}
+	}
+	
+	return fmt.Errorf("%s failed after %d attempts: %w", description, maxAttempts, err)
+}
+
 // getDisplayAddress converts a listen address to a user-friendly display address
 // Replaces 0.0.0.0, 127.0.0.1, localhost, etc. with valid FQDN, hostname, or IP
 func getDisplayAddress(listenAddr string) string {
@@ -264,7 +299,10 @@ func formatDatabaseDisplay(driver, source string) string {
 }
 
 // printStartupBanner displays a formatted startup banner with server information
-func printStartupBanner(version, fqdn, title, database string, httpPort, httpsPort int) {
+func printStartupBanner(version, fqdn, title, configFile, database string, httpPort, httpsPort int) {
+	// Get global IP address from default route
+	globalIP, _ := validation.GetGlobalIP()
+	
 	fmt.Println()
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
 	fmt.Printf("║  %-58s║\n", title)
@@ -284,8 +322,12 @@ func printStartupBanner(version, fqdn, title, database string, httpPort, httpsPo
 			fmt.Printf("║  URL:         http://%s:%-34s║\n", fqdn, portDisplay)
 		}
 	}
+	if globalIP != "" {
+		fmt.Printf("║  IP:          %-45s║\n", globalIP)
+	}
 	fmt.Println("╠════════════════════════════════════════════════════════════╣")
 	fmt.Println("║  User:        caspaste (UID:GID 642:642)                   ║")
+	fmt.Printf("║  Config:      %-45s║\n", configFile)
 	fmt.Printf("║  Database:    %-45s║\n", database)
 	fmt.Println("║  Status:      Ready                                        ║")
 	fmt.Println("╚════════════════════════════════════════════════════════════╝")
@@ -1043,6 +1085,7 @@ func main() {
 
 	// Try to load config file from config directory or current directory
 	// (yamlCfg already declared earlier for --status/--service early exit)
+	var configFilePath string
 	configPaths := []string{}
 	if *flagConfigDir != "" {
 		configPaths = append(configPaths, *flagConfigDir+"/caspaste.yml", *flagConfigDir+"/caspaste.yaml")
@@ -1053,13 +1096,17 @@ func main() {
 		cfg, err := config.LoadYAMLConfig(path)
 		if err == nil {
 			yamlCfg = cfg
-			fmt.Printf("Loaded config from: %s\n", path)
+			configFilePath = path
 			break
 		}
 	}
 
+	// Track if this is first run (config being generated)
+	isFirstRun := false
+	
 	// If no config file found, create default config
 	if yamlCfg == nil {
+		isFirstRun = true
 		var defaultConfigPath string
 		if *flagConfigDir != "" {
 			defaultConfigPath = *flagConfigDir + "/caspaste.yml"
@@ -1071,46 +1118,54 @@ func main() {
 			exitOnError(fmt.Errorf("failed to create default config file: %w", err))
 		}
 
-		fmt.Printf("Created default config file: %s\n", defaultConfigPath)
-
 		// Load the newly created config
 		cfg, err := config.LoadYAMLConfig(defaultConfigPath)
 		if err != nil {
 			exitOnError(fmt.Errorf("failed to load generated config: %w", err))
 		}
 		yamlCfg = cfg
+		configFilePath = defaultConfigPath
 	}
 
-	// Apply environment variable overrides to config
-	// Priority: Config file < Environment variables < CLI flags
-	config.ApplyEnvironmentOverrides(yamlCfg)
-
-	// Merge CLI flags (highest priority - override both config file and env vars)
-	if *flagPort != "" {
-		yamlCfg.Server.Port = *flagPort
-	}
-	if *flagAddress != ":80" {
-		yamlCfg.Server.Address = *flagAddress
-	} else if yamlCfg.Server.Address != "" {
-		*flagAddress = yamlCfg.Server.Address
+	// ONLY apply environment variables and CLI flags on FIRST RUN
+	// After first run, config file is the source of truth
+	if isFirstRun {
+		// Apply environment variable overrides to config
+		// Priority: Config file < Environment variables < CLI flags
+		config.ApplyEnvironmentOverrides(yamlCfg)
 	}
 
-	// Merge cache/logs directories from CLI (override config if specified)
-	if *flagDataDir != "" {
-		yamlCfg.Directories.Data = *flagDataDir
+	// Merge CLI flags ONLY on first run (after that, config is source of truth)
+	if isFirstRun {
+		if *flagPort != "" {
+			yamlCfg.Server.Port = *flagPort
+		}
+		if *flagAddress != ":80" {
+			yamlCfg.Server.FQDN = *flagAddress
+		}
+
+		// Merge cache/logs directories from CLI (override config if specified)
+		if *flagDataDir != "" {
+			yamlCfg.Directories.Data = *flagDataDir
+		}
+		if *flagConfigDir != "" {
+			yamlCfg.Directories.Config = *flagConfigDir
+		}
+		if *flagCacheDir != "" {
+			yamlCfg.Directories.Cache = *flagCacheDir
+		}
+		if *flagLogsDir != "" {
+			yamlCfg.Directories.Logs = *flagLogsDir
+		}
+		// Use --log flag value if provided (takes precedence over --logs)
+		if *flagLog != "" {
+			yamlCfg.Directories.Logs = *flagLog
+		}
 	}
-	if *flagConfigDir != "" {
-		yamlCfg.Directories.Config = *flagConfigDir
-	}
-	if *flagCacheDir != "" {
-		yamlCfg.Directories.Cache = *flagCacheDir
-	}
-	if *flagLogsDir != "" {
-		yamlCfg.Directories.Logs = *flagLogsDir
-	}
-	// Use --log flag value if provided (takes precedence over --logs)
-	if *flagLog != "" {
-		yamlCfg.Directories.Logs = *flagLog
+	
+	// Always set flagAddress from config if config has a value (for display purposes)
+	if yamlCfg.Server.FQDN != "" && !isFirstRun {
+		*flagAddress = yamlCfg.Server.FQDN
 	}
 
 	// Auto-detect driver from connection string if not specified
@@ -1129,8 +1184,8 @@ func main() {
 	// Normalize connection string (remove sqlite:// prefix, etc.)
 	yamlCfg.Database.Source = validation.NormalizeConnectionString(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 
-	// Process --port flag (overrides port in --address)
-	if *flagPort != "" {
+	// Process --port flag (overrides port in --address) - ONLY on first run
+	if isFirstRun && *flagPort != "" {
 		// Extract host from address (if any)
 		addr := *flagAddress
 		if strings.Contains(addr, ":") {
@@ -1153,20 +1208,28 @@ func main() {
 		exitOnError(errors.New("database.source must be specified in config file"))
 	}
 
+	// Use data directory from config (after first run) or flag (first run)
+	dataDir := yamlCfg.Directories.Data
+	if dataDir == "" && *flagDataDir != "" {
+		dataDir = *flagDataDir
+	}
+
 	// Only process file paths for SQLite databases
 	// PostgreSQL/MySQL use connection strings (postgres://, mysql://, etc.)
 	driver := yamlCfg.Database.Driver
 	if driver == "sqlite" {
 		// If database source is relative, make it absolute based on data directory
-		if !strings.HasPrefix(dbSource, "/") && *flagDataDir != "" {
-			// Check for CASPASTE_DB_DIR or LENPASTE_DB_DIR environment variable
-			dbDir = os.Getenv("CASPASTE_DB_DIR")
-			if dbDir == "" {
-				dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+		if !strings.HasPrefix(dbSource, "/") && dataDir != "" {
+			// Check for environment variable ONLY on first run
+			if isFirstRun {
+				dbDir = os.Getenv("CASPASTE_DB_DIR")
+				if dbDir == "" {
+					dbDir = os.Getenv("LENPASTE_DB_DIR") // Backward compatibility
+				}
 			}
 			if dbDir == "" {
 				// Default: {dataDir}/db
-				dbDir = *flagDataDir + "/db"
+				dbDir = dataDir + "/db"
 			}
 			yamlCfg.Database.Source = dbDir + "/caspaste.db"
 			dbSource = yamlCfg.Database.Source
@@ -1182,13 +1245,16 @@ func main() {
 	}
 
 	// Determine backup directory
-	backupDir := os.Getenv("CASPASTE_BACKUP_DIR")
-	if backupDir == "" {
-		backupDir = os.Getenv("LENPASTE_BACKUP_DIR") // Backward compatibility
+	var backupDir string
+	if isFirstRun {
+		backupDir = os.Getenv("CASPASTE_BACKUP_DIR")
+		if backupDir == "" {
+			backupDir = os.Getenv("LENPASTE_BACKUP_DIR") // Backward compatibility
+		}
 	}
-	if backupDir == "" && *flagDataDir != "" {
+	if backupDir == "" && dataDir != "" {
 		// Set platform-specific defaults
-		if *flagDataDir == "/data" {
+		if dataDir == "/data" {
 			// Docker container
 			backupDir = "/data/backups"
 		} else {
@@ -1206,7 +1272,7 @@ func main() {
 					if home := os.Getenv("HOME"); home != "" {
 						backupDir = home + "/.local/share/caspaste/backups"
 					} else {
-						backupDir = *flagDataDir + "/backups"
+						backupDir = dataDir + "/backups"
 					}
 				}
 
@@ -1219,7 +1285,7 @@ func main() {
 					if home := os.Getenv("HOME"); home != "" {
 						backupDir = home + "/Library/Application Support/CasPaste/Backups"
 					} else {
-						backupDir = *flagDataDir + "/backups"
+						backupDir = dataDir + "/backups"
 					}
 				}
 
@@ -1236,7 +1302,7 @@ func main() {
 					if appdata := os.Getenv("APPDATA"); appdata != "" {
 						backupDir = appdata + "\\CasPaste\\Backups"
 					} else {
-						backupDir = *flagDataDir + "/backups"
+						backupDir = dataDir + "/backups"
 					}
 				}
 
@@ -1249,26 +1315,26 @@ func main() {
 					if home := os.Getenv("HOME"); home != "" {
 						backupDir = home + "/.caspaste/backups"
 					} else {
-						backupDir = *flagDataDir + "/backups"
+						backupDir = dataDir + "/backups"
 					}
 				}
 
 			default:
 				// Fallback
-				backupDir = *flagDataDir + "/backups"
+				backupDir = dataDir + "/backups"
 			}
 		}
 	}
 
 	// Determine cache directory
 	cacheDir := yamlCfg.Directories.Cache
-	if cacheDir == "" {
+	if cacheDir == "" && isFirstRun {
 		cacheDir = os.Getenv("CASPASTE_CACHE_DIR")
+		if cacheDir == "" {
+			cacheDir = os.Getenv("LENPASTE_CACHE_DIR") // Backward compatibility
+		}
 	}
-	if cacheDir == "" {
-		cacheDir = os.Getenv("LENPASTE_CACHE_DIR") // Backward compatibility
-	}
-	if cacheDir == "" && *flagDataDir != "" {
+	if cacheDir == "" && dataDir != "" {
 		isRoot := isRunningAsRoot()
 		switch runtime.GOOS {
 		case "linux":
@@ -1278,7 +1344,7 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					cacheDir = home + "/.cache/caspaste"
 				} else {
-					cacheDir = *flagDataDir + "/cache"
+					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "darwin":
@@ -1288,7 +1354,7 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					cacheDir = home + "/Library/Caches/CasPaste"
 				} else {
-					cacheDir = *flagDataDir + "/cache"
+					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "windows":
@@ -1298,7 +1364,7 @@ func main() {
 				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
 					cacheDir = localAppData + "\\CasPaste\\Cache"
 				} else {
-					cacheDir = *flagDataDir + "/cache"
+					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "freebsd", "openbsd":
@@ -1308,23 +1374,23 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					cacheDir = home + "/.cache/caspaste"
 				} else {
-					cacheDir = *flagDataDir + "/cache"
+					cacheDir = dataDir + "/cache"
 				}
 			}
 		default:
-			cacheDir = *flagDataDir + "/cache"
+			cacheDir = dataDir + "/cache"
 		}
 	}
 
 	// Determine logs directory
 	logsDir := yamlCfg.Directories.Logs
-	if logsDir == "" {
+	if logsDir == "" && isFirstRun {
 		logsDir = os.Getenv("CASPASTE_LOGS_DIR")
+		if logsDir == "" {
+			logsDir = os.Getenv("LENPASTE_LOGS_DIR") // Backward compatibility
+		}
 	}
-	if logsDir == "" {
-		logsDir = os.Getenv("LENPASTE_LOGS_DIR") // Backward compatibility
-	}
-	if logsDir == "" && *flagDataDir != "" {
+	if logsDir == "" && dataDir != "" {
 		isRoot := isRunningAsRoot()
 		switch runtime.GOOS {
 		case "linux":
@@ -1334,7 +1400,7 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					logsDir = home + "/.local/log/caspaste"
 				} else {
-					logsDir = *flagDataDir + "/logs"
+					logsDir = dataDir + "/logs"
 				}
 			}
 		case "darwin":
@@ -1344,7 +1410,7 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					logsDir = home + "/Library/Logs/CasPaste"
 				} else {
-					logsDir = *flagDataDir + "/logs"
+					logsDir = dataDir + "/logs"
 				}
 			}
 		case "windows":
@@ -1354,7 +1420,7 @@ func main() {
 				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
 					logsDir = localAppData + "\\CasPaste\\Logs"
 				} else {
-					logsDir = *flagDataDir + "/logs"
+					logsDir = dataDir + "/logs"
 				}
 			}
 		case "freebsd", "openbsd":
@@ -1364,11 +1430,11 @@ func main() {
 				if home := os.Getenv("HOME"); home != "" {
 					logsDir = home + "/.local/log/caspaste"
 				} else {
-					logsDir = *flagDataDir + "/logs"
+					logsDir = dataDir + "/logs"
 				}
 			}
 		default:
-			logsDir = *flagDataDir + "/logs"
+			logsDir = dataDir + "/logs"
 		}
 	}
 
@@ -1503,7 +1569,7 @@ func main() {
 
 	// Determine FQDN for variable replacement
 	// Falls back to global IP if no valid FQDN found (never localhost)
-	fqdn, err := validation.DetermineFQDN("", yamlCfg.Server.Address)
+	fqdn, err := validation.DetermineFQDN("", yamlCfg.Server.FQDN)
 	if err != nil {
 		// Could not determine even a global IP (highly unlikely)
 		exitOnError(fmt.Errorf("failed to determine server address: %w", err))
@@ -1577,52 +1643,114 @@ func main() {
 	yamlCfg.Server.Administrator.From = adminFrom
 	yamlCfg.Web.Security.Contact.Email = securityEmail
 
-	// Create access log file (keep open for application lifetime)
-	accessLogPath := filepath.Join(logsDir, "access.log")
-	accessLogFile, err := os.OpenFile(accessLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	// Create log files (keep open for application lifetime)
+	// Use filenames from config or defaults
+	accessLogFile := yamlCfg.Logging.Access.File
+	if accessLogFile == "" {
+		accessLogFile = "access.log"
+	}
+	errorLogFile := yamlCfg.Logging.Error.File
+	if errorLogFile == "" {
+		errorLogFile = "error.log"
+	}
+	serverLogFile := yamlCfg.Logging.Server.File
+	if serverLogFile == "" {
+		serverLogFile = "caspaste.log"
+	}
+	debugLogFile := yamlCfg.Logging.Debug.File
+	if debugLogFile == "" {
+		debugLogFile = "debug.log"
+	}
+	
+	// Open access.log - HTTP requests only
+	accessLogPath := filepath.Join(logsDir, accessLogFile)
+	accessLogFd, err := os.OpenFile(accessLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		exitOnError(fmt.Errorf("failed to open access.log: %w", err))
+		exitOnError(fmt.Errorf("failed to open %s: %w", accessLogFile, err))
+	}
+	
+	// Open error.log - ERROR messages only
+	errorLogPath := filepath.Join(logsDir, errorLogFile)
+	errorLogFd, err := os.OpenFile(errorLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		exitOnError(fmt.Errorf("failed to open %s: %w", errorLogFile, err))
+	}
+	
+	// Open caspaste.log - Application log (INFO messages)
+	serverLogPath := filepath.Join(logsDir, serverLogFile)
+	serverLogFd, err := os.OpenFile(serverLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		exitOnError(fmt.Errorf("failed to open %s: %w", serverLogFile, err))
+	}
+	
+	// Open debug.log - DEBUG messages (only when --debug flag is used)
+	var debugLogFd *os.File
+	if *flagDebug {
+		debugLogPath := filepath.Join(logsDir, debugLogFile)
+		debugLogFd, err = os.OpenFile(debugLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			exitOnError(fmt.Errorf("failed to open %s: %w", debugLogFile, err))
+		}
 	}
 	// Note: Do NOT defer close - these files must stay open for the entire application lifetime
 
-	// Create logger with appropriate outputs
-	var logWriter io.Writer
-	var debugLogFile *os.File
-	if *flagDebug {
-		debugLogPath := filepath.Join(logsDir, "debug.log")
-		debugLogFile, err = os.OpenFile(debugLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			exitOnError(fmt.Errorf("failed to open debug.log: %w", err))
-		}
-		// Note: Do NOT defer close - these files must stay open for the entire application lifetime
-		
-		// Write to access log, debug log, and stdout
-		logWriter = io.MultiWriter(accessLogFile, debugLogFile, os.Stdout)
-	} else {
-		logWriter = io.MultiWriter(accessLogFile, os.Stdout)
+	// Build console writers based on config stdout/stderr settings
+	var consoleStdout, consoleStderr io.Writer
+	
+	// Stdout (for INFO/WARN/DEBUG based on level)
+	if yamlCfg.Logging.Server.Stdout || yamlCfg.Logging.Debug.Stdout {
+		consoleStdout = os.Stdout
 	}
 	
+	// Stderr (for ERROR)
+	if yamlCfg.Logging.Error.Stderr {
+		consoleStderr = os.Stderr
+	}
+	
+	// Access log file writer (for HTTP requests)
+	var accessFileWriter io.Writer
+	accessFileWriter = accessLogFd
+	
+	// Create logger with format configuration
 	log := logger.New("2006/01/02 15:04:05")
-	log.SetWriter(logWriter)
-	
-	if *flagDebug {
-		log.Info("Debug logging enabled: " + filepath.Join(logsDir, "debug.log"))
+	log.SetLevel(yamlCfg.Logging.Level)         // Set log level: info, warn, error (affects stdout only)
+	log.SetFormat(logger.LogFormat{
+		Access: yamlCfg.Logging.Access.Format,
+		Error:  yamlCfg.Logging.Error.Format,
+		Server: yamlCfg.Logging.Server.Format,
+		Debug:  yamlCfg.Logging.Debug.Format,
+	})
+	log.SetFileWriters(serverLogFd, errorLogFd)   // Files - always written regardless of level
+	log.SetWriters(consoleStdout, consoleStderr)  // Console - filtered by level
+	log.SetAccessLogWriter(accessFileWriter)       // HTTP access logs
+	if debugLogFd != nil {
+		log.SetDebugWriter(debugLogFd)            // Debug logs
 	}
-	log.Info("Access logging enabled: " + accessLogPath)
+	log.SetDebugMode(*flagDebug)
+	
+	log.Debug("Configuration loaded from: " + configFilePath)
+	log.Debug("Data directory: " + *flagDataDir)
+	log.Debug("Config directory: " + *flagConfigDir)
+	log.Debug("Logs directory: " + logsDir)
+	log.Debug("Database: " + yamlCfg.Database.Driver + " (" + yamlCfg.Database.Source + ")")
 	
 	// Setup cleanup handler to close log files on shutdown
 	cleanupLogFiles := func() {
-		accessLogFile.Close()
-		if debugLogFile != nil {
-			debugLogFile.Close()
+		accessLogFd.Close()
+		errorLogFd.Close()
+		serverLogFd.Close()
+		if debugLogFd != nil {
+			debugLogFd.Close()
 		}
 	}
 	defer cleanupLogFiles()
 
+	log.Debug("Initializing database connection pool...")
 	db, err := storage.NewPool(yamlCfg.Database.Driver, yamlCfg.Database.Source, yamlCfg.Database.MaxOpenConns, yamlCfg.Database.MaxIdleConns, *flagDataDir)
 	if err != nil {
 		exitOnError(err)
 	}
+	log.Debug("Database connection pool created successfully")
 
 	cfg := config.Config{
 		Log:               log,
@@ -1658,11 +1786,21 @@ func main() {
 
 	rawData := raw.Load(db, cfg)
 
-	// Init data base
-	err = storage.InitDB(yamlCfg.Database.Driver, yamlCfg.Database.Source)
+	// Init database with retry logic (for when Postgres/MySQL isn't ready yet)
+	log.Debug("Initializing database schema...")
+	err = retryWithBackoff(
+		func() error {
+			return storage.InitDB(yamlCfg.Database.Driver, yamlCfg.Database.Source)
+		},
+		10,                    // max 10 attempts
+		1*time.Second,         // start with 1 second
+		30*time.Second,        // max 30 seconds between retries
+		"Database initialization",
+	)
 	if err != nil {
 		exitOnError(err)
 	}
+	log.Debug("Database schema initialized successfully")
 
 	// Auto-detect and perform database migration if driver changed
 	// NOW safe to migrate since destination database is initialized
@@ -1726,7 +1864,10 @@ func main() {
 				log.Error(errors.New("Delete expired: " + err.Error()))
 			}
 
-			log.Info("Delete " + strconv.FormatInt(count, 10) + " expired pastes")
+			// Only log if pastes were actually deleted
+			if count > 0 {
+				log.Info("Deleted " + strconv.FormatInt(count, 10) + " expired pastes")
+			}
 
 			// Wait
 			time.Sleep(cleanJobPeriod)
@@ -1735,7 +1876,6 @@ func main() {
 
 	// Determine ports (HTTP and optionally HTTPS)
 	var httpPort, httpsPort int
-	var configFilePath string
 
 	// Check for PORT environment variable override
 	portEnv := os.Getenv("PORT")
@@ -1799,8 +1939,14 @@ func main() {
 	}
 	*flagAddress = net.JoinHostPort(host, strconv.Itoa(httpPort))
 
+	// Convert listen address ("all" → "::", or use as-is)
+	listenAddr := yamlCfg.Server.Listen
+	if listenAddr == "all" || listenAddr == "" {
+		listenAddr = "::" // IPv4 + IPv6 dual stack
+	}
+
 	// Create HTTP listener (must be done as root for ports < 1024 on Unix)
-	httpAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpPort))
+	httpAddr := net.JoinHostPort(listenAddr, strconv.Itoa(httpPort))
 	httpListener, err := net.Listen("tcp", httpAddr)
 	if err != nil {
 		exitOnError(fmt.Errorf("failed to bind HTTP to %s: %w", httpAddr, err))
@@ -1810,7 +1956,7 @@ func main() {
 	var httpsListener net.Listener
 	var tlsCert *validation.TLSCertPaths
 	if httpsPort > 0 {
-		httpsAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpsPort))
+		httpsAddr := net.JoinHostPort(listenAddr, strconv.Itoa(httpsPort))
 		httpsListener, err = net.Listen("tcp", httpsAddr)
 		if err != nil {
 			exitOnError(fmt.Errorf("failed to bind HTTPS to %s: %w", httpsAddr, err))
@@ -1838,7 +1984,7 @@ func main() {
 
 	// Print startup banner with database info
 	dbDisplay := formatDatabaseDisplay(yamlCfg.Database.Driver, yamlCfg.Database.Source)
-	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, dbDisplay, httpPort, httpsPort)
+	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, configFilePath, dbDisplay, httpPort, httpsPort)
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{
@@ -1856,8 +2002,6 @@ func main() {
 	// Start HTTP server in a goroutine
 	httpErrors := make(chan error, 1)
 	go func() {
-		displayAddr := getDisplayAddress(*flagAddress)
-		log.Info("Run HTTP server on " + displayAddr)
 		httpErrors <- srv.Serve(httpListener)
 	}()
 
@@ -1901,7 +2045,7 @@ func main() {
 		}
 
 		go func() {
-			httpsAddr := net.JoinHostPort(yamlCfg.Server.Bind, strconv.Itoa(httpsPort))
+			httpsAddr := net.JoinHostPort(listenAddr, strconv.Itoa(httpsPort))
 			log.Info("Run HTTPS server on " + httpsAddr)
 			httpsErrors <- srvHTTPS.ServeTLS(httpsListener, tlsCert.CertFile, tlsCert.KeyFile)
 		}()

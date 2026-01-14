@@ -86,7 +86,6 @@ func EnsureUser() (int, int, error) {
 		return 0, 0, fmt.Errorf("failed to create user: %w\nOutput: %s", err, string(output))
 	}
 
-	fmt.Printf("Created user %s:%s (UID:GID %d:%d)\n", CasPasteUser, CasPasteGroup, uid, gid)
 	return uid, gid, nil
 }
 
@@ -104,7 +103,6 @@ func DropPrivileges(uid, gid int) error {
 		return fmt.Errorf("failed to set UID %d: %w", uid, err)
 	}
 
-	fmt.Printf("Dropped privileges to %s:%s (UID:GID %d:%d)\n", CasPasteUser, CasPasteGroup, uid, gid)
 	return nil
 }
 

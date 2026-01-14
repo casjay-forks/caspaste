@@ -27,11 +27,17 @@ func getEnv(name string) string {
 // Environment variables override config file values
 func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	// Server settings
-	if val := getEnv("ADDRESS"); val != "" {
-		cfg.Server.Address = val
+	if val := getEnv("FQDN"); val != "" {
+		cfg.Server.FQDN = val
 	}
-	if val := getEnv("BIND"); val != "" {
-		cfg.Server.Bind = val
+	if val := getEnv("ADDRESS"); val != "" { // Backward compatibility
+		cfg.Server.FQDN = val
+	}
+	if val := getEnv("LISTEN"); val != "" {
+		cfg.Server.Listen = val
+	}
+	if val := getEnv("BIND"); val != "" { // Backward compatibility
+		cfg.Server.Listen = val
 	}
 	if val := getEnv("PORT"); val != "" {
 		cfg.Server.Port = val // Now string format: "8080" or "8080,64453"

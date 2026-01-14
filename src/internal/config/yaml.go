@@ -17,11 +17,11 @@ import (
 // All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
-		Address           string `yaml:"address"`             // Public FQDN
-		Bind              string `yaml:"bind"`                // Bind address (::, 0.0.0.0, specific IP)
+		FQDN              string `yaml:"fqdn"`                // Public FQDN (dynamic: auto-detected from reverse proxy headers when trust_reverse_proxy=true, fallback to hostname/IP)
+		Listen            string `yaml:"listen"`              // Listen address (all, ::, 0.0.0.0, specific IP)
 		Port              string `yaml:"port"`                // "8080" or "8080,64453"
 		Title             string `yaml:"title"`               // Server title
-		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"` // Trust X-Forwarded-For headers
+		TrustReverseProxy bool   `yaml:"trust_reverse_proxy"` // Trust X-Forwarded-Host/X-Forwarded-Proto headers for dynamic FQDN detection
 		
 		Administrator struct {
 			Name  string `yaml:"name"`  // Admin name
@@ -149,11 +149,35 @@ type YAMLConfig struct {
 	} `yaml:"directories"`
 	
 	Logging struct {
-		Level     string `yaml:"level"`      // Log level: debug, info, warn, error
-		Format    string `yaml:"format"`     // Log format: text, json
-		AccessLog string `yaml:"access_log"` // Access log file path (Apache format)
-		ErrorLog  string `yaml:"error_log"`  // Error log file path
-		DebugLog  string `yaml:"debug_log"`  // Debug log file path (when --debug enabled)
+		Level string `yaml:"level"` // Log level: info, warn, error (default: info)
+		
+		Access struct {
+			Stdout bool   `yaml:"stdout"` // Enable access log to stdout (default: true)
+			Stderr bool   `yaml:"stderr"` // Enable access log to stderr (default: false)
+			Format string `yaml:"format"` // apache, nginx, text, json (default: apache)
+			File   string `yaml:"file"`   // Access log file (default: access.log)
+		} `yaml:"access"`
+		
+		Error struct {
+			Stdout bool   `yaml:"stdout"` // Enable error log to stdout (default: false)
+			Stderr bool   `yaml:"stderr"` // Enable error log to stderr (default: true)
+			Format string `yaml:"format"` // text, json (default: text)
+			File   string `yaml:"file"`   // Error log file (default: error.log)
+		} `yaml:"error"`
+		
+		Server struct {
+			Stdout bool   `yaml:"stdout"` // Enable server log to stdout (default: true)
+			Stderr bool   `yaml:"stderr"` // Enable server log to stderr (default: false)
+			Format string `yaml:"format"` // text, json (default: text)
+			File   string `yaml:"file"`   // Server log file (default: caspaste.log)
+		} `yaml:"server"`
+		
+		Debug struct {
+			Stdout bool   `yaml:"stdout"` // Enable debug log to stdout (default: true)
+			Stderr bool   `yaml:"stderr"` // Enable debug log to stderr (default: false)
+			Format string `yaml:"format"` // text, json (default: text)
+			File   string `yaml:"file"`   // Debug log file (default: debug.log)
+		} `yaml:"debug"`
 	} `yaml:"logging"`
 }
 
@@ -195,11 +219,11 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// SERVER CONFIGURATION
 	// ============================================================================
-	defaultConfig.Server.Address = ""  // Auto-detected FQDN
-	defaultConfig.Server.Bind = "::"   // IPv4 + IPv6 (dual stack)
-	defaultConfig.Server.Port = ""     // Empty = random port in 64xxx range
+	defaultConfig.Server.FQDN = ""      // Dynamic: detects from X-Forwarded-Host when trust_reverse_proxy=true, fallback to hostname/IP
+	defaultConfig.Server.Listen = "all" // Listen on all interfaces (IPv4 + IPv6)
+	defaultConfig.Server.Port = "64365" // Default port
 	defaultConfig.Server.Title = "CasPaste"
-	defaultConfig.Server.TrustReverseProxy = false
+	defaultConfig.Server.TrustReverseProxy = false // Set to true when behind reverse proxy (Nginx, Caddy, Traefik, etc.)
 	
 	defaultConfig.Server.Administrator.Name = "CasPaste Administrator"
 	defaultConfig.Server.Administrator.Email = "administrator@{fqdn}"
@@ -220,15 +244,15 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Database.MaxIdleConns = 5
 	defaultConfig.Database.CleanupPeriod = "1m"
 	
-	// Backup database (optional)
+	// Backup database (optional - secondary database for redundancy)
 	defaultConfig.Database.Backup.Enabled = false
-	defaultConfig.Database.Backup.Driver = ""
-	defaultConfig.Database.Backup.Source = ""
+	defaultConfig.Database.Backup.Driver = "sqlite"
+	defaultConfig.Database.Backup.Source = "/var/lib/caspaste/backup.db"
 
 	// ============================================================================
 	// SECURITY CONFIGURATION
 	// ============================================================================
-	defaultConfig.Security.PasswordFile = ""
+	defaultConfig.Security.PasswordFile = "/etc/caspaste/passwords.txt"
 	
 	// HTTP Security Headers
 	defaultConfig.Security.Headers.XFrameOptions = "DENY"
@@ -247,8 +271,8 @@ func GenerateDefaultYAMLConfig(path string) error {
 		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
 		"TLS_CHACHA20_POLY1305_SHA256",
 	}
-	defaultConfig.Security.TLS.CertFile = "" // Auto-detected from Let's Encrypt
-	defaultConfig.Security.TLS.KeyFile = ""  // Auto-detected from Let's Encrypt
+	defaultConfig.Security.TLS.CertFile = "/etc/caspaste/tls/cert.pem" // Auto-detected from Let's Encrypt
+	defaultConfig.Security.TLS.KeyFile = "/etc/caspaste/tls/key.pem"  // Auto-detected from Let's Encrypt
 	
 	// Upload Security
 	defaultConfig.Security.Upload.MaxFileSize = 52428800 // 50MB
@@ -282,17 +306,17 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// UI Settings
 	defaultConfig.Web.UI.DefaultLifetime = "never"
 	defaultConfig.Web.UI.DefaultTheme = "dark"  // Accepts: "dark" (dracula), "light" (github), "auto", or full path like "dark/dracula"
-	defaultConfig.Web.UI.ThemesDir = ""
+	defaultConfig.Web.UI.ThemesDir = "/usr/share/caspaste/themes"
 	
 	// Content Pages
-	defaultConfig.Web.Content.About = ""    // Empty = use embedded default
-	defaultConfig.Web.Content.Rules = ""    // Empty = use embedded default
-	defaultConfig.Web.Content.Terms = ""    // Empty = use embedded default
-	defaultConfig.Web.Content.Security = "" // Empty = auto-generated security.txt
+	defaultConfig.Web.Content.About = "/etc/caspaste/content/about.md"    // Empty = use embedded default
+	defaultConfig.Web.Content.Rules = "/etc/caspaste/content/rules.md"    // Empty = use embedded default
+	defaultConfig.Web.Content.Terms = "/etc/caspaste/content/terms.md"    // Empty = use embedded default
+	defaultConfig.Web.Content.Security = "/etc/caspaste/content/security.txt" // Empty = auto-generated security.txt
 	
 	// Branding
-	defaultConfig.Web.Branding.Logo = ""
-	defaultConfig.Web.Branding.Favicon = ""
+	defaultConfig.Web.Branding.Logo = "/static/logo.png"
+	defaultConfig.Web.Branding.Favicon = "/static/favicon.ico"
 	
 	// Security Contact (for security.txt)
 	defaultConfig.Web.Security.Contact.Email = "security@{fqdn}"
@@ -334,21 +358,41 @@ func GenerateDefaultYAMLConfig(path string) error {
 	// ============================================================================
 	// DIRECTORIES
 	// ============================================================================
-	// Empty = auto-detected based on platform and user permissions
-	defaultConfig.Directories.Data = ""
-	defaultConfig.Directories.Config = ""
-	defaultConfig.Directories.Db = ""
-	defaultConfig.Directories.Cache = ""
-	defaultConfig.Directories.Logs = ""
+	// Platform-specific defaults
+	defaultConfig.Directories.Data = "/var/lib/caspaste"
+	defaultConfig.Directories.Config = "/etc/caspaste"
+	defaultConfig.Directories.Db = "/var/lib/caspaste/db"    // Database directory - if under data dir, included in data backup
+	defaultConfig.Directories.Cache = "/var/cache/caspaste"
+	defaultConfig.Directories.Logs = "/var/log/caspaste"
 
 	// ============================================================================
 	// LOGGING
 	// ============================================================================
-	defaultConfig.Logging.Level = "info"
-	defaultConfig.Logging.Format = "text"
-	defaultConfig.Logging.AccessLog = "access.log"  // Apache Common Log Format
-	defaultConfig.Logging.ErrorLog = "error.log"
-	defaultConfig.Logging.DebugLog = "debug.log"    // Only used with --debug flag
+	defaultConfig.Logging.Level = "info" // info, warn, error (default: info)
+	
+	// Access Log (HTTP requests)
+	defaultConfig.Logging.Access.Stdout = false  // Don't clutter console with every request
+	defaultConfig.Logging.Access.Stderr = false
+	defaultConfig.Logging.Access.Format = "apache" // apache (combined), nginx, text, json
+	defaultConfig.Logging.Access.File = "access.log"
+	
+	// Error Log (ERROR messages)
+	defaultConfig.Logging.Error.Stdout = false
+	defaultConfig.Logging.Error.Stderr = true // Errors to stderr by default
+	defaultConfig.Logging.Error.Format = "text" // text, json
+	defaultConfig.Logging.Error.File = "error.log"
+	
+	// Server Log (INFO messages)
+	defaultConfig.Logging.Server.Stdout = true // Show info messages on console
+	defaultConfig.Logging.Server.Stderr = false
+	defaultConfig.Logging.Server.Format = "text" // text, json
+	defaultConfig.Logging.Server.File = "caspaste.log"
+	
+	// Debug Log (DEBUG messages, only with --debug flag)
+	defaultConfig.Logging.Debug.Stdout = true
+	defaultConfig.Logging.Debug.Stderr = false
+	defaultConfig.Logging.Debug.Format = "text" // text, json
+	defaultConfig.Logging.Debug.File = "debug.log"
 
 	// Write to file
 	data, err := yaml.Marshal(defaultConfig)
