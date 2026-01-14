@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -39,18 +40,16 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 
 	db.pool.SetMaxOpenConns(maxOpenConns)
 	db.pool.SetMaxIdleConns(maxIdleConns)
-	
+
 	// Set connection lifetime and idle timeouts to prevent stale connections
 	db.pool.SetConnMaxLifetime(3600 * 1000000000) // 1 hour in nanoseconds
 	db.pool.SetConnMaxIdleTime(600 * 1000000000)  // 10 minutes in nanoseconds
 
 	// If using postgres/mysql, also open SQLite backup/cache
+	// SQLite cache is ALWAYS required for local operations
 	if driverName == "postgres" || driverName == "mysql" || driverName == "mariadb" {
-		// SQLite backup at standard path (same as if SQLite was primary)
-		backupPath := dataDir + "/db/caspaste.db"
-		if dataDir == "" {
-			backupPath = "./data/db/caspaste.db"
-		}
+		// Determine SQLite cache path - check env var first, then use standard path
+		backupPath := getSQLiteCachePath(dataDir)
 
 		db.backupPool, err = sql.Open("sqlite", backupPath)
 		if err != nil {
@@ -67,6 +66,21 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 	}
 
 	return db, nil
+}
+
+// getSQLiteCachePath determines the SQLite cache database path
+// Priority: CASPASTE_DB_DIR env var > dataDir/db/ > ./data/db/
+func getSQLiteCachePath(dataDir string) string {
+	// Check environment variable first
+	if envDbDir := os.Getenv("CASPASTE_DB_DIR"); envDbDir != "" {
+		return envDbDir + "/caspaste.db"
+	}
+	// Use data directory if provided
+	if dataDir != "" {
+		return dataDir + "/db/caspaste.db"
+	}
+	// Fallback to relative path
+	return "./data/db/caspaste.db"
 }
 
 func (db DB) Close() error {
