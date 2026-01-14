@@ -14,6 +14,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ type loginTmpl struct {
 func generateSessionToken(username string) string {
 	// Token format: username:timestamp:signature
 	timestamp := time.Now().Unix()
-	data := []byte(username + ":" + string(rune(timestamp)))
+	data := []byte(username + ":" + strconv.FormatInt(timestamp, 10))
 
 	h := hmac.New(sha256.New, sessionSecret)
 	h.Write(data)
@@ -91,7 +92,7 @@ func validateSessionToken(token string) (string, bool) {
 	}
 
 	// Verify signature
-	data := []byte(username + ":" + string(rune(timestamp.Unix())))
+	data := []byte(username + ":" + strconv.FormatInt(timestamp.Unix(), 10))
 	h := hmac.New(sha256.New, sessionSecret)
 	h.Write(data)
 	expectedSig := base64.URLEncoding.EncodeToString(h.Sum(nil))
@@ -115,8 +116,11 @@ func (data *Data) isAuthenticated(req *http.Request) bool {
 }
 
 // setSessionCookie sets a session cookie for authenticated users
-func setSessionCookie(rw http.ResponseWriter, username string) {
+func setSessionCookie(rw http.ResponseWriter, req *http.Request, username string) {
 	token := generateSessionToken(username)
+
+	// Auto-detect HTTPS from request TLS or X-Forwarded-Proto header
+	secure := req.TLS != nil || req.Header.Get("X-Forwarded-Proto") == "https"
 
 	http.SetCookie(rw, &http.Cookie{
 		Name:     sessionCookieName,
@@ -124,7 +128,7 @@ func setSessionCookie(rw http.ResponseWriter, username string) {
 		Path:     "/",
 		MaxAge:   int(sessionDuration.Seconds()),
 		HttpOnly: true,
-		Secure:   false, // Set to true if using HTTPS
+		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,
 	})
 }
@@ -196,7 +200,7 @@ func (data *Data) handleLoginSubmit(rw http.ResponseWriter, req *http.Request) e
 	}
 
 	// Set session cookie and redirect
-	setSessionCookie(rw, username)
+	setSessionCookie(rw, req, username)
 	writeRedirect(rw, req, redirect, 302)
 	return nil
 }
