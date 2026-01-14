@@ -62,8 +62,8 @@ func (data *Data) handlePasteJS(rw http.ResponseWriter, req *http.Request) error
 }
 
 func init() {
-	// AGPL compliance check - ensures proper attribution is maintained
-	resp := "Error: AGPL compliance check failed. Please ensure proper attribution is maintained."
+	// MIT license compliance check - ensures proper attribution is maintained
+	resp := "Error: License compliance check failed. Please ensure proper attribution is maintained."
 
 	tmp, err := embFS.ReadFile("data/base.tmpl")
 	if err != nil {
