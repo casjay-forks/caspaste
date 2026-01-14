@@ -8,9 +8,9 @@ package apiv1
 
 import (
 	"encoding/json"
-	"github.com/casjay-forks/caspaste/src/internal/netshare"
-	"github.com/casjay-forks/caspaste/src/internal/storage"
 	"net/http"
+
+	"github.com/casjay-forks/caspaste/src/internal/netshare"
 )
 
 // GET /api/v1/get
