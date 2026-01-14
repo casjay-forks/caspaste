@@ -3,8 +3,9 @@
 A self-hosted, privacy-focused pastebin service for sharing text snippets, files, and short URLs.
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://golang.org)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?logo=docker)](https://ghcr.io/casjay-forks/caspaste)
+[![Demo](https://img.shields.io/badge/Demo-lp.pste.us-green)](https://lp.pste.us)
 
 ## 📖 About
 
@@ -635,7 +636,7 @@ sudo systemctl start caspaste
 
 ## 📜 License
 
-MIT License - see [LICENSE](LICENSE) and [LICENSE.md](LICENSE.md) for third-party attributions.
+MIT License - see [LICENSE.md](LICENSE.md) for details and third-party attributions.
 
 ## 👥 Credits
 
@@ -643,6 +644,6 @@ MIT License - see [LICENSE](LICENSE) and [LICENSE.md](LICENSE.md) for third-part
 
 ## 🆘 Support
 
+- 🌐 **Demo**: https://lp.pste.us
 - 🐛 **Issues**: https://github.com/casjay-forks/caspaste/issues
-- 📚 **API Docs**: `/docs/apiv1` on your instance
-- 📋 **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+- 📚 **API Docs**: https://lp.pste.us/docs/apiv1
