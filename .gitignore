@@ -103,5 +103,8 @@ $RECYCLE.BIN/
 binaries/**
 releases/**
 
+# ignore Go build cache (used by Makefile Docker builds)
+.go-cache/
+
 # ignore the docker-compose filesystem
 rootfs/
