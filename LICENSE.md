@@ -1,3 +1,27 @@
+# MIT License
+
+Copyright (c) 2024 CasjaysDev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
 # Third-Party Licenses and Attributions
 
 CasPaste is built upon and includes code from various open-source projects. This document provides attribution and license information for all third-party components.
@@ -41,6 +65,14 @@ CasPaste is built upon and includes code from various open-source projects. This
 - **Copyright:** © The Go Authors
 - **Source:** https://golang.org/x/crypto
 - **Used for:** Argon2id password hashing, bcrypt support
+
+### Go Net Library
+- **Package:** `golang.org/x/net`
+- **Version:** v0.20.0
+- **License:** BSD-3-Clause
+- **Copyright:** © The Go Authors
+- **Source:** https://golang.org/x/net
+- **Used for:** Public Suffix List domain validation
 
 ### Go Term Library
 - **Package:** `golang.org/x/term`
@@ -127,24 +159,11 @@ All color values were independently selected for optimal readability and mobile-
 When distributing CasPaste, you must:
 
 1. **Include this LICENSE.md file** with all attributions
-2. **Include the main LICENSE file** (MIT)
-3. **Comply with all third-party licenses** listed above
+2. **Comply with all third-party licenses** listed above
 
 ### Contribution Guidelines
 
 By contributing to CasPaste, you agree that your contributions will be licensed under the MIT License.
-
----
-
-## Full License Texts
-
-### MIT License
-See the main `LICENSE` file in the repository root.
-
-### Dependencies
-For full license texts of dependencies, see:
-- Go packages: Use `go list -m -json all` to get package details
-- Each package's source repository contains its full license text
 
 ---
 
