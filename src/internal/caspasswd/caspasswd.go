@@ -13,7 +13,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -33,7 +33,7 @@ func LoadFile(path string) (Data, error) {
 	defer file.Close()
 
 	// Read file
-	fileByte, err := ioutil.ReadAll(file)
+	fileByte, err := io.ReadAll(file)
 	if err != nil {
 		return nil, errors.New("caspasswd: " + err.Error())
 	}
