@@ -13,12 +13,6 @@ services:
     restart: always
     pull_policy: always
     logging: *default-logging
-    healthcheck:
-      test: ["CMD", "caspaste", "--status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 90s
     environment:
       - PORT=80
       - TZ=${TZ:-America/New_York}
@@ -43,6 +37,12 @@ services:
       - './rootfs/data:/data'
       - './rootfs/config:/config'
       - './rootfs/backups:/data/backups'
+    healthcheck:
+      test: ["CMD", "caspaste", "--status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
     networks:
       - caspaste
 
