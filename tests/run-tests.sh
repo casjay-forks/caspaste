@@ -176,6 +176,8 @@ fi
 echo -e "\n${YELLOW}=== SECTION 2: SERVER STARTUP TESTS ===${NC}\n"
 
 log_test "Start server container"
+# Create DB directory structure matching Dockerfile
+mkdir -p "$TEMP_DIR/data/db/sqlite"
 docker run -d --name "$CONTAINER_NAME" \
     -v "$TEMP_DIR/binaries/caspaste:/usr/local/bin/caspaste" \
     -v "$TEMP_DIR/data:/data" \
@@ -183,6 +185,7 @@ docker run -d --name "$CONTAINER_NAME" \
     -e CASPASTE_PUBLIC=true \
     -e CASPASTE_DATA_DIR=/data \
     -e CASPASTE_CONFIG_DIR=/config \
+    -e CASPASTE_DB_DIR=/data/db/sqlite \
     -e CASPASTE_DB_DRIVER=sqlite \
     -e TZ=America/New_York \
     -p $SERVER_PORT:80 \
@@ -464,7 +467,10 @@ assert_contains "$CLI_LIST" "ID" "CLI list shows header"
 echo -e "\n${YELLOW}=== SECTION 6: DATABASE TESTS ===${NC}\n"
 
 log_test "Verify SQLite database created"
-if [ -f "$TEMP_DIR/data/caspaste.db" ]; then
+# In Docker, database is at /data/db/sqlite/caspaste.db (CASPASTE_DB_DIR)
+# SQLite also serves as cache/backup when using PostgreSQL/MySQL
+if docker exec "$CONTAINER_NAME" ls /data/db/sqlite/caspaste.db >/dev/null 2>&1 || \
+   docker exec "$CONTAINER_NAME" ls /data/caspaste.db >/dev/null 2>&1; then
     pass "SQLite database file exists"
 else
     fail "SQLite database file not found"
