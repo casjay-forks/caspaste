@@ -5,7 +5,7 @@ FROM golang:alpine AS builder
 
 WORKDIR /build
 
-RUN apk add --no-cache git ca-certificates tzdata
+RUN apk add --no-cache git curl jq ca-certificates tzdata
 
 COPY go.mod go.sum ./
 COPY . .

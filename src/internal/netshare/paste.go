@@ -76,9 +76,9 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		// Store file data as base64 in Body field
 		paste.Body = string(fileData)
 
-		// Default syntax for files
+		// Default syntax for files (use plaintext as it's always valid)
 		if paste.Syntax == "" {
-			paste.Syntax = "file"
+			paste.Syntax = "plaintext"
 		}
 	}
 
@@ -127,14 +127,17 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 	}
 
 	// Validate syntax (allow "autodetect" as special value)
+	// Syntax matching is case-insensitive for user convenience
 	syntaxOk := false
-	if paste.Syntax == "autodetect" {
+	if strings.EqualFold(paste.Syntax, "autodetect") {
 		syntaxOk = true
-		// Leave as "autodetect" - will be detected during display
+		paste.Syntax = "autodetect"
 	} else {
 		for _, name := range lexerNames {
-			if name == paste.Syntax {
+			if strings.EqualFold(name, paste.Syntax) {
 				syntaxOk = true
+				// Normalize to the official lexer name for proper highlighting
+				paste.Syntax = name
 				break
 			}
 		}

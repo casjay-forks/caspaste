@@ -12,7 +12,8 @@
       "Bash(docker run:*)",
       "Bash(docker rmi:*)",
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python3:*)"
     ]
   }
 }

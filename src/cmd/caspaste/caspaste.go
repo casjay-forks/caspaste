@@ -944,7 +944,7 @@ func main() {
 	}
 	location, err := time.LoadLocation(tz)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: invalid timezone '%s', using UTC: %v\n", tz, err)
+		// Silently fall back to UTC if timezone data not available
 		location = time.UTC
 	}
 	time.Local = location

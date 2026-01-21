@@ -29,6 +29,10 @@ endif
 BUILD_DIR := ./binaries
 RELEASE_DIR := ./releases
 
+# Go directories (configurable via environment)
+GODIR ?= $(HOME)/.local/share/go
+GOCACHEDIR ?= $(HOME)/.local/share/go/build
+
 # Build flags
 LDFLAGS := -w -s -X "main.Version=$(APP_VERSION)"
 STATIC_FLAGS := -tags netgo -ldflags '$(LDFLAGS) -extldflags "-static"'
@@ -37,10 +41,10 @@ STATIC_FLAGS := -tags netgo -ldflags '$(LDFLAGS) -extldflags "-static"'
 DOCKER_IMAGE := golang:alpine
 DOCKER_OPTS := --rm \
 	-v "$(CURDIR)":/build \
-	-v "$(CURDIR)/.go-cache":/go \
+	-v "$(GODIR)":/go \
 	-w /build \
 	-e CGO_ENABLED=0 \
-	-e GOCACHE=/go/cache \
+	-e GOCACHE=/go/build \
 	-e GOMODCACHE=/go/pkg/mod
 
 # For local builds, match the runtime machine's architecture
@@ -62,7 +66,7 @@ PLATFORMS := \
     openbsd_amd64 \
     openbsd_arm64
 
-.PHONY: build release docker test local help
+.PHONY: build release docker test local help clean
 
 # Default target
 help:
@@ -75,15 +79,17 @@ help:
 	@echo "  make docker  - Build and push Docker images to ghcr.io"
 	@echo "  make test    - Run all tests"
 	@echo "  make local   - Build for current OS/arch only (fast)"
+	@echo "  make clean   - Remove build artifacts"
 	@echo ""
 	@echo "Version: $(APP_VERSION)"
+	@echo "Go cache: $(GODIR)"
 	@echo "Note: All Go builds run inside Docker (golang:alpine)"
 	@echo ""
 
 # Build for runtime machine's architecture
 local:
 	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
-	@mkdir -p $(BUILD_DIR) .go-cache
+	@mkdir -p $(BUILD_DIR) $(GODIR)/build $(GODIR)/pkg/mod
 	@echo "Building $(NAME) v$(APP_VERSION) for $$(uname -m)..."
 	@$(DOCKER_RUN_LOCAL) sh -c '\
 		go mod tidy && \
@@ -94,7 +100,7 @@ local:
 # Build all platforms
 build:
 	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
-	@mkdir -p $(BUILD_DIR) .go-cache
+	@mkdir -p $(BUILD_DIR) $(GODIR)/build $(GODIR)/pkg/mod
 	@echo "Building $(NAME) v$(APP_VERSION) for all platforms..."
 	@$(DOCKER_RUN) sh -c '\
 		go mod tidy && \
@@ -116,7 +122,7 @@ build:
 # Release to GitHub
 release:
 	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
-	@mkdir -p $(RELEASE_DIR) .go-cache
+	@mkdir -p $(RELEASE_DIR) $(GODIR)/build $(GODIR)/pkg/mod
 	@echo "Building release v$(APP_VERSION)..."
 	@$(DOCKER_RUN) sh -c '\
 		apk add --no-cache binutils && \
@@ -174,6 +180,12 @@ docker:
 
 # Run tests
 test:
-	@mkdir -p .go-cache
+	@mkdir -p $(GODIR)/build $(GODIR)/pkg/mod
 	@echo "Running tests..."
 	@$(DOCKER_RUN) sh -c 'go mod tidy && go test -v -cover ./...'
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
+	@rm -rf $(BUILD_DIR) $(RELEASE_DIR) .go-cache
+	@echo "Clean complete"

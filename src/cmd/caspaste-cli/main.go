@@ -65,8 +65,8 @@ type ListResponse struct {
 
 type ServerInfoResponse struct {
 	Version           string   `json:"version"`
-	TitleMaxLen       int      `json:"titleMaxLen"`
-	BodyMaxLen        int      `json:"bodyMaxLen"`
+	TitleMaxLen       int      `json:"titleMaxlength"`
+	BodyMaxLen        int      `json:"bodyMaxlength"`
 	MaxLifeTime       int64    `json:"maxLifeTime"`
 	ServerAbout       string   `json:"serverAbout"`
 	ServerRules       string   `json:"serverRules"`
