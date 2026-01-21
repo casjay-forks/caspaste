@@ -101,7 +101,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
-      - name: Build binary
+      - name: Build server binary
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -125,6 +125,31 @@ jobs:
           chmod +x "binaries/${OUTPUT}" 2>/dev/null || true
 
           # Strip for Unix-like systems
+          if [[ "${{ matrix.goos }}" =~ ^(linux|freebsd|openbsd)$ ]]; then
+            strip "binaries/${OUTPUT}" 2>/dev/null || true
+          fi
+
+      - name: Build CLI binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          OUTPUT="${{ env.PROJECT_NAME }}-cli-${{ matrix.goos }}-${{ matrix.goarch }}"
+
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            OUTPUT="${OUTPUT}.exe"
+          fi
+
+          go build -trimpath \
+            -tags netgo \
+            -ldflags "-w -s -X main.Version=${VERSION} -extldflags '-static'" \
+            -o "binaries/${OUTPUT}" \
+            ./src/cmd/${{ env.PROJECT_NAME }}-cli
+
+          chmod +x "binaries/${OUTPUT}" 2>/dev/null || true
+
           if [[ "${{ matrix.goos }}" =~ ^(linux|freebsd|openbsd)$ ]]; then
             strip "binaries/${OUTPUT}" 2>/dev/null || true
           fi

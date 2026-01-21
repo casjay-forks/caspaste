@@ -1,7 +1,7 @@
 #!/bin/bash
 # CasPaste Comprehensive Test Suite
 # This script builds and tests all functionality using a temp directory
-# Usage: ./tests/run-tests.sh [--keep-temp]
+# Usage: ./tests/run-tests.sh
 
 set -e
 
@@ -18,17 +18,25 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 GODIR="${GODIR:-$HOME/.local/share/go}"
 CONTAINER_NAME="caspaste-test-$$"
 SERVER_PORT=18080
-KEEP_TEMP=false
 
 # Parse arguments
-for arg in "$@"; do
-    case $arg in
-        --keep-temp)
-            KEEP_TEMP=true
-            shift
-            ;;
-    esac
-done
+case "${1:-}" in
+    -h|--help)
+        echo "CasPaste Test Suite"
+        echo ""
+        echo "Usage: $0"
+        echo ""
+        echo "Runs comprehensive tests for CasPaste including:"
+        echo "  - Go unit tests"
+        echo "  - Binary builds"
+        echo "  - Server startup"
+        echo "  - API endpoints"
+        echo "  - CLI functionality"
+        echo "  - Content-type validation"
+        echo "  - Security tests"
+        exit 0
+        ;;
+esac
 
 # Test counters
 TESTS_PASSED=0
@@ -52,12 +60,8 @@ cleanup() {
     echo -e "\n${YELLOW}Cleaning up...${NC}"
     docker stop "$CONTAINER_NAME" 2>/dev/null || true
     docker rm "$CONTAINER_NAME" 2>/dev/null || true
-    if [ "$KEEP_TEMP" = false ]; then
-        rm -rf "$TEMP_DIR"
-        echo "Removed temp directory: $TEMP_DIR"
-    else
-        echo "Keeping temp directory: $TEMP_DIR"
-    fi
+    rm -rf "$TEMP_DIR"
+    echo "Removed temp directory: $TEMP_DIR"
 }
 trap cleanup EXIT
 
@@ -489,9 +493,99 @@ EXPIRE_GET=$(curl -s "$BASE_URL/api/v1/get?id=$EXPIRE_ID")
 assert_contains "$EXPIRE_GET" '"code":404' "Expired paste is deleted"
 
 # ============================================
-# SECTION 7: SECURITY TESTS
+# SECTION 7: CONTENT-TYPE TESTS
 # ============================================
-echo -e "\n${YELLOW}=== SECTION 7: SECURITY TESTS ===${NC}\n"
+echo -e "\n${YELLOW}=== SECTION 7: CONTENT-TYPE TESTS ===${NC}\n"
+
+assert_content_type() {
+    local url="$1"
+    local expected="$2"
+    local desc="$3"
+    # Use -D - to get headers from actual response (not HEAD which may not work for all endpoints)
+    local actual=$(curl -s -D - -o /dev/null "$url" 2>/dev/null | grep -i "^content-type:" | tr -d '\r' | cut -d' ' -f2-)
+    if echo "$actual" | grep -qi "$expected"; then
+        pass "$desc"
+    else
+        fail "$desc (expected '$expected', got '$actual')"
+    fi
+}
+
+# Frontend HTML pages
+log_test "Frontend Content-Type: Homepage"
+assert_content_type "$BASE_URL/" "text/html" "Homepage returns text/html"
+
+log_test "Frontend Content-Type: About page"
+assert_content_type "$BASE_URL/about" "text/html" "About page returns text/html"
+
+log_test "Frontend Content-Type: Settings page"
+assert_content_type "$BASE_URL/settings" "text/html" "Settings page returns text/html"
+
+log_test "Frontend Content-Type: Login page"
+assert_content_type "$BASE_URL/login" "text/html" "Login page returns text/html"
+
+log_test "Frontend Content-Type: Docs page"
+assert_content_type "$BASE_URL/docs" "text/html" "Docs page returns text/html"
+
+log_test "Frontend Content-Type: Terms page"
+assert_content_type "$BASE_URL/terms" "text/html" "Terms page returns text/html"
+
+log_test "Frontend Content-Type: Paste view"
+assert_content_type "$BASE_URL/$PASTE1_ID" "text/html" "Paste view returns text/html"
+
+# Raw paste endpoint (text/plain)
+log_test "Raw paste Content-Type"
+assert_content_type "$BASE_URL/raw/$PASTE1_ID" "text/plain" "Raw paste returns text/plain"
+
+# API endpoints (application/json)
+log_test "API Content-Type: Health endpoint"
+assert_content_type "$BASE_URL/api/healthz" "application/json" "Health API returns application/json"
+
+log_test "API Content-Type: Server info"
+assert_content_type "$BASE_URL/api/v1/getServerInfo" "application/json" "Server info API returns application/json"
+
+log_test "API Content-Type: Get paste"
+assert_content_type "$BASE_URL/api/v1/get?id=$PASTE1_ID" "application/json" "Get paste API returns application/json"
+
+log_test "API Content-Type: List pastes"
+assert_content_type "$BASE_URL/api/v1/list" "application/json" "List API returns application/json"
+
+# Static files
+log_test "Static Content-Type: CSS"
+assert_content_type "$BASE_URL/style.css" "text/css" "CSS returns text/css"
+
+log_test "Static Content-Type: JavaScript (main.js)"
+assert_content_type "$BASE_URL/main.js" "application/javascript" "main.js returns application/javascript"
+
+log_test "Static Content-Type: Manifest"
+assert_content_type "$BASE_URL/manifest.json" "application/manifest+json" "manifest.json returns application/manifest+json"
+
+log_test "Static Content-Type: Service Worker"
+assert_content_type "$BASE_URL/sw.js" "application/javascript" "sw.js returns application/javascript"
+
+# Text files (robots.txt, security.txt)
+log_test "Text file Content-Type: robots.txt"
+assert_content_type "$BASE_URL/robots.txt" "text/plain" "robots.txt returns text/plain"
+
+log_test "Text file Content-Type: security.txt"
+assert_content_type "$BASE_URL/.well-known/security.txt" "text/plain" "security.txt returns text/plain"
+
+log_test "Sitemap Content-Type: sitemap.xml"
+assert_content_type "$BASE_URL/sitemap.xml" "text/xml" "sitemap.xml returns text/xml"
+
+# Verify robots.txt content
+log_test "robots.txt content"
+ROBOTS=$(curl -s "$BASE_URL/robots.txt")
+assert_contains "$ROBOTS" "User-agent" "robots.txt has User-agent"
+
+# Verify security.txt content
+log_test "security.txt content"
+SECURITY=$(curl -s "$BASE_URL/.well-known/security.txt")
+assert_contains "$SECURITY" "Contact" "security.txt has Contact field"
+
+# ============================================
+# SECTION 8: SECURITY TESTS
+# ============================================
+echo -e "\n${YELLOW}=== SECTION 8: SECURITY TESTS ===${NC}\n"
 
 log_test "SQL injection attempt stored as text"
 SQL_INJ=$(curl -s -X POST "$BASE_URL/api/v1/new" \

@@ -40,12 +40,14 @@ func (data *Data) handleAPIHealthz(rw http.ResponseWriter, req *http.Request) er
 	if err != nil {
 		resp.Status = "degraded"
 		resp.Database = "error"
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	if err != nil {
 		rw.WriteHeader(http.StatusServiceUnavailable)
 	} else {
 		rw.WriteHeader(http.StatusOK)
 	}
-
-	rw.Header().Set("Content-Type", "application/json")
 	return json.NewEncoder(rw).Encode(resp)
 }
 
