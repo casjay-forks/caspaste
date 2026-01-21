@@ -1,0 +1,61 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{ call .Translate `about.Title` }} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+{{if ne .ServerAbout ``}}
+<h3>{{ call .Translate `about.AboutServerTitle` }}</h3>
+{{ call .Highlight .ServerAbout `plaintext` }}
+{{end}}
+
+{{if ne .ServerRules ``}}
+<h3>{{ call .Translate `about.RulesTitle` }}</h3>
+{{ call .Highlight .ServerRules `plaintext` }}
+{{if .ServerTermsExist}}<p>{{ call .Translate `about.SeeTerms` `/terms` }}</p>{{end}}
+{{end}}
+
+<h3>{{ call .Translate `about.Limit` }}</h3>
+{{if ne .TitleMaxLen 0}}
+	{{if gt .TitleMaxLen 0}}
+	<p>{{call .Translate `about.LimitTitle` .TitleMaxLen}}<br>
+	{{else}}
+	<p>{{ call .Translate `about.LimitTitleNo` }}<br>
+	{{end}}
+{{else}}
+<p>{{ call .Translate `about.LimitTitleDisable` }}<br>
+{{end}}
+{{if gt .BodyMaxLen 0}}
+{{call .Translate `about.LimitBody` .BodyMaxLen }}<br>
+{{else}}
+{{ call .Translate `about.LimitBodyNo` }}<br>
+{{end}}
+{{if gt .MaxLifeTime 0}}
+{{call .Translate `about.LimitLifeTime` .MaxLifeTime }}</p>
+{{else}}
+{{ call .Translate `about.LimitLifeTimeNo` }}</p>
+{{end}}
+
+{{if or (ne .AdminName ``) (ne .AdminMail ``)}}
+<h3>{{ call .Translate `about.AdminTitle` }}</h3>
+{{if ne .AdminName ``}}<p>{{ call .Translate `about.AdminName` }} <code>{{.AdminName}}</code></p>{{end}}
+{{if ne .AdminMail ``}}<p>{{ call .Translate `about.AdminEmail` }} <a href="mailto:{{.AdminMail}}">{{.AdminMail}}</a></p>{{end}}
+{{end}}
+
+<h3>{{ call .Translate `about.CasPasteTitle` }}</h3>
+<p>{{call .Translate `about.CasPasteMessage` .Version}}</p>
+<ul>
+	<li>{{ call .Translate `about.CasPaste1` `/about/source_code` `/about/license` `MIT` }}</li>
+	<li>{{ call .Translate `about.CasPaste2` }}</li>
+	<li>{{ call .Translate `about.CasPaste3` }}</li>
+	<li>{{ call .Translate `about.CasPaste4` }}</li>
+	<li>{{ call .Translate `about.CasPaste5` `/docs/apiv1` }}</li>
+</ul>
+<p>{{call .Translate `about.CasPasteAuthors` `/about/authors`}}</p>
+{{end}}

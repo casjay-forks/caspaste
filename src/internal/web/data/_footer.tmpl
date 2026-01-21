@@ -1,0 +1,21 @@
+{{/*
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "footer"}}
+	<footer role="contentinfo">
+		<nav aria-label="Footer navigation">
+			<p>
+				<a href="/about">{{ call .Translate `base.About` }}</a> |
+				<a href="/docs">{{ call .Translate `base.Docs` }}</a> |
+				<a href="/terms">Terms of Service</a>
+			</p>
+			<p>
+				&copy; 2026 <a href="https://github.com/casjay-forks/caspaste">CasPaste</a>
+			</p>
+		</nav>
+	</footer>
+{{end}}

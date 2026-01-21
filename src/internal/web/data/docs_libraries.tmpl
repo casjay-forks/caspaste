@@ -1,0 +1,38 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{ call .Translate `docsAPIv1Libs.Title` }} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3><a href="/docs">{{ call .Translate `docs.Title` }}</a> / {{ call .Translate `docsAPIv1Libs.Title` }}</h3>
+<h4 id="libraries">{{ call .Translate `docsAPIv1Libs.Recommended` }}</h4>
+<p>CasPaste provides a simple API v1. You can use standard HTTP clients in any language to interact with the API.</p>
+<p>See the <a href="/docs/apiv1">API v1 documentation</a> for detailed endpoint information and examples.</p>
+<h4>Example Clients</h4>
+<table>
+	<th>{{ call .Translate `docsAPIv1Libs.Language` }}</th>
+	<th>Example</th>
+	<tr>
+		<td>Go</td>
+		<td><code>http.Post()</code> with standard library</td>
+	</tr>
+	<tr>
+		<td>Python</td>
+		<td><code>requests.post()</code> library</td>
+	</tr>
+	<tr>
+		<td>JavaScript</td>
+		<td><code>fetch()</code> API</td>
+	</tr>
+	<tr>
+		<td>cURL</td>
+		<td><code>curl -X POST</code> command</td>
+	</tr>
+</table>
+{{end}}

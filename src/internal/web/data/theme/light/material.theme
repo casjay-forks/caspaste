@@ -1,0 +1,34 @@
+theme.Name.en = Material Light
+theme.Name.de = Material Hell
+theme.Name.ru = Material Светлая
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = friendly
+
+color.Font             = #212121
+color.SVG              = #424242
+color.BackgroundBody   = #FAFAFA
+color.Header           = #1976D2
+color.HeaderFont       = #FFFFFF
+color.Article          = #FFFFFF
+color.BackgroundBlack  = #F5F5F5
+color.FocusOutline     = #2196F3
+color.Element          = #EEEEEE
+
+color.Red  = #F44336
+color.Grey = #6E6E6E
+
+color.Border = #888888
+color.Link   = #1565C0
+
+color.Button           = #E0E0E0
+color.ButtonHover      = #2196F3
+color.ButtonFont       = #212121
+color.ButtonGreen      = #4CAF50
+color.ButtonGreenHover = #66BB6A
+color.ButtonGreenFont  = #212121
+
+color.InputHover       = #BDBDBD
+color.InputPlaceholder = #686868

@@ -1,0 +1,20 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{ call .Translate `terms.Title`}} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3>{{ call .Translate `terms.Title` }}</h3>
+{{if ne .TermsOfUse ``}}
+<div class="info">{{ call .Translate `terms.Notice` }}</div>
+{{ call .Highlight .TermsOfUse `plaintext` }}
+{{else}}
+{{ call .Translate `terms.NoTerms` }}
+{{end}}
+{{end}}

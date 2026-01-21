@@ -1,0 +1,34 @@
+theme.Name.en = One Dark
+theme.Name.de = One Dark
+theme.Name.ru = One Dark
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = onedark
+
+color.Font             = #ABB2BF
+color.SVG              = #ABB2BF
+color.BackgroundBody   = #282C34
+color.Header           = #282C34
+color.HeaderFont       = #FFFFFF
+color.Article          = #2C323C
+color.BackgroundBlack  = #21252B
+color.FocusOutline     = #C678DD
+color.Element          = #3E4451
+
+color.Red  = #E06C75
+color.Grey = #9BA3B0
+
+color.Border = #6E7581
+color.Link   = #61AFEF
+
+color.Button           = #3E4451
+color.ButtonHover      = #4B5263
+color.ButtonFont       = #ABB2BF
+color.ButtonGreen      = #98C379
+color.ButtonGreenHover = #56B6C2
+color.ButtonGreenFont  = #282C34
+
+color.InputHover       = #3E4451
+color.InputPlaceholder = #B0B8C2

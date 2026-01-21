@@ -1,0 +1,34 @@
+theme.Name.en = Monokai
+theme.Name.de = Monokai
+theme.Name.ru = Монокай
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji"
+font.Monospace = "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", "Liberation Mono", monospace
+
+highlight.Theme = monokai
+
+color.Font             = #F8F8F2
+color.SVG              = #F8F8F2
+color.BackgroundBody   = #272822
+color.Header           = #272822
+color.HeaderFont       = #F8F8F2
+color.Article          = #2E2E2A
+color.BackgroundBlack  = #1E1E1A
+color.FocusOutline     = #F92672
+color.Element          = #3E3D32
+
+color.Red  = #F92672
+color.Grey = #A8A89D
+
+color.Border = #7E7E72
+color.Link   = #66D9EF
+
+color.Button           = #3E3D32
+color.ButtonHover      = #5E5D52
+color.ButtonFont       = #F8F8F2
+color.ButtonGreen      = #A6E22E
+color.ButtonGreenHover = #C6FF4E
+color.ButtonGreenFont  = #272822
+
+color.InputHover       = #5E5D52
+color.InputPlaceholder = #B8B8AD

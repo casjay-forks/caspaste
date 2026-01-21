@@ -1,0 +1,34 @@
+theme.Name.en = Tokyo Night
+theme.Name.de = Tokyo Nacht
+theme.Name.ru = Токио Ночь
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = monokai
+
+color.Font             = #C0CAF5
+color.SVG              = #C0CAF5
+color.BackgroundBody   = #1A1B26
+color.Header           = #1A1B26
+color.HeaderFont       = #FFFFFF
+color.Article          = #24283B
+color.BackgroundBlack  = #16161E
+color.FocusOutline     = #BB9AF7
+color.Element          = #414868
+
+color.Red  = #F7768E
+color.Grey = #9BA4C8
+
+color.Border = #626888
+color.Link   = #7AA2F7
+
+color.Button           = #414868
+color.ButtonHover      = #565F89
+color.ButtonFont       = #C0CAF5
+color.ButtonGreen      = #9ECE6A
+color.ButtonGreenHover = #73DACA
+color.ButtonGreenFont  = #1A1B26
+
+color.InputHover       = #414868
+color.InputPlaceholder = #B3BBCE

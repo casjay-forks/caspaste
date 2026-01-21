@@ -1,0 +1,45 @@
+name: caspaste
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: ghcr.io/casjay-forks/caspaste:latest
+    container_name: caspaste-app
+    hostname: ${HOSTNAME:-caspaste}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - CASPASTE_DB_CLEANUP_PERIOD=1m
+      - CASPASTE_ROBOTS_DISALLOW=false
+      - CASPASTE_TITLE_MAX_LENGTH=120
+      - CASPASTE_BODY_MAX_LENGTH=9999999999999999
+      - CASPASTE_MAX_PASTE_LIFETIME=unlimited
+      - CASPASTE_ADMIN_NAME=${APP_ORG_NAME}
+      - CASPASTE_UI_DEFAULT_LIFETIME=never
+      - CASPASTE_UI_DEFAULT_THEME=dark
+      - CASPASTE_GET_PASTES_PER_5MIN=0
+      - CASPASTE_GET_PASTES_PER_15MIN=0
+      - CASPASTE_GET_PASTES_PER_1HOUR=0
+      - CASPASTE_NEW_PASTES_PER_5MIN=30
+      - CASPASTE_NEW_PASTES_PER_15MIN=60
+      - CASPASTE_NEW_PASTES_PER_1HOUR=120
+      - CASPASTE_DB_DRIVER=sqlite
+    ports:
+      - '172.17.0.1:59093:80'
+    volumes:
+      - './rootfs/data:/data'
+      - './rootfs/config:/config'
+      - './rootfs/backups:/data/backups'
+    networks:
+      - caspaste
+
+networks:
+  caspaste:
+    name: caspaste
+    external: false

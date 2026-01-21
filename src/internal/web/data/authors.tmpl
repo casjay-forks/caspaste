@@ -1,0 +1,19 @@
+{{/*
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{ call .Translate `authors.Title` }} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3><a href="/about">{{ call .Translate `about.Title` }}</a> / {{ call .Translate `authors.Title` }}</h3>
+
+<h4>CasPaste</h4>
+<ul>
+	<li>CasjaysDev &lt;<a href="mailto:project-admin@casjay.dev">project-admin@casjay.dev</a>&gt; - Maintainer</li>
+</ul>
+
+<p>For original project credits, see <a href="/about/license">LICENSE</a>.</p>
+{{end}}

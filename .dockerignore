@@ -1,0 +1,9 @@
+*
+!.git/**
+!src/**
+!vendor/**
+!entrypoint.sh
+!go.mod
+!go.sum
+!Makefile
+!release.txt

@@ -1,0 +1,34 @@
+theme.Name.en = GitHub Light
+theme.Name.de = GitHub Hell
+theme.Name.ru = GitHub Светлая
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji"
+font.Monospace = "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", "Liberation Mono", monospace
+
+highlight.Theme = github
+
+color.Font             = #1F2328
+color.SVG              = #1F2328
+color.BackgroundBody   = #FFFFFF
+color.Header           = #F6F8FA
+color.HeaderFont       = #1F2328
+color.Article          = #FFFFFF
+color.BackgroundBlack  = #F6F8FA
+color.FocusOutline     = #0969DA
+color.Element          = #F6F8FA
+
+color.Red  = #D1242F
+color.Grey = #656D76
+
+color.Border = #8A94A0
+color.Link   = #0969DA
+
+color.Button           = #F6F8FA
+color.ButtonHover      = #EAEEF2
+color.ButtonFont       = #1F2328
+color.ButtonGreen      = #1A7F37
+color.ButtonGreenHover = #2DA44E
+color.ButtonGreenFont  = #FFFFFF
+
+color.InputHover       = #EAEEF2
+color.InputPlaceholder = #656D76

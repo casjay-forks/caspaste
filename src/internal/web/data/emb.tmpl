@@ -1,0 +1,57 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+<!doctype html>
+<html>
+	<head>
+		<style>
+			body {
+				margin: 0;
+				font-family: monospace;
+				font-size: 16px;
+				color: #F8F8F2;
+				background-color: #272822;
+			}
+			header {
+				padding: 0.4em 1.8em 0.4em 1.8em;
+				display: flex;
+				justify-content: space-between;
+			}
+			.header-right {
+				align-self: flex-end;
+				text-align: right;
+			}
+			header a {
+				color: #FFFFFF;
+				text-decoration: none;
+			}
+			pre {
+				border-top: 1px solid #75715E;
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div>{{if .Title}}<a href="/{{.ID}}" target="_blank">{{.Title}}</a>{{end}}</div>
+			<div class="header-right"><a href="/{{.ID}}" target="_blank">{{.CreateTimeStr}}</a></div>
+		</header>
+		{{if or (.ErrorNotFound) (.OneUse) (ne .DeleteTime 0)}}
+		<article>
+			{{if .ErrorNotFound}}
+			<pre><code class="embed-error"><span class="error-label">{{ call .Translate `pasteEmd.Error` }}:</span> {{ call .Translate `pasteEmd.ErrorNotFound` }}</code></pre>
+			{{else}}
+			<pre><code class="embed-error"><span class="error-label">{{ call .Translate `pasteEmd.Error` }}:</span> {{ call .Translate `pasteEmb.ErrorCouldNotEmb` }}</code></pre>
+			{{end}}
+		</article>
+		{{else}}
+		<article>{{.Body}}</article>
+		{{end}}
+	</body>
+</html>
