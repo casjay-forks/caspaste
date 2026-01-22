@@ -7,6 +7,7 @@
 package netshare
 
 import (
+	"encoding/base64"
 	"io"
 	"net/http"
 	"strconv"
@@ -73,8 +74,9 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 			paste.MimeType = "application/octet-stream"
 		}
 
-		// Store file data as base64 in Body field
-		paste.Body = string(fileData)
+		// Store file data as base64 in Body field to handle binary data safely
+		// This prevents UTF-8 encoding errors in databases like PostgreSQL
+		paste.Body = base64.StdEncoding.EncodeToString(fileData)
 
 		// Default syntax for files (use plaintext as it's always valid)
 		if paste.Syntax == "" {

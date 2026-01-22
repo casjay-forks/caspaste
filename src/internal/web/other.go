@@ -32,6 +32,12 @@ func (data *Data) handleMainJS(rw http.ResponseWriter, req *http.Request) error 
 	return nil
 }
 
+func (data *Data) handleBurnAfterJS(rw http.ResponseWriter, req *http.Request) error {
+	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	rw.Write(*data.BurnAfterJS)
+	return nil
+}
+
 func (data *Data) handleCodeJS(rw http.ResponseWriter, req *http.Request) error {
 	rw.Header().Set("Content-Type", "application/javascript; charset=utf-8")
 	return data.CodeJS.Execute(rw, jsTmpl{

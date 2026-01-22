@@ -7,11 +7,13 @@
 package web
 
 import (
-	"github.com/casjay-forks/caspaste/src/internal/lineend"
-	"github.com/casjay-forks/caspaste/src/internal/netshare"
+	"encoding/base64"
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/casjay-forks/caspaste/src/internal/lineend"
+	"github.com/casjay-forks/caspaste/src/internal/netshare"
 )
 
 type pasteTmpl struct {
@@ -30,6 +32,12 @@ type pasteTmpl struct {
 	Author      string
 	AuthorEmail string
 	AuthorURL   string
+
+	// File upload fields
+	IsFile   bool
+	FileName string
+	MimeType string
+	FileSize int
 
 	Language  string
 	Theme     func(string) string
@@ -86,10 +94,28 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 	createTime := time.Unix(paste.CreateTime, 0).UTC()
 	deleteTime := time.Unix(paste.DeleteTime, 0).UTC()
 
+	// Determine body content based on whether this is a file upload
+	var bodyContent string
+	var fileSize int
+	if paste.IsFile {
+		// File upload: try to decode base64, fall back to raw for legacy data
+		fileData, err := base64.StdEncoding.DecodeString(paste.Body)
+		if err != nil {
+			// Legacy data stored without base64 encoding - use as-is
+			bodyContent = paste.Body
+			fileSize = len(paste.Body)
+		} else {
+			bodyContent = string(fileData)
+			fileSize = len(fileData)
+		}
+	} else {
+		bodyContent = paste.Body
+	}
+
 	tmplData := pasteTmpl{
 		ID:         paste.ID,
 		Title:      paste.Title,
-		Body:       data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(paste.Body, paste.Syntax),
+		Body:       data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(bodyContent, paste.Syntax),
 		Syntax:     paste.Syntax,
 		CreateTime: paste.CreateTime,
 		DeleteTime: paste.DeleteTime,
@@ -102,13 +128,18 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 		AuthorEmail: paste.AuthorEmail,
 		AuthorURL:   paste.AuthorURL,
 
+		IsFile:   paste.IsFile,
+		FileName: paste.FileName,
+		MimeType: paste.MimeType,
+		FileSize: fileSize,
+
 		Language:  getCookie(req, "lang"),
 		Theme:     data.getThemeFunc(req),
 		Translate: data.Locales.findLocale(req).translate,
 	}
 
 	// Get body line end
-	switch lineend.GetLineEnd(paste.Body) {
+	switch lineend.GetLineEnd(bodyContent) {
 	case "\r\n":
 		tmplData.LineEnd = "CRLF"
 	case "\r":

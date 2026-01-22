@@ -7,11 +7,13 @@
 package web
 
 import (
-	"github.com/casjay-forks/caspaste/src/internal/netshare"
-	"github.com/casjay-forks/caspaste/src/internal/storage"
+	"encoding/base64"
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/casjay-forks/caspaste/src/internal/netshare"
+	"github.com/casjay-forks/caspaste/src/internal/storage"
 )
 
 type embTmpl struct {
@@ -55,13 +57,28 @@ func (data *Data) handleEmbedded(rw http.ResponseWriter, req *http.Request) erro
 	// Prepare template data
 	createTime := time.Unix(paste.CreateTime, 0).UTC()
 
+	// Determine body content based on whether this is a file upload
+	var bodyContent string
+	if paste.IsFile {
+		// File upload: try to decode base64, fall back to raw for legacy data
+		fileData, err := base64.StdEncoding.DecodeString(paste.Body)
+		if err != nil {
+			// Legacy data stored without base64 encoding - use as-is
+			bodyContent = paste.Body
+		} else {
+			bodyContent = string(fileData)
+		}
+	} else {
+		bodyContent = paste.Body
+	}
+
 	tmplData := embTmpl{
 		ID:            paste.ID,
 		CreateTimeStr: createTime.Format("1 Jan, 2006"),
 		DeleteTime:    paste.DeleteTime,
 		OneUse:        paste.OneUse,
 		Title:         paste.Title,
-		Body:          tryHighlight(paste.Body, paste.Syntax, "monokai"),
+		Body:          tryHighlight(bodyContent, paste.Syntax, "monokai"),
 
 		ErrorNotFound: errorNotFound,
 		Language:      getCookie(req, "lang"),

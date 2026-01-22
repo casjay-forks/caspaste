@@ -41,6 +41,7 @@ type Data struct {
 	ErrorPage      *template.Template
 	Main           *template.Template
 	MainJS         *[]byte
+	BurnAfterJS    *[]byte
 	HistoryJS      *textTemplate.Template
 	CodeJS         *textTemplate.Template
 	PastePage      *template.Template
@@ -205,6 +206,13 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	}
 	data.MainJS = &mainJS
 
+	// burn-after.js
+	burnAfterJS, err := embFS.ReadFile("data/burn-after.js")
+	if err != nil {
+		return nil, err
+	}
+	data.BurnAfterJS = &burnAfterJS
+
 	// history.js
 	data.HistoryJS, err = textTemplate.ParseFS(embFS, "data/history.js")
 	if err != nil {
@@ -367,6 +375,8 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		err = data.handleStyleCSS(rw, req)
 	case "/main.js":
 		err = data.handleMainJS(rw, req)
+	case "/burn-after.js":
+		err = data.handleBurnAfterJS(rw, req)
 	case "/history.js":
 		err = data.handleHistoryJS(rw, req)
 	case "/code.js":
