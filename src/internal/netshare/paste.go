@@ -108,19 +108,21 @@ func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem
 		return "", 0, 0, ErrPayloadTooLarge
 	}
 
-	// Change paste body lines end
-	switch req.PostForm.Get("lineEnd") {
-	case "", "LF", "lf":
-		paste.Body = lineend.UnknownToUnix(paste.Body)
+	// Change paste body lines end (skip for file uploads to preserve binary data)
+	if !paste.IsFile {
+		switch req.PostForm.Get("lineEnd") {
+		case "", "LF", "lf":
+			paste.Body = lineend.UnknownToUnix(paste.Body)
 
-	case "CRLF", "crlf":
-		paste.Body = lineend.UnknownToDos(paste.Body)
+		case "CRLF", "crlf":
+			paste.Body = lineend.UnknownToDos(paste.Body)
 
-	case "CR", "cr":
-		paste.Body = lineend.UnknownToOldMac(paste.Body)
+		case "CR", "cr":
+			paste.Body = lineend.UnknownToOldMac(paste.Body)
 
-	default:
-		return "", 0, 0, ErrBadRequest
+		default:
+			return "", 0, 0, ErrBadRequest
+		}
 	}
 
 	// Check syntax
