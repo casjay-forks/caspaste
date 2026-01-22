@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			min-width: calc(100% - 60px);\
 			max-width: calc(100% - 60px);\
 			line-height: 1.6;\
-			padding: 1.25rem;\
+			padding: 1rem;\
 			font-size: 15px;\
 			font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;\
 		}\
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			width: 60px;\
 			max-width: 60px;\
 			min-width: 60px;\
-			padding: 1.25rem 0.5rem 1.25rem 0.25rem;\
+			padding: 1rem 0.5rem 1rem 0.25rem;\
 			line-height: 1.6;\
 			font-size: 15px;\
 			font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;\
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		}\
 		.file-label {\
 			display: inline-block;\
-			padding: 0.75rem 1.5rem;\
+			padding: 0.625rem 1.25rem;\
 			background: var(--color-element, #44475A);\
 			color: var(--color-font, #F8F8F2);\
 			border-radius: 4px;\
@@ -102,9 +102,33 @@ document.addEventListener("DOMContentLoaded", function() {
 			background: var(--color-input-hover, #6272A4);\
 		}\
 		.form-help {\
-			margin-top: 0.5rem;\
-			font-size: 0.875rem;\
+			margin-top: 0.25rem;\
+			font-size: 0.8125rem;\
 			opacity: 0.7;\
+		}\
+		@media screen and (max-width: 719px) {\
+			#editor {\
+				margin-left: 45px;\
+				width: calc(100% - 45px);\
+				min-width: calc(100% - 45px);\
+				max-width: calc(100% - 45px);\
+				padding: 0.75rem;\
+				font-size: 14px;\
+			}\
+			#editorLines {\
+				width: 45px;\
+				max-width: 45px;\
+				min-width: 45px;\
+				padding: 0.75rem 0.375rem 0.75rem 0.25rem;\
+				font-size: 14px;\
+			}\
+			.file-label {\
+				padding: 0.5rem 1rem;\
+				font-size: 0.875rem;\
+			}\
+			.char-counter-container {\
+				font-size: 0.8125rem;\
+			}\
 		}\
 	";
 	document.head.appendChild(styleSheet);

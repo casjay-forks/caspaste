@@ -940,6 +940,30 @@ margin: 0;
 .form-row-3col {
 grid-template-columns: 1fr;
 flex-direction: column;
+gap: 0.5rem;
+}
+
+.form-group {
+margin: 0.75rem 0;
+}
+
+.form-group label {
+margin-bottom: 0.25rem;
+font-size: 0.875rem;
+}
+
+article h1 {
+font-size: 1.5rem;
+margin-bottom: 0.5rem;
+}
+
+.form-actions {
+margin-top: 1rem;
+}
+
+.form-help {
+margin-top: 0.25rem;
+font-size: 0.8125rem;
 }
 }
 /* NAV BUTTON - Style for history button in nav */
