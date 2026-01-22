@@ -217,14 +217,22 @@ document.addEventListener("DOMContentLoaded", () => {
 	let createPasteForm = document.getElementById("create-paste-form");
 	if (createPasteForm != null) {
 		createPasteForm.addEventListener("submit", (event) => {
+			// Check if a file is selected - if so, let the form submit normally
+			// since XHR with x-www-form-urlencoded cannot handle file uploads
+			let fileInput = document.getElementById("paste-file");
+			if (fileInput && fileInput.files && fileInput.files.length > 0) {
+				// Let form submit normally with multipart/form-data
+				return true;
+			}
+
 			event.preventDefault();
 
 			// Get form data
 			let data = "";
 			let title = "";
-			
+
 			Array.from(createPasteForm.elements)
-				.filter((item) => !!item.name)
+				.filter((item) => !!item.name && item.type !== "file")
 				.map((element) => {
 					let { name, value, type } = element;
 
