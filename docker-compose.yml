@@ -7,11 +7,11 @@ x-logging: &default-logging
 
 services:
   app:
-    image: ghcr.io/casjay-forks/caspaste:latest
+    image: caspaste:local-test
     container_name: caspaste-app
     hostname: ${HOSTNAME:-caspaste}
     restart: always
-    pull_policy: always
+    pull_policy: never
     logging: *default-logging
     environment:
       - PORT=80

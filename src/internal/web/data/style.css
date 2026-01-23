@@ -206,14 +206,66 @@ footer a:focus-visible {
 	border-radius: 2px;
 }
 
+.footer-links {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 0.25rem 0.5rem;
+}
+
+.footer-sep {
+	color: {{call .Theme `color.Grey`}};
+	user-select: none;
+}
+
+.footer-copyright {
+	margin-top: 0.75rem;
+	opacity: 0.8;
+}
+
 @media screen and (max-width: 719px) {
 	footer {
-		padding: 1.5rem 0;
+		padding: 1.25rem 1rem;
 		font-size: 0.875rem;
 	}
-	
-	footer nav p {
-		line-height: 2;
+
+	footer nav {
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.footer-links {
+		gap: 0.5rem;
+	}
+
+	.footer-links a {
+		padding: 0.5rem 0.75rem;
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.footer-copyright {
+		margin-top: 0.5rem;
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.footer-links {
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.footer-sep {
+		display: none;
+	}
+
+	.footer-links a {
+		width: 100%;
+		justify-content: center;
+		border-radius: 4px;
+		background: {{call .Theme `color.Element`}};
 	}
 }
 
@@ -857,6 +909,72 @@ h4 a, h5 a, h6 a {
 
 	h3 {
 		font-size: 1.1rem;
+	}
+
+	/* Mobile table styles - horizontal scroll */
+	table {
+		display: block;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		white-space: nowrap;
+	}
+
+	table th,
+	table td {
+		padding: 0.5rem;
+		font-size: 0.875rem;
+		white-space: normal;
+		min-width: 100px;
+	}
+
+	table td:last-child,
+	table th:last-child {
+		min-width: 150px;
+	}
+
+	/* Mobile code blocks */
+	pre {
+		padding: 0.75rem;
+		font-size: 12px;
+		border-radius: 6px;
+	}
+
+	pre code {
+		font-size: 12px;
+	}
+
+	code {
+		font-size: 0.8em;
+		word-break: break-word;
+	}
+
+	/* Mobile details/summary */
+	details summary {
+		padding: 0.75rem 0 0.75rem 1.5rem;
+		font-size: 0.95rem;
+	}
+
+	details > *:not(summary) {
+		padding-left: 0;
+	}
+
+	/* Documentation headings */
+	h4 {
+		font-size: 1rem;
+		margin-top: 1.5rem;
+	}
+
+	h5 {
+		font-size: 0.9rem;
+	}
+
+	/* Documentation list spacing */
+	ul, ol {
+		padding-left: 1.25rem;
+	}
+
+	li {
+		margin-bottom: 0.5rem;
 	}
 }
 
