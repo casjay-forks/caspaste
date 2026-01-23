@@ -17,16 +17,55 @@
 {{end}}
 
 <div class="text-bar">
+	{{if .IsFile}}
+	<div>{{.FileName}} ({{.MimeType}}, {{.FileSize}} bytes)</div>
+	{{else}}
 	<div>{{.Syntax}}, {{.LineEnd}}</div>
+	{{end}}
 
 	{{if not .OneUse}}
 	<div class="text-bar-right">
-		<a href="/raw/{{.ID}}" tabindex=2>{{ call .Translate `paste.Raw` }}</a><a href="/dl/{{.ID}}" tabindex=3>{{ call .Translate `paste.Download` }}</a><a{{if ne .DeleteTime 0}} class="text-grey"{{end}} href="/emb_help/{{.ID}}" tabindex=4>{{ call .Translate `paste.Embedded`}}</a>
+		{{if not .IsImage}}{{if not .IsVideo}}{{if not .IsAudio}}{{if not .IsPDF}}
+		<a href="/raw/{{.ID}}" tabindex=2>{{ call .Translate `paste.Raw` }}</a>
+		{{end}}{{end}}{{end}}{{end}}
+		<a href="/dl/{{.ID}}" tabindex=3>{{ call .Translate `paste.Download` }}</a>
+		{{if not .IsFile}}<a{{if ne .DeleteTime 0}} class="text-grey"{{end}} href="/emb_help/{{.ID}}" tabindex=4>{{ call .Translate `paste.Embedded`}}</a>{{end}}
 	</div>
 	{{end}}
 </div>
 
+{{if .IsImage}}
+<div class="file-preview">
+	<img src="{{.MediaDataURL}}" alt="{{.FileName}}" style="max-width: 100%; height: auto;">
+</div>
+{{else if .IsVideo}}
+<div class="file-preview">
+	<video controls style="max-width: 100%;">
+		<source src="{{.MediaDataURL}}" type="{{.MimeType}}">
+		Your browser does not support the video tag.
+	</video>
+</div>
+{{else if .IsAudio}}
+<div class="file-preview">
+	<audio controls style="width: 100%;">
+		<source src="{{.MediaDataURL}}" type="{{.MimeType}}">
+		Your browser does not support the audio tag.
+	</audio>
+</div>
+{{else if .IsPDF}}
+<div class="file-preview">
+	<iframe src="{{.MediaDataURL}}" style="width: 100%; height: 600px; border: 1px solid var(--border-color, #ccc);"></iframe>
+</div>
+{{else if and .IsFile (not .IsText)}}
+<div class="file-preview file-binary">
+	<p>Binary file: <strong>{{.FileName}}</strong></p>
+	<p>Type: {{.MimeType}}</p>
+	<p>Size: {{.FileSize}} bytes</p>
+	<p><a href="/dl/{{.ID}}" class="download-btn">Download File</a></p>
+</div>
+{{else}}
 {{.Body}}
+{{end}}
 
 {{if and (ne .Author ``) (ne .AuthorEmail ``) (ne .AuthorURL ``) }}<p>{{ call .Translate `paste.Author` }} {{.Author}} &lt<a href="mailto:{{.AuthorEmail}}">{{.AuthorEmail}}</a>&gt - <a target="_blank" href="{{.AuthorURL}}">{{.AuthorURL}}</a></p>{{end}}
 {{if and (ne .Author ``) (ne .AuthorEmail ``) (eq .AuthorURL ``) }}<p>{{ call .Translate `paste.Author` }} {{.Author}} &lt<a href="mailto:{{.AuthorEmail}}">{{.AuthorEmail}}</a>&gt</p>{{end}}

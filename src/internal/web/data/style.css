@@ -318,6 +318,55 @@ article {
 	margin-left: 0.625rem;
 }
 
+/* FILE PREVIEW */
+.file-preview {
+	margin: 1rem 0;
+	padding: 1rem;
+	background: {{call .Theme `color.Background`}};
+	border: 1px solid {{call .Theme `color.Border`}};
+	border-radius: 4px;
+	text-align: center;
+}
+
+.file-preview img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 4px;
+}
+
+.file-preview video,
+.file-preview audio {
+	max-width: 100%;
+}
+
+.file-preview iframe {
+	border-radius: 4px;
+}
+
+.file-binary {
+	text-align: left;
+	padding: 2rem;
+}
+
+.file-binary p {
+	margin-bottom: 0.5rem;
+}
+
+.download-btn {
+	display: inline-block;
+	margin-top: 1rem;
+	padding: 0.75rem 1.5rem;
+	background: {{call .Theme `color.ButtonGreen`}};
+	color: {{call .Theme `color.ButtonGreenFont`}};
+	text-decoration: none;
+	border-radius: 4px;
+	font-weight: bold;
+}
+
+.download-btn:hover {
+	opacity: 0.9;
+}
+
 /* TEXT COLORS */
 .text-red, .text-red:hover {
 	color: {{call .Theme `color.Red`}};
