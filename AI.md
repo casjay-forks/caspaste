@@ -1,6 +1,79 @@
-# {PROJECTNAME} Specification
+# CASPASTE Specification
 
-**Name**: {projectname}
+**Name**: caspaste
+
+---
+
+# 🆕 FIRST-TIME AI.md SETUP
+
+**If you see `caspaste` or `CASPASTE` placeholders in this file, this is a fresh template that needs configuration.**
+
+## Detecting Fresh Template
+
+```bash
+# Check if placeholders exist (fresh template)
+grep -q 'caspaste' AI.md && echo "FRESH TEMPLATE - needs setup"
+```
+
+## Auto-Detecting Project Values
+
+**Project name and org can be inferred automatically:**
+
+| Value | Primary Source | Fallback |
+|-------|----------------|----------|
+| `caspaste` | IDEA.md (if exists) | `basename "$PWD"` |
+| `casjay-forks` | IDEA.md (if exists) | `basename "$(dirname "$PWD")"` |
+
+**Detection commands:**
+```bash
+# Project name: current directory name
+projectname=$(basename "$PWD")
+
+# Project org: parent directory name (assumes ~/org/project structure)
+projectorg=$(basename "$(dirname "$PWD")")
+
+# Example: /home/user/github/myorg/myproject
+#   projectname = myproject
+#   projectorg = myorg
+```
+
+## First-Time Setup Flow
+
+```
+AI reads AI.md for the first time
+│
+├─► Check: Does AI.md contain literal "caspaste"?
+│   │
+│   ├─► YES (fresh template)
+│   │   │
+│   │   ├─► 1. Check if IDEA.md exists
+│   │   │   ├─► YES: Extract projectname/projectorg from IDEA.md
+│   │   │   └─► NO: Infer from directory structure
+│   │   │
+│   │   ├─► 2. Confirm with user: "Project: caspaste, Org: casjay-forks - correct?"
+│   │   │
+│   │   ├─► 3. Replace ALL placeholders in AI.md:
+│   │   │   - caspaste → actual project name (lowercase)
+│   │   │   - CASPASTE → actual project name (UPPERCASE)
+│   │   │   - casjay-forks → actual org name (lowercase)
+│   │   │   - CASJAY-FORKS → actual org name (UPPERCASE)
+│   │   │
+│   │   └─► 4. Create IDEA.md if it doesn't exist (from template or ask user)
+│   │
+│   └─► NO (already configured)
+│       └─► Proceed with normal operation - read PART 0 first
+```
+
+## Placeholder Reference
+
+| Placeholder | Case | Example |
+|-------------|------|---------|
+| `caspaste` | lowercase | `myapp` |
+| `CASPASTE` | UPPERCASE | `MYAPP` |
+| `casjay-forks` | lowercase | `myorg` |
+| `CASJAY-FORKS` | UPPERCASE | `MYORG` |
+
+**After setup, this section becomes reference-only. The placeholders above will show actual values.**
 
 ---
 
@@ -128,7 +201,7 @@ IDEA.md is the project PLAN. AI.md (this file) is the SOURCE OF TRUTH.
 | **CGO_ENABLED=0** | ALWAYS. No exceptions. Pure Go only. |
 | **Single static binary** | All assets embedded with Go `embed` package |
 | **8 platforms required** | linux, darwin, windows, freebsd × amd64, arm64 |
-| **Binary naming** | `{projectname}-{os}-{arch}` (windows adds `.exe`) |
+| **Binary naming** | `caspaste-{os}-{arch}` (windows adds `.exe`) |
 | **NEVER use -musl suffix** | Alpine builds are NOT musl-specific |
 | **Build source** | ALWAYS `src` directory |
 
@@ -140,7 +213,7 @@ IDEA.md is the project PLAN. AI.md (this file) is the SOURCE OF TRUTH.
 
 | Command | Purpose | Output Location | When to Use |
 |---------|---------|-----------------|-------------|
-| `make dev` | **Development & Debugging** | `${TMPDIR}/${PROJECTORG}/${PROJECTNAME}-XXXXXX/` | Active coding, quick tests |
+| `make dev` | **Development & Debugging** | `${TMPDIR}/$CASJAY-FORKS/$CASPASTE-XXXXXX/` | Active coding, quick tests |
 | `make local` | **Production Testing** | `binaries/` (with version) | Test prod builds locally |
 | `make build` | **Full Release** | `binaries/` (all 8 platforms) | Before release |
 | `make test` | **Unit Tests** | Coverage report | After code changes |
@@ -159,11 +232,11 @@ IDEA.md is the project PLAN. AI.md (this file) is the SOURCE OF TRUTH.
 
 ```bash
 # After make dev, debug in Docker with tools
-BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-*/ 2>/dev/null | head -1)
+BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-*/ 2>/dev/null | head -1)
 docker run --rm -it -v "$BUILD_DIR:/app" alpine:latest sh -c "
   apk add --no-cache curl bash file jq  # Required debug tools
-  /app/{projectname} --help
-  /app/{projectname} --version
+  /app/caspaste --help
+  /app/caspaste --version
   # Interactive debugging...
 "
 ```
@@ -205,10 +278,10 @@ docker run --rm -it -v "$BUILD_DIR:/app" alpine:latest sh -c "
 make dev                # Quick build to temp dir
 
 # 2. Debug in Docker (with tools)
-BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-*/ 2>/dev/null | head -1)
+BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-*/ 2>/dev/null | head -1)
 docker run --rm -it -v "$BUILD_DIR:/app" alpine:latest sh -c "
   apk add --no-cache curl bash file jq
-  /app/{projectname} --help
+  /app/caspaste --help
 "
 
 # 3. Unit tests
@@ -627,7 +700,7 @@ Quick reference: Accept `yes/no`, `true/false`, `1/0`, `on/off`, `enable/disable
 | **Config files** | lowercase, dot-extension | `server.yml`, `mkdocs.yml` | `SERVER.yml` |
 | **Documentation** | UPPERCASE.md | `README.md`, `LICENSE.md` | `readme.md` |
 | **Scripts** | lowercase, snake_case | `run_tests.sh` | `RunTests.sh` |
-| **Binaries** | `{projectname}-{os}-{arch}` | `echoip-linux-amd64` | `echoip_linux_amd64` |
+| **Binaries** | `caspaste-{os}-{arch}` | `echoip-linux-amd64` | `echoip_linux_amd64` |
 
 ### NEVER Create These Files
 
@@ -656,7 +729,7 @@ Quick reference: Accept `yes/no`, `true/false`, `1/0`, `on/off`, `enable/disable
 | `config/` in root | Config is embedded, runtime-generated in OS dirs |
 | `data/` in root | Data goes to OS data directory at runtime |
 | `logs/` in root | Logs go to OS log directory at runtime |
-| `tmp/`, `temp/` in root | Use `/tmp/{projectorg}/{projectname}-XXXXXX/` |
+| `tmp/`, `temp/` in root | Use `/tmp/casjay-forks/caspaste-XXXXXX/` |
 | `test-data/` in root | Test data goes to temp directories |
 | `build/`, `dist/`, `out/` | Use `binaries/` (gitignored) |
 | `vendor/` | Use Go modules, not vendoring |
@@ -794,16 +867,16 @@ Each AI tool directory MUST have a project memory file containing critical rules
 **Required Content Structure (~50-100 lines max):**
 
 ```markdown
-# {PROJECTNAME} - AI Quick Reference
+# CASPASTE - AI Quick Reference
 
 ## Binary Terminology
-- **server** = `{projectname}` (main binary, runs as service)
-- **client** = `{projectname}-cli` (REQUIRED companion, CLI/TUI/GUI)
-- **agent** = `{projectname}-agent` (optional, runs on remote machines)
+- **server** = `caspaste` (main binary, runs as service)
+- **client** = `caspaste-cli` (REQUIRED companion, CLI/TUI/GUI)
+- **agent** = `caspaste-agent` (optional, runs on remote machines)
 
 ## Key Placeholders
-- `{projectname}` = [actual project name]
-- `{projectorg}` = [organization name]
+- `caspaste` = [actual project name]
+- `casjay-forks` = [organization name]
 - `{admin_path}` = [admin URL path, default: admin]
 
 ## Account Types (CRITICAL)
@@ -851,6 +924,190 @@ Each AI tool directory MUST have a project memory file containing critical rules
 - Keep it under 100 lines - it's a quick reference, not the full spec
 - Points to rules/ files and AI.md for details
 - "Current Project State" section updated by AI as work progresses
+
+**Claude Code Settings (.claude/settings.local.json):**
+
+Project-specific Claude Code permissions and configuration. This file is gitignored and overrides/extends global `~/.claude/settings.json`.
+
+**File Structure:**
+
+```json
+{
+  "model": "",
+  "thinking": "off",
+  "permissions": {
+    "allow": [],
+    "deny": [],
+    "ask": []
+  },
+  "preferences": {
+    "auto_commit": false
+  },
+  "hooks": {
+    "PreToolUse": [],
+    "PostToolUse": []
+  },
+  "env": {}
+}
+```
+
+**Field Reference:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `model` | string | Model override (empty = default, e.g., `"claude-sonnet-4-20250514"`) |
+| `thinking` | string | Extended thinking: `"off"`, `"on"`, or token limit (e.g., `"10000"`) |
+| `permissions` | object | Tool permission rules (allow/deny/ask arrays) |
+| `preferences` | object | Behavior preferences |
+| `hooks` | object | Pre/post tool execution hooks |
+| `env` | object | Environment variables for Bash commands |
+
+**Example Project Configuration:**
+
+```json
+{
+  "model": "",
+  "thinking": "off",
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "Bash(go:*)",
+      "Bash(make:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Bash(git:*)",
+      "Bash(curl:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(ln:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(timeout:*)",
+      "Bash(sort:*)",
+      "Bash(wc:*)",
+      "Bash(diff:*)",
+      "Bash(:*::*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:pkg.go.dev)",
+      "WebFetch(domain:go.dev)",
+      "WebFetch(domain:golang.org)"
+    ],
+    "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git push:+)",
+      "Bash(rm -rf /*:*)",
+      "Bash(sudo:*)"
+    ],
+    "ask": [
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout -- :*)"
+    ]
+  },
+  "preferences": {
+    "auto_commit": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write(**)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if grep -qi 'anthropic\\|claude' \"$file\" 2>/dev/null; then echo 'Error: File contains vendor names (Anthropic/Claude)' >&2; exit 1; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Write(*.go)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "gofmt -l \"$file\" 2>/dev/null | grep -q . && echo 'Error: Go file would not be formatted' >&2 && exit 1 || exit 0"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "CGO_ENABLED": "0"
+  }
+}
+```
+
+**Permission Pattern Syntax:**
+
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| `Read(**)` | Read any file | All files recursively |
+| `Write(**)` | Write any file | All files recursively |
+| `Edit(**)` | Edit any file | All files recursively |
+| `Bash(cmd:*)` | Command with zero or more args | `Bash(go:*)` → `go`, `go build`, `go test ./...` |
+| `Bash(cmd:+)` | Command with one or more args | `Bash(git push:+)` → `git push origin`, NOT bare `git push` |
+| `Bash(cmd arg:*)` | Command with specific prefix | `Bash(git commit:*)` → `git commit -m "msg"` |
+| `Bash(:*::*)` | Piped/chained commands | `cmd1 | cmd2`, `cmd1 && cmd2` |
+| `WebFetch(domain:x)` | Fetch from specific domain | `WebFetch(domain:github.com)` |
+| `WebSearch` | Allow web searches | N/A |
+
+**Pattern Wildcards:**
+
+| Wildcard | Meaning | Notes |
+|----------|---------|-------|
+| `*` | Zero or more of anything | Matches empty string too |
+| `+` | One or more of anything | Requires at least one character/arg |
+| `**` | Recursive glob | For file paths (all subdirectories) |
+
+**Permission Sections:**
+
+| Section | Behavior |
+|---------|----------|
+| `allow` | Auto-approved without prompting |
+| `deny` | Blocked entirely (returns error) |
+| `ask` | Prompt user for approval each time |
+
+**Hook Configuration:**
+
+| Hook Event | When Triggered | Can Block |
+|------------|----------------|-----------|
+| `PreToolUse` | Before tool execution | Yes (exit 1) |
+| `PostToolUse` | After tool execution | No |
+
+**Hook Variables (available in command):**
+
+| Variable | Description |
+|----------|-------------|
+| `$file` | File path for Read/Write/Edit operations |
+| `$command` | Command string for Bash operations |
+
+**Project-Specific Recommendations:**
+
+| Project Type | Additional Allows | Additional Denies |
+|--------------|-------------------|-------------------|
+| Go project | `Bash(go:*)`, `Bash(golangci-lint:*)` | - |
+| Docker project | `Bash(docker:*)`, `Bash(docker-compose:*)` | `Bash(docker system prune:*)` |
+| Node project | `Bash(npm:*)`, `Bash(node:*)` | `Bash(npm publish:*)` |
+| Python project | `Bash(python:*)`, `Bash(pip:*)`, `Bash(uv:*)` | `Bash(pip install --user:*)` |
+
+**CRITICAL Rules:**
+- NEVER allow `Bash(sudo:*)` - privilege escalation should be explicit and manual
+- NEVER allow `Bash(rm -rf /*:*)` or similar destructive patterns
+- ALWAYS deny `git commit` and `git push` - commits should be reviewed manually
+- Use `PreToolUse` hooks to enforce project standards (formatting, no vendor names)
+- The `env` section sets environment variables for ALL Bash commands in the session
+- Settings are merged: project settings extend/override global `~/.claude/settings.json`
 
 ### Allowed Root Directories (Exhaustive List)
 
@@ -908,10 +1165,10 @@ Each AI tool directory MUST have a project memory file containing critical rules
 
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
-| `{projectname}` | Project name (lowercase, no spaces/hyphens) | `jokes`, `echoip`, `pastebin` |
-| `{projectorg}` | Organization/owner name (lowercase) | `sneak`, `acme`, `mycompany` |
+| `caspaste` | Project name (lowercase, no spaces/hyphens) | `jokes`, `echoip`, `pastebin` |
+| `casjay-forks` | Organization/owner name (lowercase) | `sneak`, `acme`, `mycompany` |
 | `{projectversion}` | Current version (semver format) | `1.0.0`, `2.3.1` |
-| `{PROJECTNAME}` | Uppercase project name (for constants, env vars) | `JOKES`, `ECHOIP` |
+| `CASPASTE` | Uppercase project name (for constants, env vars) | `JOKES`, `ECHOIP` |
 | `{officialsite}` | Official project website | `https://jokes.example.com` |
 | `{fqdn}` | Fully qualified domain name | `api.example.com` |
 | `{admin_path}` | Admin panel URL path (configurable, default: `admin`) | `admin`, `manage`, `control` |
@@ -921,12 +1178,12 @@ Each AI tool directory MUST have a project memory file containing critical rules
 
 | Placeholder | Linux/BSD Default | macOS Default | Windows Default |
 |-------------|-------------------|---------------|-----------------|
-| `{config_dir}` | `/etc/{projectorg}/{projectname}` | `/Library/Application Support/{projectorg}/{projectname}` | `%PROGRAMDATA%\{projectorg}\{projectname}` |
-| `{data_dir}` | `/var/lib/{projectorg}/{projectname}` | `/Library/Application Support/{projectorg}/{projectname}` | `%PROGRAMDATA%\{projectorg}\{projectname}` |
-| `{log_dir}` | `/var/log/{projectorg}/{projectname}` | `/Library/Logs/{projectorg}/{projectname}` | `%PROGRAMDATA%\{projectorg}\{projectname}\logs` |
-| `{cache_dir}` | `/var/cache/{projectorg}/{projectname}` | `/Library/Caches/{projectorg}/{projectname}` | `%PROGRAMDATA%\{projectorg}\{projectname}\cache` |
-| `{backup_dir}` | `/mnt/Backups/{projectorg}/{projectname}` | `/Library/Application Support/{projectorg}/{projectname}/backups` | `%PROGRAMDATA%\{projectorg}\{projectname}\backups` |
-| `{pid_file}` | `/var/run/{projectorg}/{projectname}.pid` | `/var/run/{projectorg}/{projectname}.pid` | N/A (Windows uses SCM) |
+| `{config_dir}` | `/etc/casjay-forks/caspaste` | `/Library/Application Support/casjay-forks/caspaste` | `%PROGRAMDATA%\casjay-forks\caspaste` |
+| `{data_dir}` | `/var/lib/casjay-forks/caspaste` | `/Library/Application Support/casjay-forks/caspaste` | `%PROGRAMDATA%\casjay-forks\caspaste` |
+| `{log_dir}` | `/var/log/casjay-forks/caspaste` | `/Library/Logs/casjay-forks/caspaste` | `%PROGRAMDATA%\casjay-forks\caspaste\logs` |
+| `{cache_dir}` | `/var/cache/casjay-forks/caspaste` | `/Library/Caches/casjay-forks/caspaste` | `%PROGRAMDATA%\casjay-forks\caspaste\cache` |
+| `{backup_dir}` | `/mnt/Backups/casjay-forks/caspaste` | `/Library/Application Support/casjay-forks/caspaste/backups` | `%PROGRAMDATA%\casjay-forks\caspaste\backups` |
+| `{pid_file}` | `/var/run/casjay-forks/caspaste.pid` | `/var/run/casjay-forks/caspaste.pid` | N/A (Windows uses SCM) |
 
 ## Binary Terminology
 
@@ -934,9 +1191,9 @@ Each AI tool directory MUST have a project memory file containing critical rules
 
 | Term | Default Binary Name | Description |
 |------|---------------------|-------------|
-| **server** | `{projectname}` | The main application binary - runs as service/daemon, serves API/WebUI |
-| **client** | `{projectname}-cli` | Required companion binary - terminal interface with CLI/TUI/GUI modes |
-| **agent** | `{projectname}-agent` | Optional companion binary - runs on remote machines, reports to server |
+| **server** | `caspaste` | The main application binary - runs as service/daemon, serves API/WebUI |
+| **client** | `caspaste-cli` | Required companion binary - terminal interface with CLI/TUI/GUI modes |
+| **agent** | `caspaste-agent` | Optional companion binary - runs on remote machines, reports to server |
 
 **Renaming behavior:**
 - Renaming a binary (e.g., `cp jokes myjokes`) changes user-visible output (help text, banners, User-Agent)
@@ -1111,16 +1368,16 @@ This distinction exists for clarity. When referring to OS-level resources that b
 
 ## How to Read This Large File
 
-**AI.md is ~1.9MB and ~52,400 lines. You CANNOT read it all at once. Follow these procedures.**
+**AI.md is ~2.0MB and ~54,100 lines. You CANNOT read it all at once. Follow these procedures.**
 
 ### File Size Reality
 
 | Constraint | Value |
 |------------|-------|
-| File size | ~1.9MB |
-| Line count | ~52,400 lines |
+| File size | ~2.0MB |
+| Line count | ~54,100 lines |
 | Read limit | ~500 lines per read |
-| Full reads needed | ~105 reads (impractical) |
+| Full reads needed | ~108 reads (impractical) |
 
 **Use the PART index to find relevant sections, then read each section COMPLETELY.**
 
@@ -1130,45 +1387,45 @@ This distinction exists for clarity. When referring to OS-level resources that b
 
 | PART | Line | Topic | When to Read |
 |------|------|-------|--------------|
-| 0 | ~1265 | AI Assistant Rules | **ALWAYS READ FIRST**, **AI Behavior Rules** |
-| 1 | ~2857 | Critical Rules | **ALWAYS READ FIRST** |
-| 2 | ~3712 | License & Attribution | License requirements |
-| 3 | ~4046 | Project Structure | Setting up new project, **CI/CD badge detection** |
-| 4 | ~4996 | OS-Specific Paths | Path handling |
-| 5 | ~5181 | Configuration | Config file work, **Path Security**, **Privileged Ports**, **Escalation** |
-| 6 | ~7091 | Application Modes | Mode handling, debug endpoints |
-| 7 | ~7699 | Binary Requirements | Binary building, **Display detection**, **TERM=dumb**, **NO_COLOR** |
-| 8 | ~8362 | Server Binary CLI | CLI flags/commands, **NO_COLOR Support**, **--color flag** |
-| 9 | ~11515 | Error Handling & Caching | Error/cache patterns |
-| 10 | ~11892 | Database & Cluster | Database work |
-| 11 | ~12307 | Security & Logging | Security features, **Scoped Agent Tokens**, **Context Detection** |
-| 12 | ~14199 | Server Configuration | Server settings |
-| 13 | ~15259 | Health & Versioning | Health endpoints |
-| 14 | ~16010 | API Structure | REST/GraphQL/Route Compliance, **Non-Interactive Text Output** |
-| 15 | ~17602 | SSL/TLS & Let's Encrypt | SSL certificates |
-| 16 | ~18475 | Web Frontend | Frontend/UI, **Sitemap**, **Site Verification**, **Branding/SEO** |
-| 17 | ~23521 | Admin Panel | Admin UI, **Server Admin**, **Scoped Agents API** |
-| 18 | ~25561 | Email & Notifications | Email/SMTP, **SMTP Auto-Detection** |
-| 19 | ~26881 | Scheduler | Background tasks, **NO external schedulers**, **Backup tasks** |
-| 20 | ~27366 | GeoIP | GeoIP features |
-| 21 | ~27439 | Metrics | Prometheus metrics, **INTERNAL only** |
-| 22 | ~28884 | Backup & Restore | Backup features, **Compliance encryption**, **Cluster backups** |
-| 23 | ~29613 | Update Command | Update feature |
-| 24 | ~30092 | Privilege Escalation & Service | Service/privilege work |
-| 25 | ~30990 | Service Support | Systemd/runit/rc.d/launchd templates |
-| 26 | ~31174 | Makefile | Local dev/tests/debug only, **NOT used in CI/CD** |
-| 27 | ~31929 | Docker | Docker/containers, **NEVER copy/symlink binaries** |
-| 28 | ~33297 | CI/CD Workflows | GitHub/GitLab/Gitea Actions |
-| 29 | ~36151 | Testing & Development | Testing/dev workflow, **AI Docker Compose Rules**, **Content Negotiation Testing** |
-| 30 | ~37970 | ReadTheDocs Documentation | Documentation |
-| 31 | ~38683 | I18N & A11Y | Internationalization |
-| 32 | ~39104 | Tor Hidden Service | Tor support, **binary controls Tor** |
-| 33 | ~40883 | Client & Agent | Client **REQUIRED**, Agent optional - CLI/TUI/GUI, **Scoped Agent Tokens**, **Smart Context**, **First-Run Wizard** |
-| 34 | ~45292 | Multi-User | **OPTIONAL** - Regular User accounts/registration, vanity URLs |
-| 35 | ~48944 | Organizations | **OPTIONAL** - multi-user orgs, vanity URLs |
-| 36 | ~49585 | Custom Domains | **OPTIONAL** - user/org branded domains |
-| 37 | ~50608 | IDEA.md Reference | **Examples only** - NEVER modify |
-| FINAL | ~50862 | Compliance Checklist | Final verification, **AI Quick Reference Rules** |
+| 0 | ~1522 | AI Assistant Rules | **ALWAYS READ FIRST**, **AI Behavior Rules** |
+| 1 | ~3221 | Critical Rules | **ALWAYS READ FIRST** |
+| 2 | ~4468 | License & Attribution | License requirements |
+| 3 | ~4802 | Project Structure | Setting up new project, **CI/CD badge detection** |
+| 4 | ~5752 | OS-Specific Paths | Path handling |
+| 5 | ~5937 | Configuration | Config file work, **Path Security**, **Privileged Ports**, **Escalation** |
+| 6 | ~7847 | Application Modes | Mode handling, debug endpoints |
+| 7 | ~8455 | Binary Requirements | Binary building, **Display detection**, **TERM=dumb**, **NO_COLOR** |
+| 8 | ~9118 | Server Binary CLI | CLI flags/commands, **NO_COLOR Support**, **--color flag** |
+| 9 | ~12271 | Error Handling & Caching | Error/cache patterns |
+| 10 | ~12648 | Database & Cluster | Database work |
+| 11 | ~13063 | Security & Logging | Security features, **Scoped Agent Tokens**, **Context Detection** |
+| 12 | ~14955 | Server Configuration | Server settings |
+| 13 | ~16015 | Health & Versioning | Health endpoints |
+| 14 | ~16766 | API Structure | REST/GraphQL/Route Compliance, **Non-Interactive Text Output** |
+| 15 | ~18358 | SSL/TLS & Let's Encrypt | SSL certificates |
+| 16 | ~19231 | Web Frontend | Frontend/UI, **Sitemap**, **Site Verification**, **Branding/SEO** |
+| 17 | ~25167 | Admin Panel | Admin UI, **Server Admin**, **Scoped Agents API** |
+| 18 | ~27207 | Email & Notifications | Email/SMTP, **SMTP Auto-Detection** |
+| 19 | ~28527 | Scheduler | Background tasks, **NO external schedulers**, **Backup tasks** |
+| 20 | ~29012 | GeoIP | GeoIP features |
+| 21 | ~29085 | Metrics | Prometheus metrics, **INTERNAL only** |
+| 22 | ~30530 | Backup & Restore | Backup features, **Compliance encryption**, **Cluster backups** |
+| 23 | ~31259 | Update Command | Update feature |
+| 24 | ~31738 | Privilege Escalation & Service | Service/privilege work |
+| 25 | ~32636 | Service Support | Systemd/runit/rc.d/launchd templates |
+| 26 | ~32820 | Makefile | Local dev/tests/debug only, **NOT used in CI/CD** |
+| 27 | ~33575 | Docker | Docker/containers, **NEVER copy/symlink binaries** |
+| 28 | ~34943 | CI/CD Workflows | GitHub/GitLab/Gitea Actions |
+| 29 | ~37797 | Testing & Development | Testing/dev workflow, **AI Docker Compose Rules**, **Content Negotiation Testing** |
+| 30 | ~39618 | ReadTheDocs Documentation | Documentation |
+| 31 | ~40348 | I18N & A11Y | Internationalization |
+| 32 | ~40769 | Tor Hidden Service | Tor support, **binary controls Tor** |
+| 33 | ~42548 | Client & Agent | Client **REQUIRED**, Agent optional - CLI/TUI/GUI, **Scoped Agent Tokens**, **Smart Context**, **First-Run Wizard** |
+| 34 | ~46957 | Multi-User | **OPTIONAL** - Regular User accounts/registration, vanity URLs |
+| 35 | ~50609 | Organizations | **OPTIONAL** - multi-user orgs, vanity URLs |
+| 36 | ~51250 | Custom Domains | **OPTIONAL** - user/org branded domains |
+| 37 | ~52273 | IDEA.md Reference | **Examples only** - NEVER modify |
+| FINAL | ~52527 | Compliance Checklist | Final verification, **AI Quick Reference Rules** |
 
 **When Implementing OPTIONAL PARTs (34-36, Agent from 33):**
 1. Change PART title from `OPTIONAL` → `NON-NEGOTIABLE` in AI.md
@@ -1200,7 +1457,7 @@ When reading a PART and you encounter a reference like "See PART X" or "Read PAR
 2. Jump to the referenced PART and read it
 3. **Return to your original location** and continue reading
 
-Example: If you're reading PART 5 at line 5181 and it says "See PART 10", read PART 10, then **return to PART 5 line 5181** and continue.
+Example: If you're reading PART 5 at line 5356 and it says "See PART 10", read PART 10, then **return to PART 5 line 5356** and continue.
 
 **Never abandon your current PART after following a reference.**
 
@@ -1623,18 +1880,120 @@ See IDEA.md for the full project breakdown.
 
 **File:** `{project_dir}/.git/COMMIT_MESS`
 
-| Action | When |
-|--------|------|
-| **Create/Update** | Only when files were actually changed |
-| **Skip** | If no files were modified (nothing to commit) |
-| **Delete** | Not AI's responsibility (user deletes after commit) |
+### COMMIT_MESS Must Reflect Actual Changes
 
-**Before writing COMMIT_MESS, verify changes exist:**
+**The commit message MUST accurately describe the current state of uncommitted changes.**
+
+**Before ANY COMMIT_MESS action, check actual changes:**
 ```bash
-git status --porcelain  # If empty, no changes - skip COMMIT_MESS
+git status --porcelain  # What files are modified/added/deleted?
+git diff --stat         # Summary of changes
 ```
 
-**Rule:** No changes = no COMMIT_MESS. Don't create empty or unnecessary commit messages.
+| Situation | Action |
+|-----------|--------|
+| No changes (`git status --porcelain` empty) | **Do nothing** - no COMMIT_MESS needed |
+| Changes exist, no COMMIT_MESS | **Create** new COMMIT_MESS |
+| Changes exist, COMMIT_MESS exists and matches | **Append** new changes to existing |
+| Changes exist, COMMIT_MESS exists but stale | **Recreate** COMMIT_MESS from scratch |
+
+### Detecting Stale COMMIT_MESS
+
+**COMMIT_MESS is stale when:**
+- It describes files that are no longer modified (user already committed them)
+- It doesn't mention files that ARE modified
+- The described changes don't match `git diff --stat`
+
+**Check before appending:**
+```bash
+# Compare COMMIT_MESS content against actual changes
+git status --porcelain | cut -c4-  # List of changed files
+# If COMMIT_MESS mentions files not in this list = stale, recreate
+# If this list has files not in COMMIT_MESS = append or recreate
+```
+
+### Append vs Recreate Logic
+
+```
+AI made changes to file X
+│
+├─► No COMMIT_MESS exists
+│   └─► CREATE new COMMIT_MESS describing X
+│
+├─► COMMIT_MESS exists, describes X
+│   └─► DO NOTHING (already covered)
+│
+├─► COMMIT_MESS exists, describes Y (not X)
+│   ├─► Y still in `git status`?
+│   │   └─► APPEND: Add X changes to existing message
+│   └─► Y NOT in `git status`? (user committed Y already)
+│       └─► RECREATE: New message describing only X
+│
+└─► COMMIT_MESS exists, describes X and Y
+    └─► Y NOT in `git status`? (user committed Y already)
+        └─► RECREATE: New message describing only X
+```
+
+### COMMIT_MESS Accuracy Rules
+
+**COMMIT_MESS must ALWAYS match `git status`. Never describe committed changes. Never omit uncommitted changes.**
+
+| Rule | Description |
+|------|-------------|
+| **List actual files** | Mention specific files/paths that changed, not vague descriptions |
+| **Describe actual changes** | What was added/modified/removed must match `git diff` |
+| **No phantom changes** | Never describe work that isn't in `git status` |
+| **No missing changes** | Every modified file must be accounted for |
+| **No stale content** | If user committed, recreate to reflect current state |
+| **Verify before write** | Always run `git status --porcelain` before creating/updating |
+
+**COMMIT_MESS content must answer:**
+1. Which files were changed? (from `git status`)
+2. What was changed in each? (from `git diff`)
+3. Why was it changed? (context from the task)
+
+**Example verification flow:**
+```bash
+# 1. Check what's actually changed
+git status --porcelain
+#  M src/server/config.go
+#  M src/server/handler.go
+# ?? src/server/newfile.go
+
+# 2. COMMIT_MESS must mention ALL of these:
+#    - config.go changes
+#    - handler.go changes
+#    - newfile.go addition
+
+# 3. If COMMIT_MESS mentions "database.go" but it's not in git status = STALE
+```
+
+**Bad vs Good:**
+```
+# BAD - vague, doesn't mention files
+✨ Add new feature ✨
+Added some improvements to the server.
+
+# GOOD - specific, lists actual changes (code files)
+✨ Add NO_COLOR support for terminal output ✨
+Implement NO_COLOR environment variable handling per no-color.org spec.
+
+- src/common/display/detect.go: Add IsDumbTerminal() helper
+- src/common/output/color.go: Add ColorEnabled(), EmojiEnabled() functions
+- src/server/banner/banner.go: Add plainMode check and printServerBannerPlain()
+
+# GOOD - when AI.md itself is modified
+📝 Add NO_COLOR and TERM=dumb specs to AI.md 📝
+Document terminal output handling for plain text environments.
+
+- AI.md PART 7: Add TERM=dumb handling section, IsDumbTerminal() helper
+- AI.md PART 8: Add NO_COLOR section, --color flag, EmojiEnabled() function
+- AI.md PART 11: Add emoji fallback table to Log Output Rules
+- AI.md PART 15: Update startup banner with plain mode support
+- AI.md PART 33: Add plain banner example for agent
+```
+
+**Note:** When modifying AI.md, reference the PART number and section name for clarity.
 
 **Format:**
 ```
@@ -1713,14 +2072,14 @@ Implemented core server functionality and admin panel.
 - Built admin panel with authentication
 ```
 
-**Rules:**
+**TODO Completion Rules:**
 - The ✅ emoji MUST be used for todo completion commits
 - Title is EXACTLY: `✅ all todo items have been completed ✅`
 - Body MUST summarize what was accomplished
 - Empty TODO.AI.md BEFORE writing COMMIT_MESS
 - File stays empty until new tasks are added
 
-**Rules:**
+**Format Rules:**
 - Title line: max 64 characters (including emojis)
 - Blank line after title
 - Detailed description follows
@@ -1890,11 +2249,16 @@ Spec version: {line count or hash}
 
 ## Attribution
 
+**AI operates on behalf of the user in a Senior Developer / UI-UX Designer capacity.**
+
 | Rule | Description |
 |------|-------------|
-| **NEVER** | Include AI attribution in code, comments, commits, or documentation |
-| **NEVER** | "authored by Claude", "generated by AI", "Co-Authored-By: Claude" |
-| **ALWAYS** | Code should appear as if written by a human developer |
+| **NEVER** | Include AI attribution anywhere (code, comments, commits, PRs, documentation) |
+| **NEVER** | Add "authored by Claude", "generated by AI", "Co-Authored-By: Claude/AI", etc. |
+| **NEVER** | Add AI-related comments like "AI-generated", "written by assistant", etc. |
+| **NEVER** | Reference AI tools in commit messages, PR descriptions, or changelogs |
+| **ALWAYS** | All output should appear as if written by a human senior developer |
+| **ALWAYS** | AI acts as an extension of the user, not a separate contributor |
 
 ## Tool Access
 
@@ -2502,8 +2866,8 @@ Enter choice [a-d]:
 # AI should run these checks and report results:
 
 # 1. Verify CLI
-./binaries/{projectname} --help
-./binaries/{projectname} --version
+./binaries/caspaste --help
+./binaries/caspaste --version
 
 # 2. Verify build
 make clean && make build
@@ -2871,7 +3235,7 @@ Every feature MUST work via:
 | **Browser** | Chrome, Firefox, Safari | HTML (pretty UI) |
 | **PWA** | Installed web app (desktop/mobile) | HTML (same as browser) |
 | **API/Automation** | curl, wget, scripts, integrations | JSON |
-| **CLI tool** | `{projectname}-cli` | Text/JSON (configurable) |
+| **CLI tool** | `caspaste-cli` | Text/JSON (configurable) |
 
 **Endpoint Pattern (applies to ENTIRE app):**
 | Web Route (HTML) | API Route (JSON) | Purpose |
@@ -2933,7 +3297,7 @@ When working on this project, the following roles are assumed based on the task:
 
 ```bash
 # CORRECT - Use Makefile targets
-make dev                    # Quick build to {tempdir}/{projectorg}/{projectname}-XXXXXX/
+make dev                    # Quick build to {tempdir}/casjay-forks/caspaste-XXXXXX/
 make local                   # Build with version info to binaries/
 make build                  # Full cross-platform build to binaries/
 make test                   # Run unit tests
@@ -2943,7 +3307,7 @@ make test                   # Run unit tests
 ./tests/incus.sh            # Full OS test with systemd (PREFERRED)
 
 # WRONG - Never run go directly on local machine
-go build -o binary/{projectname} ./src
+go build -o binary/caspaste ./src
 ```
 
 **See PART 29: TESTING & DEVELOPMENT for full containerized build/test procedures.**
@@ -3348,17 +3712,18 @@ IDEA.md (project spec - update as needed)
 
 #### Section Order (MUST follow this order)
 
-1. **Title & Badges** - Project name, build status, version badges
+1. **Title & Badges** - Project name, build status, version, license, docs badges
 2. **About** - Brief description of what the project does
-3. **Official Site** - Link to official site (if defined, e.g., `https://{projectname}.{projectorg}.us`)
+3. **Official Site** - Link to official site (if `{officialsite}` is defined)
 4. **Features** - Key features list
 5. **Production** - Production deployment instructions (Docker, binary, systemd)
 6. **Client** - Client installation and usage (if applicable)
 7. **Configuration** - Key configuration options
-8. **API** - API endpoints summary (if applicable)
+8. **API** - API endpoints summary with full URLs if `{officialsite}` is set
 9. **Other** - Additional info (troubleshooting, FAQ, etc.)
 10. **Development** - Development setup (ALWAYS LAST - for contributors only)
-11. **License** - License info
+11. **Disclaimer** - Clear, readable disclaimer (see template below)
+12. **License** - License info
 
 #### CI/CD Badge Detection
 
@@ -3377,33 +3742,325 @@ Detect platform by checking for workflow files in this order:
 
 ```markdown
 # GitHub Actions
-[![Build](https://github.com/{projectorg}/{projectname}/actions/workflows/build.yml/badge.svg)](https://github.com/{projectorg}/{projectname}/actions/workflows/build.yml)
+[![Build](https://github.com/casjay-forks/caspaste/actions/workflows/build.yml/badge.svg)](https://github.com/casjay-forks/caspaste/actions/workflows/build.yml)
 
 # Gitea/Forgejo Actions
-[![Build](https://git.example.com/{projectorg}/{projectname}/actions/workflows/build.yml/badge.svg)](https://git.example.com/{projectorg}/{projectname}/actions)
+[![Build](https://git.example.com/casjay-forks/caspaste/actions/workflows/build.yml/badge.svg)](https://git.example.com/casjay-forks/caspaste/actions)
 
 # GitLab CI
-[![Build](https://gitlab.com/{projectorg}/{projectname}/badges/main/pipeline.svg)](https://gitlab.com/{projectorg}/{projectname}/-/pipelines)
+[![Build](https://gitlab.com/casjay-forks/caspaste/badges/main/pipeline.svg)](https://gitlab.com/casjay-forks/caspaste/-/pipelines)
 
 # Jenkins
-[![Build](https://jenkins.example.com/buildStatus/icon?job={projectorg}/{projectname})](https://jenkins.example.com/job/{projectorg}/job/{projectname}/)
+[![Build](https://jenkins.example.com/buildStatus/icon?job=casjay-forks/caspaste)](https://jenkins.example.com/job/casjay-forks/job/caspaste/)
 ```
 
-**Release/License badges also adapt to platform:**
+**Release/License/Docs badges also adapt to platform:**
 
 ```markdown
 # GitHub
-[![Release](https://img.shields.io/github/v/release/{projectorg}/{projectname})](https://github.com/{projectorg}/{projectname}/releases)
-[![License](https://img.shields.io/github/license/{projectorg}/{projectname})](LICENSE.md)
+[![Release](https://img.shields.io/github/v/release/casjay-forks/caspaste)](https://github.com/casjay-forks/caspaste/releases)
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
+[![Docs](https://readthedocs.org/projects/{RTD_PROJECT}/badge/?version=latest)](https://{RTD_URL})
 
 # GitLab
-[![Release](https://gitlab.com/{projectorg}/{projectname}/-/badges/release.svg)](https://gitlab.com/{projectorg}/{projectname}/-/releases)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![Release](https://gitlab.com/casjay-forks/caspaste/-/badges/release.svg)](https://gitlab.com/casjay-forks/caspaste/-/releases)
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
+[![Docs](https://readthedocs.org/projects/{RTD_PROJECT}/badge/?version=latest)](https://{RTD_URL})
 
 # Gitea/Forgejo (use shields.io with custom endpoint or static badge)
-[![Release](https://img.shields.io/badge/dynamic/json?url=https://git.example.com/api/{api_version}/repos/{projectorg}/{projectname}/releases/latest&query=$.tag_name&label=release)](https://git.example.com/{projectorg}/{projectname}/releases)
+[![Release](https://img.shields.io/badge/dynamic/json?url=https://git.example.com/api/{api_version}/repos/casjay-forks/caspaste/releases/latest&query=$.tag_name&label=release)](https://git.example.com/casjay-forks/caspaste/releases)
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
+[![Docs](https://readthedocs.org/projects/{RTD_PROJECT}/badge/?version=latest)](https://{RTD_URL})
+
+# {RTD_PROJECT} and {RTD_URL} - Use one of:
+#   casjay-forks-caspaste / casjay-forks-caspaste.readthedocs.io
+#   caspaste / caspaste.readthedocs.io
+#   Custom project name / {custom_rtd_address}
+```
+
+#### License Badge - GitHub Detection
+
+**Problem:** Static license badges like `![License](https://img.shields.io/badge/license-MIT-blue.svg)` show "MIT" but GitHub cannot auto-detect the license, showing "View license" instead of "MIT License" in the repo sidebar.
+
+**Solution:** Use GitHub's license API endpoint which reads from your LICENSE file:
+
+```markdown
+# ✅ CORRECT - GitHub can detect license
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
+
+# ❌ WRONG - Static badge, GitHub cannot detect
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 ```
+
+**Requirements for GitHub to detect license:**
+1. File must be named `LICENSE`, `LICENSE.md`, or `LICENSE.txt` (root of repo)
+2. License text must match a known license (use exact template from choosealicense.com)
+3. Do NOT modify the license text (except copyright year/name in header)
+
+**Verify detection:**
+- Go to repo page → Look at right sidebar → Should show "MIT License" (not just "View license")
+- API check: `curl -q -LSsf https://api.github.com/repos/casjay-forks/caspaste/license`
+
+#### Docs Badge - Avoid "unknown"
+
+**Problem:** Generic docs badges show "unknown" when documentation isn't configured.
+
+**Solution:** Only add docs badge when documentation is actually deployed:
+
+| Docs Platform | Badge | Condition |
+|---------------|-------|-----------|
+| ReadTheDocs | See ReadTheDocs URL formats below | RTD project exists |
+| GitHub Pages | `[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://casjay-forks.github.io/caspaste)` | gh-pages branch exists |
+| GitBook | `[![Docs](https://img.shields.io/badge/docs-GitBook-blue)](https://casjay-forks.gitbook.io/caspaste)` | GitBook project exists |
+| Self-hosted | `[![Docs](https://img.shields.io/badge/docs-online-blue)]({docs_url})` | Docs site is live |
+| None | **Do not add docs badge** | No docs deployed |
+
+**Rules:**
+- Do NOT add a docs badge if documentation is not deployed
+- Do NOT use `https://img.shields.io/badge/docs-unknown-lightgrey` or similar
+- If docs are planned but not ready, omit the badge entirely
+
+#### ReadTheDocs URL Formats
+
+**ReadTheDocs supports three URL formats (use the one that matches your project):**
+
+| Format | URL Pattern | When to Use |
+|--------|-------------|-------------|
+| **Org-Project** | `https://casjay-forks-caspaste.readthedocs.io` | Default for organization projects |
+| **Project Only** | `https://caspaste.readthedocs.io` | When project name is unique enough |
+| **Custom Domain** | `https://{custom_rtd_address}` | When custom domain is configured in RTD |
+
+**Badge formats:**
+
+```markdown
+# Option 1: Org-Project format (most common)
+[![Docs](https://readthedocs.org/projects/casjay-forks-caspaste/badge/?version=latest)](https://casjay-forks-caspaste.readthedocs.io)
+
+# Option 2: Project only format
+[![Docs](https://readthedocs.org/projects/caspaste/badge/?version=latest)](https://caspaste.readthedocs.io)
+
+# Option 3: Custom domain
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://{custom_rtd_address})
+```
+
+**Determining which format to use:**
+1. Check your ReadTheDocs project settings for the actual URL
+2. If using organization account → likely `casjay-forks-caspaste`
+3. If standalone project → likely just `caspaste`
+4. If custom domain configured → use that
+
+**mkdocs.yml site_url must match:**
+```yaml
+# Must match whichever RTD URL format you're using
+site_url: https://casjay-forks-caspaste.readthedocs.io
+# OR
+site_url: https://caspaste.readthedocs.io
+# OR
+site_url: https://{custom_rtd_address}
+```
+
+#### Disclaimer Section
+
+**Every README.md MUST include a Disclaimer section (typically before or after License).**
+
+**Good Disclaimer - Clear, professional, covers key points:**
+
+```markdown
+## Disclaimer
+
+This software is provided "as is" without warranty of any kind. Use at your own risk.
+
+- **No Warranty**: The authors are not responsible for any damages, data loss, or issues arising from use of this software
+- **Not Professional Advice**: This software does not constitute legal, financial, medical, or other professional advice
+- **Third-Party Services**: If this software connects to external APIs or services, their terms of service apply separately
+- **Security**: While we strive to follow security best practices, no software is guaranteed to be free of vulnerabilities
+- **Production Use**: Evaluate thoroughly before deploying in production environments
+
+By using this software, you acknowledge that you have read and understood this disclaimer.
+```
+
+**Bad Disclaimer examples to AVOID:**
+
+| ❌ Bad | Why |
+|--------|-----|
+| "Use at your own risk" (one line only) | Too vague, doesn't cover key concerns |
+| "No warranty blah blah blah" (copy-paste legalese) | Unreadable, users skip it |
+| "We are not responsible for anything" | Too broad, unprofessional |
+| No disclaimer at all | Missing important legal protection |
+| Disclaimer hidden in LICENSE file only | Users don't read LICENSE, README is primary |
+
+**Disclaimer placement:**
+- Add as a section in README.md (after "Other" or before "License")
+- Keep it readable (bullet points, not a wall of text)
+- Optionally also include in LICENSE.md, but README is primary
+
+#### URL Standards (PROJECT-WIDE)
+
+**Two different URL formats depending on context:**
+
+| Context | URL Format | Example |
+|---------|------------|---------|
+| **Documentation** (README, docs/, examples) | `{officialsite}/path` | `GET https://api.example.com/healthz` |
+| **Embedded code** (Go, JS, templates) | `{fqdn}/path` | `fmt.Sprintf("https://%s/healthz", cfg.FQDN)` |
+
+**Why the distinction:**
+- **Documentation**: Users copy-paste. Full URLs work immediately.
+- **Embedded code**: Must use configured FQDN variable for the running instance.
+
+---
+
+**{officialsite} - Documentation URLs (README, docs/, API docs, examples)**
+
+If `{officialsite}` is defined, ALL documentation examples MUST use the full URL.
+
+| Scenario | Example Format |
+|----------|----------------|
+| **{officialsite} is set** | `GET https://api.example.com/v1/users` |
+| **{officialsite} is NOT set** | `GET /v1/users` |
+
+**Applies to:**
+- README.md
+- docs/ directory
+- API documentation
+- Swagger/OpenAPI examples
+- GraphQL documentation
+- Installation guides
+- Troubleshooting guides
+- Any user-facing documentation
+
+**Example transformation when {officialsite} = `https://api.example.com`:**
+
+```markdown
+# ❌ WRONG - Relative paths when officialsite exists
+GET /healthz
+GET /api/v1/users
+GET /api/autoconfig
+curl http://localhost:8080/api/v1/data
+
+# ✅ CORRECT - Full URLs using officialsite
+GET https://api.example.com/healthz
+GET https://api.example.com/api/v1/users
+GET https://api.example.com/api/autoconfig
+curl -q -LSsf https://api.example.com/api/v1/data
+```
+
+**Rules:**
+1. **API examples**: Always use `{officialsite}` as base URL
+2. **curl commands**: Use `{officialsite}`, not `localhost` or relative paths
+3. **Client examples**: Show connecting to `{officialsite}` by default
+4. **Endpoint tables**: Show full URLs: `GET {officialsite}/api/v1/users`
+5. **Docker examples**: OK to use localhost for local deployment instructions
+6. **Development section**: OK to use localhost (it's for local dev)
+
+**Template variables:**
+```markdown
+## API
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET {officialsite}/healthz` | Health check |
+| `GET {officialsite}/api/v1/users` | List users |
+| `POST {officialsite}/api/v1/users` | Create user |
+| `GET {officialsite}/api/autoconfig` | Auto-configuration |
+
+### Examples
+
+```bash
+# Get server status
+curl -q -LSsf {officialsite}/healthz
+
+# List all users (requires auth)
+curl -q -LSsf -H "Authorization: Bearer TOKEN" {officialsite}/api/v1/users
+
+# Auto-config for clients
+curl -q -LSsf {officialsite}/api/autoconfig
+```
+```
+
+**If {officialsite} is not defined:**
+- Use relative paths: `GET /healthz`, `GET /api/v1/users`
+- Use placeholder in curl: `curl -q -LSsf http://YOUR_SERVER/healthz`
+- Document that user must specify their server URL
+
+---
+
+**{fqdn} - Embedded Code URLs (Go, JavaScript, templates)**
+
+For code that runs in the application, NEVER use bare `/path`. Always use `{fqdn}/path`.
+
+| Context | ❌ Wrong | ✅ Correct |
+|---------|----------|------------|
+| **Go code** | `"/api/v1/users"` | `fmt.Sprintf("https://%s/api/v1/users", cfg.FQDN)` |
+| **JavaScript** | `fetch('/api/v1/users')` | `fetch(\`${window.location.origin}/api/v1/users\`)` |
+| **HTML templates** | `href="/api/docs"` | `href="https://{{.FQDN}}/api/docs"` |
+| **Config files** | `url: /callback` | `url: https://{fqdn}/callback` |
+| **Email templates** | `<a href="/verify">` | `<a href="https://{{.FQDN}}/verify">` |
+
+**Why:** Bare paths break when:
+- Behind reverse proxy with different base path
+- Emails/notifications need absolute URLs
+- OAuth callbacks require full URLs
+- Webhooks need full URLs
+- API responses with links (HATEOAS)
+
+**Go examples:**
+
+```go
+// ❌ WRONG - Bare path
+redirectURL := "/auth/callback"
+link := "/api/v1/users/" + userID
+
+// ✅ CORRECT - Using FQDN
+redirectURL := fmt.Sprintf("https://%s/auth/callback", cfg.FQDN)
+link := fmt.Sprintf("https://%s/api/v1/users/%s", cfg.FQDN, userID)
+
+// ✅ CORRECT - Helper function
+func BuildURL(path string) string {
+    return fmt.Sprintf("https://%s%s", cfg.FQDN, path)
+}
+link := BuildURL("/api/v1/users/" + userID)
+```
+
+**JavaScript examples:**
+
+```javascript
+// ❌ WRONG - Bare path (breaks with base paths)
+fetch('/api/v1/users')
+
+// ✅ CORRECT - Full URL
+fetch(`${window.location.origin}/api/v1/users`)
+
+// ✅ CORRECT - From config
+fetch(`${config.apiBaseUrl}/api/v1/users`)
+```
+
+**HTML template examples:**
+
+```html
+<!-- ❌ WRONG - Bare path (breaks in emails, notifications) -->
+<a href="/verify?token={{.Token}}">Verify Email</a>
+
+<!-- ✅ CORRECT - Full URL using FQDN -->
+<a href="https://{{.FQDN}}/verify?token={{.Token}}">Verify Email</a>
+```
+
+**Exception - Internal routing only:**
+```go
+// OK to use bare paths for internal router registration
+router.GET("/api/v1/users", handleUsers)
+router.GET("/healthz", handleHealth)
+```
+
+**Summary:**
+
+| Location | Format | Example |
+|----------|--------|---------|
+| README.md | `{officialsite}/path` | `GET https://api.example.com/healthz` |
+| docs/*.md | `{officialsite}/path` | `curl -q -LSsf https://api.example.com/api/v1/users` |
+| Go code | `{fqdn}/path` | `fmt.Sprintf("https://%s/path", cfg.FQDN)` |
+| JS code | `origin/path` | `${window.location.origin}/path` |
+| Email templates | `{fqdn}/path` | `https://{{.FQDN}}/verify` |
+| Router registration | `/path` | `router.GET("/api/v1/users", ...)` (internal only) |
 
 **Platform-Specific URLs:**
 
@@ -3419,11 +4076,12 @@ Detect platform by checking for workflow files in this order:
 **Use the appropriate badges and URLs for your platform (see above).**
 
 ```markdown
-# {projectname}
+# caspaste
 
 {PLATFORM_BUILD_BADGE}
 {PLATFORM_RELEASE_BADGE}
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
+{PLATFORM_DOCS_BADGE}  <!-- Only include if docs are deployed -->
 
 ## About
 
@@ -3431,7 +4089,7 @@ Detect platform by checking for workflow files in this order:
 
 ## Official Site
 
-https://{projectname}.{projectorg}.us
+{officialsite}
 
 ## Features
 
@@ -3445,17 +4103,17 @@ https://{projectname}.{projectorg}.us
 
 ```bash
 docker run -d \
-  --name {projectname} \
+  --name caspaste \
   -p 64580:80 \
   -v ./rootfs/config:/config:z \
   -v ./rootfs/data:/data:z \
-  {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
+  {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
 ```
 
 ### Docker Compose
 
 ```bash
-curl -O {PLATFORM_RAW_URL}/docker/docker-compose.yml
+curl -q -LSsf -O {PLATFORM_RAW_URL}/docker/docker-compose.yml
 docker compose up -d
 ```
 
@@ -3463,11 +4121,11 @@ docker compose up -d
 
 ```bash
 # Download latest release
-curl -LO {PLATFORM_RELEASE_URL}/{projectname}-linux-amd64
+curl -q -LSsf -O {PLATFORM_RELEASE_URL}/caspaste-linux-amd64
 
 # Make executable and run
-chmod +x {projectname}-linux-amd64
-./{projectname}-linux-amd64
+chmod +x caspaste-linux-amd64
+./caspaste-linux-amd64
 ```
 
 ## Client
@@ -3478,23 +4136,23 @@ A companion client is available for interacting with the server API.
 
 ```bash
 # Download latest release
-curl -LO {PLATFORM_RELEASE_URL}/{projectname}-cli-linux-amd64
-chmod +x {projectname}-cli-linux-amd64
-sudo mv {projectname}-cli-linux-amd64 /usr/local/bin/{projectname}-cli
+curl -q -LSsf -O {PLATFORM_RELEASE_URL}/caspaste-cli-linux-amd64
+chmod +x caspaste-cli-linux-amd64
+sudo mv caspaste-cli-linux-amd64 /usr/local/bin/caspaste-cli
 ```
 
 ### Configure
 
 ```bash
-# Connect to server (creates ~/.config/{projectorg}/{projectname}/cli.yml)
-{projectname}-cli --server https://api.example.com --token YOUR_API_TOKEN
+# Connect to official server (creates ~/.config/casjay-forks/caspaste/cli.yml)
+caspaste-cli --server {officialsite} --token YOUR_API_TOKEN
 ```
 
 ### Usage
 
 ```bash
-{projectname}-cli --help
-{projectname}-cli [command] --help
+caspaste-cli --help
+caspaste-cli [command] --help
 ```
 
 ## Configuration
@@ -3507,19 +4165,29 @@ Key settings:
 
 ## API
 
-API documentation available at `/api/{api_version}/` when running.
+API documentation available at `{officialsite}/api/{api_version}/` when running.
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /healthz` | Health check |
-| `GET /api/{api_version}/...` | API endpoints |
+| `GET {officialsite}/healthz` | Health check |
+| `GET {officialsite}/api/{api_version}/...` | API endpoints |
+
+### Examples
+
+```bash
+# Health check
+curl -q -LSsf {officialsite}/healthz
+
+# API request (requires auth)
+curl -q -LSsf -H "Authorization: Bearer TOKEN" {officialsite}/api/{api_version}/resource
+```
 
 ## Other
 
 ### Troubleshooting
 
-- Check logs: `docker logs {projectname}`
-- Health check: `curl http://{fqdn}:{port}/healthz`
+- Check logs: `docker logs caspaste`
+- Health check: `curl -q -LSsf {officialsite}/healthz`
 
 ## Development
 
@@ -3535,7 +4203,7 @@ API documentation available at `/api/{api_version}/` when running.
 ```bash
 # Clone
 git clone {PLATFORM_REPO_URL}
-cd {projectname}
+cd caspaste
 
 # Quick dev build (outputs to OS temp dir)
 make dev
@@ -3555,6 +4223,18 @@ tests/         # Test files
 binaries/      # Built binaries (gitignored)
 ```
 
+## Disclaimer
+
+This software is provided "as is" without warranty of any kind. Use at your own risk.
+
+- **No Warranty**: The authors are not responsible for any damages, data loss, or issues arising from use of this software
+- **Not Professional Advice**: This software does not constitute legal, financial, medical, or other professional advice
+- **Third-Party Services**: If this software connects to external APIs or services, their terms of service apply separately
+- **Security**: While we strive to follow security best practices, no software is guaranteed to be free of vulnerabilities
+- **Production Use**: Evaluate thoroughly before deploying in production environments
+
+By using this software, you acknowledge that you have read and understood this disclaimer.
+
 ## License
 
 MIT - See [LICENSE.md](LICENSE.md)
@@ -3572,6 +4252,82 @@ MIT - See [LICENSE.md](LICENSE.md)
 | Breaking change | Yes - add notice at top |
 
 **NEVER let README become outdated. It is the first thing users see.**
+
+---
+
+### curl Command Standard (PROJECT-WIDE)
+
+**ALL curl commands in docs, examples, tests, and scripts MUST use this format:**
+
+```bash
+# Standard curl command (base format)
+curl -q -LSsf {url}
+
+# With headers only (HEAD request)
+curl -q -LSsfI {url}
+
+# With output to file
+curl -q -LSsf -o {file} {url}
+
+# With custom headers
+curl -q -LSsf -H "Authorization: Bearer TOKEN" {url}
+
+# With data (POST/PUT)
+curl -q -LSsf -X POST -d '{"key":"value"}' {url}
+```
+
+**Flag breakdown:**
+
+| Flag | Purpose | Why Required |
+|------|---------|--------------|
+| `-q` | Quiet mode | Don't read `.curlrc` - ensures consistent behavior |
+| `-L` | Follow redirects | Handle 301/302 automatically |
+| `-S` | Show errors | Display errors even in silent mode |
+| `-s` | Silent | No progress bar/meter |
+| `-f` | Fail silently | Return proper exit code on HTTP errors (4xx/5xx) |
+
+**Additional flags (add as needed):**
+
+| Flag | When to Use |
+|------|-------------|
+| `-I` | Headers only (HEAD request) |
+| `-o {file}` | Download to file |
+| `-O` | Download with remote filename |
+| `-H "Header: Value"` | Custom headers |
+| `-X METHOD` | Specify HTTP method |
+| `-d 'data'` | Send data (POST body) |
+| `--connect-timeout N` | Connection timeout in seconds |
+| `--max-time N` | Maximum time for entire operation |
+
+**Examples:**
+
+```bash
+# ✅ CORRECT
+curl -q -LSsf https://api.example.com/healthz
+curl -q -LSsfI https://api.example.com/healthz
+curl -q -LSsf -H "Accept: application/json" https://api.example.com/users
+curl -q -LSsf -X POST -d '{"name":"test"}' https://api.example.com/users
+curl -q -LSsf -o app.tar.gz https://releases.example.com/app-1.0.tar.gz
+curl -q -LSsf -O https://releases.example.com/app-linux-amd64
+
+# ❌ WRONG - Missing standard flags
+curl https://api.example.com/healthz
+curl -s https://api.example.com/healthz
+curl -L https://api.example.com/healthz
+```
+
+**Where this applies:**
+- README.md examples
+- docs/ documentation
+- Test scripts
+- Makefiles
+- CI/CD pipelines
+- Agent install scripts
+- Any shell script
+
+**Exceptions:**
+- **Interactive debugging** - Use `curl -v` for verbose output
+- **HTTP status code testing** - Use `curl -q -LSs` (no `-f`) when capturing status codes with `-w "%{http_code}"`, since `-f` exits on 4xx/5xx before returning the code
 
 ---
 
@@ -3719,7 +4475,7 @@ Before proceeding, confirm you understand:
 |-------------|-------|
 | License type | MIT License |
 | License file | `LICENSE.md` (REQUIRED in project root) |
-| Copyright holder | `{projectorg}` or individual/organization name |
+| Copyright holder | `casjay-forks` or individual/organization name |
 | Year | Current year or year of first publication |
 
 ## LICENSE.md Structure
@@ -3727,7 +4483,7 @@ Before proceeding, confirm you understand:
 ```markdown
 MIT License
 
-Copyright (c) {YEAR} {projectorg}
+Copyright (c) {YEAR} casjay-forks
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -3975,7 +4731,7 @@ echo "3. Commit the changes"
 **Every README.md MUST include a license badge:**
 
 ```markdown
-[![License](https://img.shields.io/github/license/{projectorg}/{projectname})](LICENSE.md)
+[![License](https://img.shields.io/github/license/casjay-forks/caspaste)](LICENSE.md)
 ```
 
 This badge should appear in the badges section near the top of README.md.
@@ -4059,21 +4815,17 @@ package main
 
 ## Project Description
 
-CasPaste is a self-hosted, privacy-focused pastebin service written in Go. It produces a single static binary with all assets embedded, supporting SQLite, PostgreSQL, and MySQL databases. Features include syntax highlighting (350+ languages), multiple themes, public/private mode, file uploads, burn-after-read, and a CLI client.
+CasPaste is a self-hosted, privacy-focused pastebin service. It provides a fast, secure platform for sharing text snippets and code with syntax highlighting, burn-after-reading, and file upload support. Designed as a single static binary with no external runtime dependencies.
 
 ## Project-Specific Features
 
-- Syntax highlighting with 350+ language support via Chroma
-- 12+ themes including dark mode (Dracula, Nord, Gruvbox, Tokyo Night, etc.)
-- Public and private operation modes
-- File upload support with configurable size limits
-- Burn-after-read functionality
-- Paste expiration with configurable TTL
-- CLI client for command-line usage
-- PWA support with offline capabilities
-- Internationalization (4 locales: en, de, bn_IN, ru)
-- Rate limiting with token bucket algorithm
-- Optional password protection for pastes
+- **Paste Creation**: Create text pastes with optional syntax highlighting
+- **File Upload**: Upload files (images, documents) as pastes
+- **Privacy Options**: Burn-after-reading, password protection, expiration
+- **Themes**: 12+ syntax highlighting themes (dark/light)
+- **Localization**: Multi-language support (en, de, bn_IN, ru)
+- **PWA**: Progressive Web App support for offline access
+- **Multi-Database**: SQLite (default), PostgreSQL, MySQL support
 
 ---
 
@@ -4081,17 +4833,17 @@ CasPaste is a self-hosted, privacy-focused pastebin service written in Go. It pr
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{projectname}` | Project name (inferred from path) | `jokes` |
-| `{projectorg}` | Organization name (inferred from path) | `apimgr` |
+| `caspaste` | Project name (inferred from path) | `jokes` |
+| `casjay-forks` | Organization name (inferred from path) | `apimgr` |
 | `{gitprovider}` | Git hosting provider | `github`, `gitlab`, `private` |
 | **Rule** | Anything in `{}` is a variable | |
 | **Rule** | Anything NOT in `{}` is literal | `/etc/letsencrypt/live` is a real path |
 
 ### Inferring Variables from Path
 
-**NEVER hardcode `{projectname}` or `{projectorg}` - always infer from git remote or directory path.**
+**NEVER hardcode `caspaste` or `casjay-forks` - always infer from git remote or directory path.**
 
-**Recommended path structure:** `~/Projects/{gitprovider}/{projectorg}/{projectname}` (but works with any location)
+**Recommended path structure:** `~/Projects/{gitprovider}/casjay-forks/caspaste` (but works with any location)
 
 ```bash
 # Method 1: Infer from git remote (PREFERRED - works regardless of directory location)
@@ -4109,16 +4861,16 @@ PROJECTNAME=$(git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)(\.git
 PROJECTORG=$(git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)/[^/]+(\.git)?$|\1|' || basename "$(dirname "$PWD")")
 ```
 
-**Note:** When using path-based inference, `PROJECTORG` will be the parent directory name, which may not match the git organization unless you follow the recommended `~/Projects/{gitprovider}/{projectorg}/{projectname}` structure. Git remote inference is always more reliable.
+**Note:** When using path-based inference, `PROJECTORG` will be the parent directory name, which may not match the git organization unless you follow the recommended `~/Projects/{gitprovider}/casjay-forks/caspaste` structure. Git remote inference is always more reliable.
 
 ### Variable Capitalization
 
 | Format | Use Case | Example |
 |--------|----------|---------|
-| `{projectname}` | Lowercase (filenames, paths, commands) | `jokes`, `/etc/apimgr/jokes/` |
+| `caspaste` | Lowercase (filenames, paths, commands) | `jokes`, `/etc/apimgr/jokes/` |
 | `{projectName}` | camelCase (Go variables, JSON keys) | `projectName := "jokes"` |
 | `{Projectname}` | PascalCase (Go types, display names) | `type JokesServer struct` |
-| `{PROJECTNAME}` | UPPERCASE (env vars, Makefile vars) | `PROJECTNAME=jokes` |
+| `CASPASTE` | UPPERCASE (env vars, Makefile vars) | `PROJECTNAME=jokes` |
 
 **Examples (assuming no git remote, inferred from path):**
 
@@ -4136,14 +4888,14 @@ PROJECTORG=$(git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)/[^/]+(
 
 **IMPORTANT: Project root can be located ANYWHERE on your system. This section describes a RECOMMENDED organizational structure, not a requirement.**
 
-**Recommended Format:** `~/Projects/{gitprovider}/{projectorg}/{projectname}`
+**Recommended Format:** `~/Projects/{gitprovider}/casjay-forks/caspaste`
 
 | Component | Description | Examples |
 |-----------|-------------|----------|
 | `~/Projects/` | Base projects directory (recommended) | Can be `~/Projects/`, `~/Documents/`, `/opt/`, etc. |
 | `{gitprovider}` | Git hosting provider or `local` | `github`, `gitlab`, `bitbucket`, `private`, `local` |
-| `{projectorg}` | Organization/username (inferred) | `apimgr`, `casjay`, `myorg` |
-| `{projectname}` | Project name (inferred) | `jokes`, `icons`, `myproject` |
+| `casjay-forks` | Organization/username (inferred) | `apimgr`, `casjay`, `myorg` |
+| `caspaste` | Project name (inferred) | `jokes`, `icons`, `myproject` |
 
 **Examples of recommended structure:**
 ```
@@ -4164,7 +4916,7 @@ PROJECTORG=$(git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)/[^/]+(
 
 ### Special: `local` Provider
 
-`~/Projects/local/{projectorg}/{projectname}` (or any other location) is used for:
+`~/Projects/local/casjay-forks/caspaste` (or any other location) is used for:
 - **Prototyping** - Quick experiments and proof-of-concept
 - **Bootstrapping** - Initial project setup before pushing to VCS
 - **Local-only development** - Projects not intended for remote hosting
@@ -4607,7 +5359,7 @@ cd /path/to/project && docker build -f docker/Dockerfile .
 
 **go.mod Example:**
 ```
-module github.com/{projectorg}/{projectname}
+module github.com/casjay-forks/caspaste
 
 go 1.xx  // Use current latest stable version
 
@@ -4849,7 +5601,7 @@ require github.com/tursodatabase/libsql-client-go v0.0.0-20240902231107-85af5b9d
 ### Example go.mod
 
 ```go
-module github.com/{projectorg}/{projectname}
+module github.com/casjay-forks/caspaste
 
 go 1.xx  // Use current latest stable version
 
@@ -5011,36 +5763,36 @@ Before proceeding, confirm you understand:
 
 | Type | Path |
 |------|------|
-| Binary | `/usr/local/bin/{projectname}` |
-| Config | `/etc/{projectorg}/{projectname}/` |
-| Config File | `/etc/{projectorg}/{projectname}/server.yml` |
-| Data | `/var/lib/{projectorg}/{projectname}/` |
-| Cache | `/var/cache/{projectorg}/{projectname}/` |
-| Logs | `/var/log/{projectorg}/{projectname}/` |
-| Log File | `/var/log/{projectorg}/{projectname}/server.log` |
-| Backup | `/mnt/Backups/{projectorg}/{projectname}/` |
-| PID File | `/var/run/{projectorg}/{projectname}.pid` |
-| SSL | `/etc/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `/etc/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/var/lib/{projectorg}/{projectname}/db/` |
-| Service | `/etc/systemd/system/{projectname}.service` |
+| Binary | `/usr/local/bin/caspaste` |
+| Config | `/etc/casjay-forks/caspaste/` |
+| Config File | `/etc/casjay-forks/caspaste/server.yml` |
+| Data | `/var/lib/casjay-forks/caspaste/` |
+| Cache | `/var/cache/casjay-forks/caspaste/` |
+| Logs | `/var/log/casjay-forks/caspaste/` |
+| Log File | `/var/log/casjay-forks/caspaste/server.log` |
+| Backup | `/mnt/Backups/casjay-forks/caspaste/` |
+| PID File | `/var/run/casjay-forks/caspaste.pid` |
+| SSL | `/etc/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `/etc/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `/var/lib/casjay-forks/caspaste/db/` |
+| Service | `/etc/systemd/system/caspaste.service` |
 
 ### User (non-privileged)
 
 | Type | Path |
 |------|------|
-| Binary | `~/.local/bin/{projectname}` |
-| Config | `~/.config/{projectorg}/{projectname}/` |
-| Config File | `~/.config/{projectorg}/{projectname}/server.yml` |
-| Data | `~/.local/share/{projectorg}/{projectname}/` |
-| Cache | `~/.cache/{projectorg}/{projectname}/` |
-| Logs | `~/.local/log/{projectorg}/{projectname}/` |
-| Log File | `~/.local/log/{projectorg}/{projectname}/server.log` |
-| Backup | `~/.local/share/Backups/{projectorg}/{projectname}/` |
-| PID File | `~/.local/share/{projectorg}/{projectname}/{projectname}.pid` |
-| SSL | `~/.config/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `~/.config/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/.local/share/{projectorg}/{projectname}/db/` |
+| Binary | `~/.local/bin/caspaste` |
+| Config | `~/.config/casjay-forks/caspaste/` |
+| Config File | `~/.config/casjay-forks/caspaste/server.yml` |
+| Data | `~/.local/share/casjay-forks/caspaste/` |
+| Cache | `~/.cache/casjay-forks/caspaste/` |
+| Logs | `~/.local/log/casjay-forks/caspaste/` |
+| Log File | `~/.local/log/casjay-forks/caspaste/server.log` |
+| Backup | `~/.local/share/Backups/casjay-forks/caspaste/` |
+| PID File | `~/.local/share/casjay-forks/caspaste/caspaste.pid` |
+| SSL | `~/.config/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `~/.config/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` |
 
 ---
 
@@ -5050,37 +5802,37 @@ Before proceeding, confirm you understand:
 
 | Type | Path |
 |------|------|
-| Binary | `/usr/local/bin/{projectname}` |
-| Config | `/Library/Application Support/{projectorg}/{projectname}/` |
-| Config File | `/Library/Application Support/{projectorg}/{projectname}/server.yml` |
-| Data | `/Library/Application Support/{projectorg}/{projectname}/data/` |
-| Cache | `/Library/Caches/{projectorg}/{projectname}/` |
-| Logs | `/Library/Logs/{projectorg}/{projectname}/` |
-| Log File | `/Library/Logs/{projectorg}/{projectname}/server.log` |
-| Backup | `/Library/Backups/{projectorg}/{projectname}/` |
-| PID File | `/var/run/{projectorg}/{projectname}.pid` |
-| SSL | `/Library/Application Support/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `/Library/Application Support/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/Library/Application Support/{projectorg}/{projectname}/db/` |
-| Service | `/Library/LaunchDaemons/com.{projectorg}.{projectname}.plist` |
+| Binary | `/usr/local/bin/caspaste` |
+| Config | `/Library/Application Support/casjay-forks/caspaste/` |
+| Config File | `/Library/Application Support/casjay-forks/caspaste/server.yml` |
+| Data | `/Library/Application Support/casjay-forks/caspaste/data/` |
+| Cache | `/Library/Caches/casjay-forks/caspaste/` |
+| Logs | `/Library/Logs/casjay-forks/caspaste/` |
+| Log File | `/Library/Logs/casjay-forks/caspaste/server.log` |
+| Backup | `/Library/Backups/casjay-forks/caspaste/` |
+| PID File | `/var/run/casjay-forks/caspaste.pid` |
+| SSL | `/Library/Application Support/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `/Library/Application Support/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `/Library/Application Support/casjay-forks/caspaste/db/` |
+| Service | `/Library/LaunchDaemons/com.casjay-forks.caspaste.plist` |
 
 ### User (non-privileged)
 
 | Type | Path |
 |------|------|
-| Binary | `~/bin/{projectname}` or `/usr/local/bin/{projectname}` |
-| Config | `~/Library/Application Support/{projectorg}/{projectname}/` |
-| Config File | `~/Library/Application Support/{projectorg}/{projectname}/server.yml` |
-| Data | `~/Library/Application Support/{projectorg}/{projectname}/` |
-| Cache | `~/Library/Caches/{projectorg}/{projectname}/` |
-| Logs | `~/Library/Logs/{projectorg}/{projectname}/` |
-| Log File | `~/Library/Logs/{projectorg}/{projectname}/server.log` |
-| Backup | `~/Library/Backups/{projectorg}/{projectname}/` |
-| PID File | `~/Library/Application Support/{projectorg}/{projectname}/{projectname}.pid` |
-| SSL | `~/Library/Application Support/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `~/Library/Application Support/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/Library/Application Support/{projectorg}/{projectname}/db/` |
-| Service | `~/Library/LaunchAgents/com.{projectorg}.{projectname}.plist` |
+| Binary | `~/bin/caspaste` or `/usr/local/bin/caspaste` |
+| Config | `~/Library/Application Support/casjay-forks/caspaste/` |
+| Config File | `~/Library/Application Support/casjay-forks/caspaste/server.yml` |
+| Data | `~/Library/Application Support/casjay-forks/caspaste/` |
+| Cache | `~/Library/Caches/casjay-forks/caspaste/` |
+| Logs | `~/Library/Logs/casjay-forks/caspaste/` |
+| Log File | `~/Library/Logs/casjay-forks/caspaste/server.log` |
+| Backup | `~/Library/Backups/casjay-forks/caspaste/` |
+| PID File | `~/Library/Application Support/casjay-forks/caspaste/caspaste.pid` |
+| SSL | `~/Library/Application Support/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `~/Library/Application Support/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `~/Library/Application Support/casjay-forks/caspaste/db/` |
+| Service | `~/Library/LaunchAgents/com.casjay-forks.caspaste.plist` |
 
 ---
 
@@ -5090,36 +5842,36 @@ Before proceeding, confirm you understand:
 
 | Type | Path |
 |------|------|
-| Binary | `/usr/local/bin/{projectname}` |
-| Config | `/usr/local/etc/{projectorg}/{projectname}/` |
-| Config File | `/usr/local/etc/{projectorg}/{projectname}/server.yml` |
-| Data | `/var/db/{projectorg}/{projectname}/` |
-| Cache | `/var/cache/{projectorg}/{projectname}/` |
-| Logs | `/var/log/{projectorg}/{projectname}/` |
-| Log File | `/var/log/{projectorg}/{projectname}/server.log` |
-| Backup | `/var/backups/{projectorg}/{projectname}/` |
-| PID File | `/var/run/{projectorg}/{projectname}.pid` |
-| SSL | `/usr/local/etc/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `/usr/local/etc/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/var/db/{projectorg}/{projectname}/db/` |
-| Service | `/usr/local/etc/rc.d/{projectname}` |
+| Binary | `/usr/local/bin/caspaste` |
+| Config | `/usr/local/etc/casjay-forks/caspaste/` |
+| Config File | `/usr/local/etc/casjay-forks/caspaste/server.yml` |
+| Data | `/var/db/casjay-forks/caspaste/` |
+| Cache | `/var/cache/casjay-forks/caspaste/` |
+| Logs | `/var/log/casjay-forks/caspaste/` |
+| Log File | `/var/log/casjay-forks/caspaste/server.log` |
+| Backup | `/var/backups/casjay-forks/caspaste/` |
+| PID File | `/var/run/casjay-forks/caspaste.pid` |
+| SSL | `/usr/local/etc/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `/usr/local/etc/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `/var/db/casjay-forks/caspaste/db/` |
+| Service | `/usr/local/etc/rc.d/caspaste` |
 
 ### User (non-privileged)
 
 | Type | Path |
 |------|------|
-| Binary | `~/.local/bin/{projectname}` |
-| Config | `~/.config/{projectorg}/{projectname}/` |
-| Config File | `~/.config/{projectorg}/{projectname}/server.yml` |
-| Data | `~/.local/share/{projectorg}/{projectname}/` |
-| Cache | `~/.cache/{projectorg}/{projectname}/` |
-| Logs | `~/.local/log/{projectorg}/{projectname}/` |
-| Log File | `~/.local/log/{projectorg}/{projectname}/server.log` |
-| Backup | `~/.local/share/Backups/{projectorg}/{projectname}/` |
-| PID File | `~/.local/share/{projectorg}/{projectname}/{projectname}.pid` |
-| SSL | `~/.config/{projectorg}/{projectname}/ssl/` (letsencrypt/, local/) |
-| Security | `~/.config/{projectorg}/{projectname}/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/.local/share/{projectorg}/{projectname}/db/` |
+| Binary | `~/.local/bin/caspaste` |
+| Config | `~/.config/casjay-forks/caspaste/` |
+| Config File | `~/.config/casjay-forks/caspaste/server.yml` |
+| Data | `~/.local/share/casjay-forks/caspaste/` |
+| Cache | `~/.cache/casjay-forks/caspaste/` |
+| Logs | `~/.local/log/casjay-forks/caspaste/` |
+| Log File | `~/.local/log/casjay-forks/caspaste/server.log` |
+| Backup | `~/.local/share/Backups/casjay-forks/caspaste/` |
+| PID File | `~/.local/share/casjay-forks/caspaste/caspaste.pid` |
+| SSL | `~/.config/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
+| Security | `~/.config/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
+| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` |
 
 ---
 
@@ -5129,34 +5881,34 @@ Before proceeding, confirm you understand:
 
 | Type | Path |
 |------|------|
-| Binary | `C:\Program Files\{projectorg}\{projectname}\{projectname}.exe` |
-| Config | `%ProgramData%\{projectorg}\{projectname}\` |
-| Config File | `%ProgramData%\{projectorg}\{projectname}\server.yml` |
-| Data | `%ProgramData%\{projectorg}\{projectname}\data\` |
-| Cache | `%ProgramData%\{projectorg}\{projectname}\cache\` |
-| Logs | `%ProgramData%\{projectorg}\{projectname}\logs\` |
-| Log File | `%ProgramData%\{projectorg}\{projectname}\logs\server.log` |
-| Backup | `%ProgramData%\Backups\{projectorg}\{projectname}\` |
-| SSL | `%ProgramData%\{projectorg}\{projectname}\ssl\` (letsencrypt\, local\) |
-| Security | `%ProgramData%\{projectorg}\{projectname}\security\` (geoip\, blocklists\, cve\, trivy\) |
-| SQLite DB | `%ProgramData%\{projectorg}\{projectname}\db\` |
+| Binary | `C:\Program Files\casjay-forks\caspaste\caspaste.exe` |
+| Config | `%ProgramData%\casjay-forks\caspaste\` |
+| Config File | `%ProgramData%\casjay-forks\caspaste\server.yml` |
+| Data | `%ProgramData%\casjay-forks\caspaste\data\` |
+| Cache | `%ProgramData%\casjay-forks\caspaste\cache\` |
+| Logs | `%ProgramData%\casjay-forks\caspaste\logs\` |
+| Log File | `%ProgramData%\casjay-forks\caspaste\logs\server.log` |
+| Backup | `%ProgramData%\Backups\casjay-forks\caspaste\` |
+| SSL | `%ProgramData%\casjay-forks\caspaste\ssl\` (letsencrypt\, local\) |
+| Security | `%ProgramData%\casjay-forks\caspaste\security\` (geoip\, blocklists\, cve\, trivy\) |
+| SQLite DB | `%ProgramData%\casjay-forks\caspaste\db\` |
 | Service | Windows Service Manager |
 
 ### User (non-privileged)
 
 | Type | Path |
 |------|------|
-| Binary | `%LocalAppData%\{projectorg}\{projectname}\{projectname}.exe` |
-| Config | `%AppData%\{projectorg}\{projectname}\` |
-| Config File | `%AppData%\{projectorg}\{projectname}\server.yml` |
-| Data | `%LocalAppData%\{projectorg}\{projectname}\` |
-| Cache | `%LocalAppData%\{projectorg}\{projectname}\cache\` |
-| Logs | `%LocalAppData%\{projectorg}\{projectname}\logs\` |
-| Log File | `%LocalAppData%\{projectorg}\{projectname}\logs\server.log` |
-| Backup | `%LocalAppData%\Backups\{projectorg}\{projectname}\` |
-| SSL | `%AppData%\{projectorg}\{projectname}\ssl\` (letsencrypt\, local\) |
-| Security | `%AppData%\{projectorg}\{projectname}\security\` (geoip\, blocklists\, cve\, trivy\) |
-| SQLite DB | `%LocalAppData%\{projectorg}\{projectname}\db\` |
+| Binary | `%LocalAppData%\casjay-forks\caspaste\caspaste.exe` |
+| Config | `%AppData%\casjay-forks\caspaste\` |
+| Config File | `%AppData%\casjay-forks\caspaste\server.yml` |
+| Data | `%LocalAppData%\casjay-forks\caspaste\` |
+| Cache | `%LocalAppData%\casjay-forks\caspaste\cache\` |
+| Logs | `%LocalAppData%\casjay-forks\caspaste\logs\` |
+| Log File | `%LocalAppData%\casjay-forks\caspaste\logs\server.log` |
+| Backup | `%LocalAppData%\Backups\casjay-forks\caspaste\` |
+| SSL | `%AppData%\casjay-forks\caspaste\ssl\` (letsencrypt\, local\) |
+| Security | `%AppData%\casjay-forks\caspaste\security\` (geoip\, blocklists\, cve\, trivy\) |
+| SQLite DB | `%LocalAppData%\casjay-forks\caspaste\db\` |
 
 ---
 
@@ -5164,16 +5916,16 @@ Before proceeding, confirm you understand:
 
 | Type | Path |
 |------|------|
-| Binary | `/usr/local/bin/{projectname}` |
-| Config | `/config/{projectname}/` |
-| Config File | `/config/{projectname}/server.yml` |
-| Security DBs | `/config/{projectname}/security/` (geoip, blocklists, cve, trivy) |
-| Data | `/data/{projectname}/` |
-| Cache | `/data/{projectname}/cache/` |
-| Logs | `/data/log/{projectname}/` |
-| Log File | `/data/log/{projectname}/server.log` |
+| Binary | `/usr/local/bin/caspaste` |
+| Config | `/config/caspaste/` |
+| Config File | `/config/caspaste/server.yml` |
+| Security DBs | `/config/caspaste/security/` (geoip, blocklists, cve, trivy) |
+| Data | `/data/caspaste/` |
+| Cache | `/data/caspaste/cache/` |
+| Logs | `/data/log/caspaste/` |
+| Log File | `/data/log/caspaste/server.log` |
 | SQLite DB | `/data/db/{dbtype}/` |
-| Backup | `/data/backups/{projectname}/` |
+| Backup | `/data/backups/caspaste/` |
 | Internal Port | `80` |
 
 ---
@@ -5184,7 +5936,7 @@ Before proceeding, confirm you understand:
 - [ ] Each OS has specific paths for privileged and non-privileged users
 - [ ] Config file is ALWAYS `server.yml` (not .yaml)
 - [ ] Docker uses simplified paths (/config, /data)
-- [ ] All paths follow the {projectorg}/{projectname} pattern
+- [ ] All paths follow the casjay-forks/caspaste pattern
 
 ---
 
@@ -6230,8 +6982,8 @@ func (req *CreateUserRequest) Parse() (*User, error) {
 
 | User Type | Path |
 |-----------|------|
-| Root | `/etc/{projectorg}/{projectname}/server.yml` |
-| Regular | `~/.config/{projectorg}/{projectname}/server.yml` |
+| Root | `/etc/casjay-forks/caspaste/server.yml` |
+| Regular | `~/.config/casjay-forks/caspaste/server.yml` |
 
 ### Migration
 
@@ -6278,8 +7030,8 @@ func (req *CreateUserRequest) Parse() (*User, error) {
 
 | Mode | How Started | Port Restriction | Privilege Handling |
 |------|-------------|------------------|-------------------|
-| **Service (escalated)** | `sudo {projectname} --service install` | Any port | Runs as root/admin, binary drops after binding |
-| **User ($USER)** | `{projectname}` | >1024 only | Runs as calling user, no escalation |
+| **Service (escalated)** | `sudo caspaste --service install` | Any port | Runs as root/admin, binary drops after binding |
+| **User ($USER)** | `caspaste` | >1024 only | Runs as calling user, no escalation |
 
 #### Service Installation (One-Time Escalation)
 
@@ -6287,13 +7039,13 @@ func (req *CreateUserRequest) Parse() (*User, error) {
 
 ```bash
 # Unix-like (Linux, macOS, FreeBSD)
-sudo {projectname} --service install
+sudo caspaste --service install
 # Binary creates service file configured to run as root
 # All future service starts run as root automatically
 
 # Windows (run as Administrator)
-{projectname}.exe --service install
-# Binary creates Windows service with Virtual Service Account (NT SERVICE\{projectname})
+caspaste.exe --service install
+# Binary creates Windows service with Virtual Service Account (NT SERVICE\caspaste)
 ```
 
 #### Unix-Like Platforms (Linux, macOS, FreeBSD)
@@ -6303,10 +7055,10 @@ sudo {projectname} --service install
 | Step | Running As | Actions |
 |------|-----------|---------|
 | 1 | **root** | Service manager starts binary |
-| 2 | **root** | Create system user `{projectname}` (if needed) |
+| 2 | **root** | Create system user `caspaste` (if needed) |
 | 3 | **root** | Create directories, set ownership |
 | 4 | **root** | Bind configured ports (any port works) |
-| 5 | **root→user** | **DROP PRIVILEGES** to `{projectname}` user |
+| 5 | **root→user** | **DROP PRIVILEGES** to `caspaste` user |
 | 6 | **user** | Initialize config, database, etc. |
 | 7 | **user** | Start serving requests |
 
@@ -6315,7 +7067,7 @@ Service start (automatic after install):
     ├─ Start as root (service manager)
     ├─ Create user/dirs if needed
     ├─ Bind port 80/443 (root)
-    ├─ Drop to {projectname} user
+    ├─ Drop to caspaste user
     └─ Serve requests (user)
 ```
 
@@ -6325,7 +7077,7 @@ Service start (automatic after install):
 ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 
 # WRONG: Don't do this - prevents privileged port binding
-# USER {projectname}
+# USER caspaste
 ```
 
 #### Windows
@@ -6334,10 +7086,10 @@ ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 
 | Step | Running As | Actions |
 |------|-----------|---------|
-| 1 | **NT SERVICE\\{projectname}** | Service manager starts binary |
-| 2 | **NT SERVICE\\{projectname}** | Create directories (has access via ACL) |
-| 3 | **NT SERVICE\\{projectname}** | Bind configured ports |
-| 4 | **NT SERVICE\\{projectname}** | Initialize and serve requests |
+| 1 | **NT SERVICE\\caspaste** | Service manager starts binary |
+| 2 | **NT SERVICE\\caspaste** | Create directories (has access via ACL) |
+| 3 | **NT SERVICE\\caspaste** | Bind configured ports |
+| 4 | **NT SERVICE\\caspaste** | Initialize and serve requests |
 
 **Note:** VSA is auto-created by Windows when service is installed. No manual user creation needed.
 
@@ -6347,7 +7099,7 @@ ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 
 ```bash
 # No sudo - runs as current user
-{projectname} --port 8080
+caspaste --port 8080
 
 # Port must be >1024 (unprivileged)
 # Paths use user directories (~/.config/, ~/.local/, etc.)
@@ -6564,8 +7316,8 @@ ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
    Error: Cannot bind to port 80
 
    Port 80 requires elevated privileges. Options:
-     1. Install as service (requires admin): sudo {projectname} --service install
-     2. Use high port (no admin needed): {projectname} --port 8080
+     1. Install as service (requires admin): sudo caspaste --service install
+     2. Use high port (no admin needed): caspaste --port 8080
    ```
 
 #### Commands Requiring Escalation
@@ -6596,7 +7348,7 @@ ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 | `--maintenance mode` | 🔐 Auth | Requires admin auth OR root | N/A |
 | (normal start) | ❌ No | Adapts paths to current user | N/A |
 
-**Key insight:** After service install, the `{projectname}` user owns all data directories. However, sensitive operations require AUTHORIZATION, not just file access.
+**Key insight:** After service install, the `caspaste` user owns all data directories. However, sensitive operations require AUTHORIZATION, not just file access.
 
 #### Sensitive Operations (🔐 Auth Required)
 
@@ -6611,7 +7363,7 @@ ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
 **Setup authorization flow:**
 
 ```
-User runs: {projectname} --maintenance setup
+User runs: caspaste --maintenance setup
 
 Binary checks:
 ├─ Is database empty (no admins exist)?
@@ -6623,21 +7375,21 @@ Binary checks:
 └─ NO authorization → Reject with:
    "Setup already completed. To reconfigure:
     1. Use existing admin credentials via WebUI
-    2. Run as root: sudo {projectname} --maintenance setup
+    2. Run as root: sudo caspaste --maintenance setup
     3. Use setup token from server logs (if available)"
 ```
 
 **Restore authorization flow:**
 
 ```
-User runs: {projectname} --maintenance restore backup.tar.gz
+User runs: caspaste --maintenance restore backup.tar.gz
 
 Binary checks:
 ├─ Is database empty (first-run/fresh install)?
 │   └─ YES → Allow restore (nothing to protect)
 ├─ Is user root?
 │   └─ YES → Allow restore (with confirmation prompt)
-├─ Is user the service user ({projectname})?
+├─ Is user the service user (caspaste)?
 │   └─ YES → Require admin credentials:
 │            "This will OVERWRITE all data. Enter admin credentials to confirm."
 │            └─ Valid credentials → Allow restore
@@ -6650,12 +7402,12 @@ Binary checks:
 **Mode change authorization flow:**
 
 ```
-User runs: {projectname} --maintenance mode development
+User runs: caspaste --maintenance mode development
 
 Binary checks:
 ├─ Is user root?
 │   └─ YES → Allow (with warning about security implications)
-├─ Is user the service user ({projectname})?
+├─ Is user the service user (caspaste)?
 │   └─ YES → Require admin credentials
 └─ Random user → Reject
 ```
@@ -6679,9 +7431,9 @@ func needsEscalationForService() bool {
         return !isElevated() && isWindowsServiceInstalled()
     }
     // Unix: check for system service files
-    if fileExists("/etc/systemd/system/{projectname}.service") ||
-       fileExists("/Library/LaunchDaemons/{projectorg}.{projectname}.plist") ||
-       fileExists("/usr/local/etc/rc.d/{projectname}") {
+    if fileExists("/etc/systemd/system/caspaste.service") ||
+       fileExists("/Library/LaunchDaemons/casjay-forks.caspaste.plist") ||
+       fileExists("/usr/local/etc/rc.d/caspaste") {
         // System service installed - need elevated privileges to manage
         return !isElevated()
     }
@@ -6769,7 +7521,7 @@ func canChangeMode() (bool, string) {
 **Smart escalation behavior:**
 
 ```
-User runs: {projectname} --service --install
+User runs: caspaste --service --install
 
 Binary checks:
 ├─ Already root/admin? → Proceed with system service
@@ -6784,7 +7536,7 @@ Binary checks:
 **Port fallback behavior:**
 
 ```
-User runs: {projectname} --port 80
+User runs: caspaste --port 80
 
 Binary checks:
 ├─ Already root/admin? → Bind port 80, proceed
@@ -6796,35 +7548,35 @@ Binary checks:
 └─ Warn user of actual port in use
 ```
 
-#### The `{projectname}` System User/Group
+#### The `caspaste` System User/Group
 
 **Created automatically during first root/service startup.**
 
 | Property | Value |
 |----------|-------|
-| **Username** | `{projectname}` |
-| **Group** | `{projectname}` |
+| **Username** | `caspaste` |
+| **Group** | `caspaste` |
 | **Shell** | `/usr/sbin/nologin` (no login) |
-| **Home** | `/var/lib/{projectorg}/{projectname}` |
+| **Home** | `/var/lib/casjay-forks/caspaste` |
 | **UID/GID** | Auto-assigned by system |
 | **Type** | System user (UID < 1000 on Linux) |
 
-**What the `{projectname}` user CAN do:**
+**What the `caspaste` user CAN do:**
 
 | Permission | Details |
 |------------|---------|
-| Read/write config | `/etc/{projectorg}/{projectname}/` |
-| Read/write data | `/var/lib/{projectorg}/{projectname}/` |
-| Read/write cache | `/var/cache/{projectorg}/{projectname}/` |
-| Read/write logs | `/var/log/{projectorg}/{projectname}/` |
-| Read/write backups | `/var/lib/Backups/{projectorg}/{projectname}/` or `/mnt/Backups/...` |
+| Read/write config | `/etc/casjay-forks/caspaste/` |
+| Read/write data | `/var/lib/casjay-forks/caspaste/` |
+| Read/write cache | `/var/cache/casjay-forks/caspaste/` |
+| Read/write logs | `/var/log/casjay-forks/caspaste/` |
+| Read/write backups | `/var/lib/Backups/casjay-forks/caspaste/` or `/mnt/Backups/...` |
 | Use bound sockets | Inherited from root before privilege drop |
 | Bind ports >1024 | New sockets after privilege drop |
 | Run scheduled tasks | Backup, cleanup, SSL renewal, etc. |
 | Manage database | SQLite in data dir |
 | Manage SSL certs | In `{config_dir}/ssl/` |
 
-**What the `{projectname}` user CANNOT do:**
+**What the `caspaste` user CANNOT do:**
 
 | Restriction | Reason |
 |-------------|--------|
@@ -6840,19 +7592,19 @@ Binary checks:
 
 ```bash
 # Binary sets these during startup as root
-chown -R {projectname}:{projectname} /etc/{projectorg}/{projectname}/
-chown -R {projectname}:{projectname} /var/lib/{projectorg}/{projectname}/
-chown -R {projectname}:{projectname} /var/cache/{projectorg}/{projectname}/
-chown -R {projectname}:{projectname} /var/log/{projectorg}/{projectname}/
+chown -R caspaste:caspaste /etc/casjay-forks/caspaste/
+chown -R caspaste:caspaste /var/lib/casjay-forks/caspaste/
+chown -R caspaste:caspaste /var/cache/casjay-forks/caspaste/
+chown -R caspaste:caspaste /var/log/casjay-forks/caspaste/
 
 # Permissions
-chmod 755 /etc/{projectorg}/{projectname}/
-chmod 700 /etc/{projectorg}/{projectname}/security/
-chmod 700 /etc/{projectorg}/{projectname}/ssl/
-chmod 700 /etc/{projectorg}/{projectname}/tor/
-chmod 755 /var/lib/{projectorg}/{projectname}/
-chmod 755 /var/cache/{projectorg}/{projectname}/
-chmod 755 /var/log/{projectorg}/{projectname}/
+chmod 755 /etc/casjay-forks/caspaste/
+chmod 700 /etc/casjay-forks/caspaste/security/
+chmod 700 /etc/casjay-forks/caspaste/ssl/
+chmod 700 /etc/casjay-forks/caspaste/tor/
+chmod 755 /var/lib/casjay-forks/caspaste/
+chmod 755 /var/cache/casjay-forks/caspaste/
+chmod 755 /var/log/casjay-forks/caspaste/
 ```
 
 **User creation:** See PART 24 for platform-specific user creation commands (Linux `useradd`, macOS `dscl`, FreeBSD `pw`).
@@ -6862,7 +7614,7 @@ chmod 755 /var/log/{projectorg}/{projectname}/
 | Aspect | System Service | User Service |
 |--------|---------------|--------------|
 | **Installed by** | root/admin | Regular user |
-| **Runs as** | root → drops to `{projectname}` | Calling user |
+| **Runs as** | root → drops to `caspaste` | Calling user |
 | **Ports** | Any | >1024 only |
 | **Paths** | `/etc/`, `/var/` | `~/.config/`, `~/.local/` |
 | **Survives logout** | Yes | Depends on `lingering` |
@@ -6960,7 +7712,7 @@ server:
 
   # Branding & SEO - see PART 16 for full details
   branding:
-    title: "{projectname}"
+    title: "caspaste"
     tagline: ""
     description: ""
   seo:
@@ -7559,7 +8311,7 @@ go tool pprof http://localhost:64580/debug/pprof/block
 go tool pprof http://localhost:64580/debug/pprof/mutex
 
 # Execution trace (download and view)
-curl -o trace.out http://localhost:64580/debug/pprof/trace?seconds=5
+curl -q -LSsf -o trace.out http://localhost:64580/debug/pprof/trace?seconds=5
 go tool trace trace.out
 
 # WebUI for profiles
@@ -7609,7 +8361,7 @@ import (
     "runtime"
     "strings"
 
-    "github.com/{projectorg}/{projectname}/src/config"
+    "github.com/casjay-forks/caspaste/src/config"
 )
 
 var (
@@ -8041,12 +8793,12 @@ func ShowProgress(env *DisplayEnv, percent int) {
 
 ```bash
 # Test dumb terminal behavior
-TERM=dumb {projectname} --status
-TERM=dumb {projectname}-cli list
-TERM=dumb {projectname}-agent status
+TERM=dumb caspaste --status
+TERM=dumb caspaste-cli list
+TERM=dumb caspaste-agent status
 
 # Should produce plain text output with no escape codes
-TERM=dumb {projectname} --status | cat -v   # No ^[ sequences
+TERM=dumb caspaste --status | cat -v   # No ^[ sequences
 ```
 
 ### Platform-Specific Display Detection
@@ -8211,7 +8963,7 @@ src/
 
 ```go
 // go.mod
-module {projectorg}/{projectname}
+module casjay-forks/caspaste
 
 go 1.xx  // Use current latest stable version
 
@@ -8337,7 +9089,7 @@ package banner
 
 import (
     "fmt"
-    "{projectorg}/{projectname}/common/terminal"
+    "casjay-forks/caspaste/common/terminal"
 )
 
 type BannerConfig struct {
@@ -8371,15 +9123,15 @@ func PrintStartupBanner(cfg BannerConfig) {
 
 # PART 8: SERVER BINARY CLI 
 
-**These are the command-line flags for the SERVER binary (`{projectname}`), NOT the client (`{projectname}-cli`).**
+**These are the command-line flags for the SERVER binary (`caspaste`), NOT the client (`caspaste-cli`).**
 
 ## Binary Types
 
 | Binary | Default Name | Purpose | Key Flags |
 |--------|--------------|---------|-----------|
-| **Server** | `{projectname}` | Runs the HTTP server | `--config`, `--data`, `--port`, `--mode` |
-| **Agent** | `{projectname}-agent` | Reports to server | `--server`, `--token`, `--config` |
-| **Client** | `{projectname}-cli` | User interface to server | `--server`, `--token`, `--output` |
+| **Server** | `caspaste` | Runs the HTTP server | `--config`, `--data`, `--port`, `--mode` |
+| **Agent** | `caspaste-agent` | Reports to server | `--server`, `--token`, `--config` |
+| **Client** | `caspaste-cli` | User interface to server | `--server`, `--token`, `--output` |
 
 **Shared flags (ALL binaries):** `--help`, `--version`, `--shell`, `--debug`, `--color`
 
@@ -8387,18 +9139,18 @@ func PrintStartupBanner(cfg BannerConfig) {
 
 | Binary | Default Name | User-Agent |
 |--------|--------------|------------|
-| Server | `{projectname}` | `{projectname}/{version}` |
-| Agent | `{projectname}-agent` | `{projectname}-agent/{version}` |
-| Client | `{projectname}-cli` | `{projectname}-cli/{version}` |
+| Server | `caspaste` | `caspaste/{version}` |
+| Agent | `caspaste-agent` | `caspaste-agent/{version}` |
+| Client | `caspaste-cli` | `caspaste-cli/{version}` |
 
 **ALL binaries can be renamed by users. Must show ACTUAL binary name in:**
 - `--help` and `--version` output
 - Error messages showing "run X --help"
 - Any user-facing documentation/instructions
 
-**Hardcode `{projectname}` for internal identifiers (never changes):**
+**Hardcode `caspaste` for internal identifiers (never changes):**
 - User-Agent header (identifies binary type to server)
-- Default paths (`/etc/{projectorg}/{projectname}/`)
+- Default paths (`/etc/casjay-forks/caspaste/`)
 - Config keys, database tables, API identifiers
 
 **Get actual binary name:**
@@ -8517,20 +9269,20 @@ output:
 **Testing:**
 ```bash
 # Colors and emojis enabled (default)
-{projectname} --status
+caspaste --status
 
 # Colors and emojis disabled via NO_COLOR
-NO_COLOR=1 {projectname} --status
+NO_COLOR=1 caspaste --status
 
 # Colors forced on (overrides NO_COLOR for colors only)
-NO_COLOR=1 {projectname} --status --color=always
+NO_COLOR=1 caspaste --status --color=always
 
 # Colors forced off (explicit)
-{projectname} --status --color=never
+caspaste --status --color=never
 
 # Verify no escape codes or emojis in output
-NO_COLOR=1 {projectname} --status | cat -v   # No ^[ sequences
-NO_COLOR=1 {projectname} --status | grep -E '✅|❌|⚠️|🚀'  # Should find nothing
+NO_COLOR=1 caspaste --status | cat -v   # No ^[ sequences
+NO_COLOR=1 caspaste --status | grep -E '✅|❌|⚠️|🚀'  # Should find nothing
 ```
 
 **THESE SERVER COMMANDS CANNOT BE CHANGED. This is the complete command set.**
@@ -8564,11 +9316,11 @@ NO_COLOR=1 {projectname} --status | grep -E '✅|❌|⚠️|🚀'  # Should find
 ### Server --help Output
 
 ```bash
-$ {projectname} --help
-{projectname} {projectversion} - {project description}
+$ caspaste --help
+caspaste {projectversion} - {project description}
 
 Usage:
-  {projectname} [flags]
+  caspaste [flags]
 
 Information:
   -h, --help                        Show help (--help for any command shows its help)
@@ -8599,7 +9351,7 @@ Service Management:
       --maintenance CMD             Maintenance operations (--maintenance --help for details)
       --update [CMD]                Check/perform updates (--update --help for details)
 
-Run '{projectname} <command> --help' for detailed help on any command.
+Run 'caspaste <command> --help' for detailed help on any command.
 ```
 
 ## Directory Flags
@@ -8608,12 +9360,12 @@ Run '{projectname} <command> --help' for detailed help on any command.
 
 | Flag | Type | Default (Linux root) | Default (Linux user) |
 |------|------|----------------------|----------------------|
-| `--config` | Directory | `/etc/{projectorg}/{projectname}/` | `~/.config/{projectorg}/{projectname}/` |
-| `--data` | Directory | `/var/lib/{projectorg}/{projectname}/` | `~/.local/share/{projectorg}/{projectname}/` |
-| `--cache` | Directory | `/var/cache/{projectorg}/{projectname}/` | `~/.cache/{projectorg}/{projectname}/` |
-| `--log` | Directory | `/var/log/{projectorg}/{projectname}/` | `~/.local/log/{projectorg}/{projectname}/` |
-| `--backup` | Directory | `/mnt/Backups/{projectorg}/{projectname}/` (if writable) | `~/.local/share/Backups/{projectorg}/{projectname}/` |
-| `--pid` | File | `/var/run/{projectorg}/{projectname}.pid` | `~/.local/share/{projectorg}/{projectname}/{projectname}.pid` |
+| `--config` | Directory | `/etc/casjay-forks/caspaste/` | `~/.config/casjay-forks/caspaste/` |
+| `--data` | Directory | `/var/lib/casjay-forks/caspaste/` | `~/.local/share/casjay-forks/caspaste/` |
+| `--cache` | Directory | `/var/cache/casjay-forks/caspaste/` | `~/.cache/casjay-forks/caspaste/` |
+| `--log` | Directory | `/var/log/casjay-forks/caspaste/` | `~/.local/log/casjay-forks/caspaste/` |
+| `--backup` | Directory | `/mnt/Backups/casjay-forks/caspaste/` (if writable) | `~/.local/share/Backups/casjay-forks/caspaste/` |
+| `--pid` | File | `/var/run/casjay-forks/caspaste.pid` | `~/.local/share/casjay-forks/caspaste/caspaste.pid` |
 
 **Note:** `--backup` prefers system backup dir if writable, falls back to user dir. See `GetBackupDir()` in PART 5.
 
@@ -8725,7 +9477,7 @@ func isOurProcess(pid int) bool {
         // On macOS/BSD, use ps command
         return isOurProcessDarwin(pid)
     }
-    return strings.Contains(filepath.Base(exePath), "{projectname}")
+    return strings.Contains(filepath.Base(exePath), "caspaste")
 }
 
 // isOurProcessDarwin checks process on macOS/BSD
@@ -8735,7 +9487,7 @@ func isOurProcessDarwin(pid int) bool {
     if err != nil {
         return false
     }
-    return strings.Contains(string(output), "{projectname}")
+    return strings.Contains(string(output), "caspaste")
 }
 
 // --- pid_windows.go ---
@@ -8774,7 +9526,7 @@ func isOurProcess(pid int) bool {
         return false
     }
     exePath := windows.UTF16ToString(buf[:size])
-    return strings.Contains(strings.ToLower(filepath.Base(exePath)), "{projectname}")
+    return strings.Contains(strings.ToLower(filepath.Base(exePath)), "caspaste")
 }
 
 // WritePIDFile writes current process PID to file
@@ -8887,15 +9639,15 @@ PHASE 5: Server startup (actual server start)
 
 8. IF RUNNING AS ROOT - setup system resources BEFORE dropping privileges:
    a. Check/create system user:
-      ├─ User {projectname} exists → use it
-      └─ User missing → create {projectname}:{projectname} (see PART 25)
+      ├─ User caspaste exists → use it
+      └─ User missing → create caspaste:caspaste (see PART 25)
    b. Create ALL directories (while still root):
       ├─ {config_dir}/ and subdirs (security/, ssl/, tor/)
       ├─ {data_dir}/ and subdirs (db/, tor/, tor/site/)
       ├─ {cache_dir}/
       ├─ {log_dir}/
       └─ {backup_dir}/
-   c. Set ownership: chown -R {projectname}:{projectname} on all dirs
+   c. Set ownership: chown -R caspaste:caspaste on all dirs
    d. Set permissions: 0755 general dirs, 0700 sensitive (security/, ssl/, tor/)
    e. Determine ports (see PART 15 for full port rules):
       ├─ Format 1: --port {port} (single port)
@@ -8905,22 +9657,22 @@ PHASE 5: Server startup (actual server start)
       ├─ Format 2: --port {http},{https} (dual port)
       │   ├─ First port = HTTP
       │   └─ Second port = HTTPS
-      ├─ No --port? → check {PROJECTNAME}_PORT env var (same format)
+      ├─ No --port? → check CASPASTE_PORT env var (same format)
       ├─ No env var? → read from config file (server.port)
       └─ No config? → random port in 64000-64999 range (single, HTTP)
    f. Bind ALL privileged ports (< 1024) NOW while still root:
       ├─ For each port < 1024: create and bind socket, store fd
       ├─ If ANY privileged port fails: exit with error
       └─ Unprivileged ports (>= 1024) bound later in step 18
-   g. DROP PRIVILEGES to {projectname} user
+   g. DROP PRIVILEGES to caspaste user
    h. Verify privilege drop succeeded (getuid() != 0)
 
 9. IF RUNNING AS USER (non-root) - setup user directories:
-   ├─ Create {config_dir} (~/.config/{projectorg}/{projectname}/)
-   ├─ Create {data_dir} (~/.local/share/{projectorg}/{projectname}/)
-   ├─ Create {cache_dir} (~/.cache/{projectorg}/{projectname}/)
-   ├─ Create {log_dir} (~/.local/log/{projectorg}/{projectname}/)
-   ├─ Create {backup_dir} (~/.local/share/Backups/{projectorg}/{projectname}/)
+   ├─ Create {config_dir} (~/.config/casjay-forks/caspaste/)
+   ├─ Create {data_dir} (~/.local/share/casjay-forks/caspaste/)
+   ├─ Create {cache_dir} (~/.cache/casjay-forks/caspaste/)
+   ├─ Create {log_dir} (~/.local/log/casjay-forks/caspaste/)
+   ├─ Create {backup_dir} (~/.local/share/Backups/casjay-forks/caspaste/)
    ├─ Set permissions: 0700 on all dirs (user-only access)
    └─ Note: port must be >1024 (user mode cannot bind privileged ports)
 
@@ -8929,7 +9681,7 @@ PHASE 5: Server startup (actual server start)
     ├─ Set default log level (info)
     └─ Log "Server starting, version X.Y.Z"
 
-11. Check PID file (root: /var/run/{projectorg}/{projectname}.pid, user: {data_dir}/{projectname}.pid):
+11. Check PID file (root: /var/run/casjay-forks/caspaste.pid, user: {data_dir}/caspaste.pid):
     ├─ PID file exists AND process running → exit 1 "already running"
     ├─ PID file exists AND process dead → remove stale PID, continue
     └─ No PID file → continue
@@ -8940,7 +9692,7 @@ PHASE 5: Server startup (actual server start)
     ├─ Look for {config_dir}/server.yml
     ├─ Determine port (if not already bound in step 8f):
     │   ├─ --port CLI flag → use specified
-    │   ├─ {PROJECTNAME}_PORT env var → use specified
+    │   ├─ CASPASTE_PORT env var → use specified
     │   ├─ Config file server.port → use specified
     │   └─ Default → random 64000-64999
     ├─ If MISSING (first run):
@@ -8952,7 +9704,7 @@ PHASE 5: Server startup (actual server start)
     ├─ If EXISTS:
     │   ├─ Parse YAML configuration
     │   └─ Validate all values (invalid → log WARN, use default)
-    └─ Apply remaining environment variable overrides ({PROJECTNAME}_*)
+    └─ Apply remaining environment variable overrides (CASPASTE_*)
 
 14. Reconfigure logging from config:
     ├─ Set log level from server.logging.level
@@ -9089,7 +9841,7 @@ PHASE 5: Server startup (actual server start)
 | Init systems | Parent PID 1 is: `tini`, `dumb-init`, `s6-svscan`, `runsv`, `runsvdir`, `catatonit` |
 | Kubernetes | `KUBERNETES_SERVICE_HOST` env var set |
 | cgroup | `/proc/1/cgroup` contains `docker`, `kubepods`, `lxc` |
-| Self wrapper | Parent process is `{projectname}` (entrypoint wrapper)
+| Self wrapper | Parent process is `caspaste` (entrypoint wrapper)
 
 **Manual Start Priority Order:**
 1. `--daemon` CLI flag (highest)
@@ -9131,7 +9883,7 @@ func isContainer() bool {
     switch parentName {
     case "tini", "dumb-init", "s6-svscan", "runsv", "runsvdir", "catatonit":
         return true
-    case "{projectname}":
+    case "caspaste":
         // Parent is our own binary - likely container entrypoint
         return true
     }
@@ -9378,7 +10130,7 @@ myapp is running (PID 12345)
 **Used for Docker/compose healthcheck:**
 ```yaml
 healthcheck:
-  test: /usr/local/bin/{projectname} --status
+  test: /usr/local/bin/caspaste --status
   interval: 10s
   timeout: 5s
   retries: 3
@@ -10809,7 +11561,7 @@ $ kill -TERM $(cat /var/run/myapp.pid)
 | (none) | `DATABASE_DIR` | SQLite database directory (defaults to `{data_dir}/db/`, changeable) |
 | (none) | `BACKUP_DIR` | Backup directory (defaults to `{data_dir}/backup/`, changeable) |
 
-**External backup mounts:** In production, `BACKUP_DIR` should typically point to external storage (NAS, separate disk, etc.) rather than staying under `{data_dir}`. Example: `BACKUP_DIR=/mnt/Backups/{projectorg}/{projectname}`. The default `{data_dir}/backup/` is for development/testing only.
+**External backup mounts:** In production, `BACKUP_DIR` should typically point to external storage (NAS, separate disk, etc.) rather than staying under `{data_dir}`. Example: `BACKUP_DIR=/mnt/Backups/casjay-forks/caspaste`. The default `{data_dir}/backup/` is for development/testing only.
 
 **Implementation:**
 
@@ -10888,10 +11640,10 @@ func isWritable(path string) bool {
 }
 
 // systemBackupDir returns the system-level backup directory
-// Linux: /mnt/Backups/{projectorg}/{projectname}
-// macOS: /Library/Backups/{projectorg}/{projectname}
-// BSD:   /var/backups/{projectorg}/{projectname}
-// Windows: %ProgramData%\Backups\{projectorg}\{projectname}
+// Linux: /mnt/Backups/casjay-forks/caspaste
+// macOS: /Library/Backups/casjay-forks/caspaste
+// BSD:   /var/backups/casjay-forks/caspaste
+// Windows: %ProgramData%\Backups\casjay-forks\caspaste
 func systemBackupDir() string {
     switch runtime.GOOS {
     case "darwin":
@@ -10906,9 +11658,9 @@ func systemBackupDir() string {
 }
 
 // userBackupDir returns the user-level backup directory
-// Linux/BSD: ~/.local/share/Backups/{projectorg}/{projectname}
-// macOS: ~/Library/Backups/{projectorg}/{projectname}
-// Windows: %LocalAppData%\Backups\{projectorg}\{projectname}
+// Linux/BSD: ~/.local/share/Backups/casjay-forks/caspaste
+// macOS: ~/Library/Backups/casjay-forks/caspaste
+// Windows: %LocalAppData%\Backups\casjay-forks\caspaste
 func userBackupDir() string {
     home, _ := os.UserHomeDir()
     switch runtime.GOOS {
@@ -10926,7 +11678,7 @@ func userBackupDir() string {
 
 ```bash
 # Configurable paths - organized by component
-# APP_NAME is set to {projectname}
+# APP_NAME is set to caspaste
 export CONFIG_DIR="/config/${APP_NAME}"
 export DATA_DIR="/data/${APP_NAME}"
 export CACHE_DIR="/data/${APP_NAME}/cache"
@@ -10935,8 +11687,8 @@ export DATABASE_DIR="/data/db"
 export BACKUP_DIR="/data/backups/${APP_NAME}"
 
 # Tor directories under binary's dirs (binary owns Tor)
-# ${CONFIG_DIR}/tor/ = /config/{projectname}/tor/
-# ${DATA_DIR}/tor/   = /data/{projectname}/tor/
+# ${CONFIG_DIR}/tor/ = /config/caspaste/tor/
+# ${DATA_DIR}/tor/   = /data/caspaste/tor/
 ```
 
 ### Docker Compose Mapping
@@ -10945,13 +11697,13 @@ export BACKUP_DIR="/data/backups/${APP_NAME}"
 
 ```yaml
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
     command:
       - --config=/config
       - --data=/data
       - --log=/logs
-      - --pid=/run/{projectname}.pid
+      - --pid=/run/caspaste.pid
       - --port=8080
     volumes:
       - config:/config:ro          # Config (read-only)
@@ -10966,15 +11718,15 @@ services:
 
 ```yaml
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
     volumes:
-      - {projectname}-data:/data
+      - caspaste-data:/data
     ports:
       - "8080:8080"
 
 volumes:
-  {projectname}-data:
+  caspaste-data:
 ```
 
 ### Commands Anyone Can Run (No Privileges)
@@ -11270,7 +12022,7 @@ This properly handles complex suffixes like `.co.uk`, `.com.au`, `.org.uk`, etc.
 - `.localhost`, `.test`, `.example`, `.invalid` (RFC 6761)
 - `.local`, `.lan`, `.internal`, `.home`, `.localdomain`
 - `.home.arpa`, `.intranet`, `.corp`, `.private`
-- `{projectname}` - dynamic (e.g., `app.jokes`, `dev.quotes`, `my.api`)
+- `caspaste` - dynamic (e.g., `app.jokes`, `dev.quotes`, `my.api`)
 
 **Overlay Network TLDs (App-Managed, not set in DOMAIN):**
 - `.onion` - Tor hidden services (RFC 7686) - app generates/manages
@@ -11326,7 +12078,7 @@ func IsValidHost(host string, devMode bool, projectName string) bool {
         return true
     }
 
-    // Check dynamic project-specific TLD (e.g., app.jokes, dev.quotes, quotes, jokes, {projectname})
+    // Check dynamic project-specific TLD (e.g., app.jokes, dev.quotes, quotes, jokes, caspaste)
     if projectName != "" && strings.HasSuffix(lower, "."+strings.ToLower(projectName)) {
         // Project TLDs only valid in dev mode
         return devMode
@@ -15173,7 +15925,7 @@ server:
     timeout: 5s
 
     # Key prefix to avoid collisions (use unique prefix per app)
-    prefix: "{projectname}:"
+    prefix: "caspaste:"
 
     # Default TTL
     ttl: 1h
@@ -15208,7 +15960,7 @@ server:
   cache:
     type: valkey
     url: ${CACHE_URL}  # valkey://user:pass@valkey.example.com:6379/0
-    prefix: "{projectname}:"
+    prefix: "caspaste:"
 ```
 
 **Using individual fields:**
@@ -15220,7 +15972,7 @@ server:
     port: 6379
     password: ${VALKEY_PASSWORD}
     db: 0
-    prefix: "{projectname}:"
+    prefix: "caspaste:"
 ```
 
 **Valkey/Redis Cluster:**
@@ -15234,7 +15986,7 @@ server:
       - valkey2.example.com:6379
       - valkey3.example.com:6379
     password: ${VALKEY_PASSWORD}
-    prefix: "{projectname}:"
+    prefix: "caspaste:"
 ```
 
 ### Cache Usage in Application
@@ -15529,7 +16281,7 @@ type StatsInfo struct {
 
 | Requirement | Details |
 |-------------|---------|
-| Page title | `{projectname} - Health Status` |
+| Page title | `caspaste - Health Status` |
 | Layout | Standard public layout (header, main.container, footer) |
 | CSS patterns | PART 16 global classes |
 | Field order | Same as backend struct (1-8) |
@@ -15541,7 +16293,7 @@ type StatsInfo struct {
 <!DOCTYPE html>
 <html lang="en" class="theme-dark">
 <head>
-  <title>{projectname} - Health Status</title>
+  <title>caspaste - Health Status</title>
   <!-- Standard meta, CSS, theme support -->
 </head>
 <body>
@@ -16008,7 +16760,7 @@ When not in cluster mode:
 ### --version Output
 
 ```
-{projectname} {projectversion}
+caspaste {projectversion}
 Built: {BUILD_DATE}
 Go: {GO_VERSION}
 OS/Arch: {GOOS}/{GOARCH}
@@ -16535,13 +17287,13 @@ func getAPIResponseFormat(r *http.Request) string {
 **Use cases:**
 
 **API with `.txt` extension:**
-- `curl https://api.example.com/api/{api_version}/joke/random.txt` → Just the joke text
-- `curl https://api.example.com/api/{api_version}/healthz.txt` → "OK" or "ERROR: ..."
+- `curl -q -LSsf https://api.example.com/api/{api_version}/joke/random.txt` → Just the joke text
+- `curl -q -LSsf https://api.example.com/api/{api_version}/healthz.txt` → "OK" or "ERROR: ..."
 - Scripts that need plain output without JSON parsing
 
 **Frontend with smart detection:**
-- `curl https://example.com/joke/random` → Auto-detects CLI, returns text (no .txt needed)
-- `curl -H "Accept: text/plain" https://example.com/users/123` → Plain text
+- `curl -q -LSsf https://example.com/joke/random` → Auto-detects CLI, returns text (no .txt needed)
+- `curl -q -LSsf -H "Accept: text/plain" https://example.com/users/123` → Plain text
 - Browser visit to `/joke/random` → HTML page
 - Command-line tools get text automatically
 
@@ -16646,7 +17398,7 @@ When an HTTP tool (curl, wget, httpie) is detected, the server MUST:
 
 | Type | Examples | Detection | Response | Interactive | JS Support |
 |------|----------|-----------|----------|-------------|------------|
-| **Our Client** | `{projectname}-cli` | `{projectname}-cli/` in User-Agent | JSON (client handles formatting) | **YES** (TUI/GUI) | N/A |
+| **Our Client** | `caspaste-cli` | `caspaste-cli/` in User-Agent | JSON (client handles formatting) | **YES** (TUI/GUI) | N/A |
 | **Text Browsers** | lynx, w3m, links, elinks | User-Agent patterns | HTML **without JavaScript** (no-JS alternative) | **YES** (navigate, click) | **NO** |
 | **HTTP Tools** | curl, wget, httpie | User-Agent patterns | Formatted text (HTML2TextConverter) | **NO** (just dump output) | N/A |
 
@@ -16672,7 +17424,7 @@ When an HTTP tool (curl, wget, httpie) is detected, the server MUST:
 ```go
 // src/common/httputil/detect.go
 
-// isOurCliClient detects our own client binary ({projectname}-cli)
+// isOurCliClient detects our own client binary (caspaste-cli)
 // Client is INTERACTIVE (TUI/GUI) - receives JSON, renders itself
 func isOurCliClient(r *http.Request) bool {
     ua := r.Header.Get("User-Agent")
@@ -16902,7 +17654,7 @@ ID: joke_123
   • API Docs [/docs]
   • Get Another Joke [/jokes/random]
 ────────────────────────────────────────────────────────────────────────────────
-                    Powered by {projectname} • v{version}
+                    Powered by caspaste • v{version}
 ```
 
 **Request Handler Integration:**
@@ -16958,7 +17710,7 @@ func renderNoJSHTML(w http.ResponseWriter, data interface{}) {
 | Client Type | Detection | Response | Interactive | JS Support |
 |-------------|-----------|----------|-------------|------------|
 | Browser (Chrome, Firefox) | User-Agent | HTML + JS | **Yes** | **Yes** |
-| **Our Client** (`{projectname}-cli`) | `isOurCliClient()` | JSON | **Yes** (TUI/GUI) | N/A |
+| **Our Client** (`caspaste-cli`) | `isOurCliClient()` | JSON | **Yes** (TUI/GUI) | N/A |
 | **Text Browsers** (lynx, w3m, links) | `isTextBrowser()` | HTML (no-JS) | **Yes** (navigate, click) | **No** |
 | **HTTP Tools** (curl, wget, httpie) | `isHttpTool()` | Formatted text | **No** (just dump) | N/A |
 | Accept: text/plain | Header | Formatted text | No | N/A |
@@ -17680,7 +18432,7 @@ Before proceeding, confirm you understand:
 
 | Environment | DOMAIN Value | Example |
 |-------------|--------------|---------|
-| **Development** | `{projectname}` | `DOMAIN=jokes` |
+| **Development** | `caspaste` | `DOMAIN=jokes` |
 | **Production** | Valid FQDN | `DOMAIN=api.example.com` |
 
 **Valid Production DOMAIN formats (comma-separated list supported):**
@@ -17886,9 +18638,9 @@ export DOMAIN=myapp.com,www.myapp.com,api.myapp.com
 **Dev TLDs are allowed in development mode but require global IP fallback for remote access.**
 
 **Dynamic Dev TLDs (project name as TLD):**
-- `{projectname}` - e.g., `app.jokes`, `my.quotes`, `dev.api`
-- `{projectname}.local` - e.g., `app.jokes.local`
-- `{projectname}.test` - e.g., `app.jokes.test`
+- `caspaste` - e.g., `app.jokes`, `my.quotes`, `dev.api`
+- `caspaste.local` - e.g., `app.jokes.local`
+- `caspaste.test` - e.g., `app.jokes.test`
 
 **Static Dev TLDs:**
 - `.local`, `.test`, `.example`, `.invalid` (RFC 6761)
@@ -17924,7 +18676,7 @@ func GetDisplayURL(projectName string, port int, isHTTPS bool) string {
 func isDevTLD(host, projectName string) bool {
     lower := strings.ToLower(host)
 
-    // Check dynamic project-specific TLD (e.g., app.jokes, dev.quotes, quotes, jokes, {projectname})
+    // Check dynamic project-specific TLD (e.g., app.jokes, dev.quotes, quotes, jokes, caspaste)
     if projectName != "" && strings.HasSuffix(lower, "."+strings.ToLower(projectName)) {
         return true
     }
@@ -18255,7 +19007,7 @@ formatURL(host, 8443, true)
 **Example (Production with SSL + Tor on 443):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔒 Running in mode: production                             │
 ├─────────────────────────────────────────────────────────────┤
@@ -18270,7 +19022,7 @@ formatURL(host, 8443, true)
 **Example (Production with Tor + I2P on 443):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔒 Running in mode: production                             │
 ├─────────────────────────────────────────────────────────────┤
@@ -18286,7 +19038,7 @@ formatURL(host, 8443, true)
 **Example (Production on port 8080):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔒 Running in mode: production                             │
 ├─────────────────────────────────────────────────────────────┤
@@ -18300,7 +19052,7 @@ formatURL(host, 8443, true)
 **Example (Development on port 8080):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔧 Running in mode: development                            │
 ├─────────────────────────────────────────────────────────────┤
@@ -18314,7 +19066,7 @@ formatURL(host, 8443, true)
 **Example (Development IPv6 on port 8080):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔧 Running in mode: development                            │
 ├─────────────────────────────────────────────────────────────┤
@@ -18328,7 +19080,7 @@ formatURL(host, 8443, true)
 **Example (Production on port 80):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔒 Running in mode: production                             │
 ├─────────────────────────────────────────────────────────────┤
@@ -18342,7 +19094,7 @@ formatURL(host, 8443, true)
 **Example (Production with debugging enabled):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔒 Running in mode: production [debugging]                 │
 ├─────────────────────────────────────────────────────────────┤
@@ -18356,7 +19108,7 @@ formatURL(host, 8443, true)
 **Example (First Run - Setup Required):**
 ```
 ╭─────────────────────────────────────────────────────────────╮
-│  🚀 {PROJECTNAME} · 📦 {projectversion}                      │
+│  🚀 CASPASTE · 📦 {projectversion}                      │
 ├─────────────────────────────────────────────────────────────┤
 │  🔧 Running in mode: development                            │
 ├─────────────────────────────────────────────────────────────┤
@@ -18833,16 +19585,16 @@ func detectClientType(r *http.Request) string {
 
 2. **API Endpoints** (programmatic):
    ```bash
-   curl -X POST /api/{api_version}/auth/register -d '{"username":"test","email":"test@example.com"}'
-   curl -X PATCH /api/{api_version}/users -d '{"email":"new@test.com"}'  # Current user
-   curl -X PUT /api/{api_version}/{admin_path}/users/123 -d '{"email":"new@test.com"}'  # Admin
-   curl -X DELETE /api/{api_version}/{admin_path}/users/123  # Admin
+   curl -q -LSsf -X POST /api/{api_version}/auth/register -d '{"username":"test","email":"test@example.com"}'
+   curl -q -LSsf -X PATCH /api/{api_version}/users -d '{"email":"new@test.com"}'  # Current user
+   curl -q -LSsf -X PUT /api/{api_version}/{admin_path}/users/123 -d '{"email":"new@test.com"}'  # Admin
+   curl -q -LSsf -X DELETE /api/{api_version}/{admin_path}/users/123  # Admin
    ```
 
 3. **Frontend Direct** (CLI/scripting):
    ```bash
-   curl -X POST /auth/register -d 'username=test&email=test@example.com'  # Form-encoded
-   curl /{username}  # Returns text (auto-detected) - public profile
+   curl -q -LSsf -X POST /auth/register -d 'username=test&email=test@example.com'  # Form-encoded
+   curl -q -LSsf /{username}  # Returns text (auto-detected) - public profile
    ```
 
 **Rule:** CRUD must work for browsers (HTML forms), APIs (JSON), and CLI (text/form-encoded).
@@ -18853,11 +19605,11 @@ func detectClientType(r *http.Request) string {
 
 ```bash
 # Easy: Test text output (no HTML parsing needed)
-curl /users/123                           # Auto-detects CLI, returns text
-curl -H "Accept: text/plain" /users/123  # Explicitly request text
+curl -q -LSsf /users/123                  # Auto-detects CLI, returns text
+curl -q -LSsf -H "Accept: text/plain" /users/123  # Explicitly request text
 
 # Hard: Testing HTML requires parsing
-curl -H "Accept: text/html" /users/123 | grep "<title>"  # Fragile
+curl -q -LSsf -H "Accept: text/html" /users/123 | grep "<title>"  # Fragile
 ```
 
 **Recommended testing approach:**
@@ -18869,7 +19621,7 @@ curl -H "Accept: text/html" /users/123 | grep "<title>"  # Fragile
 **Test scripts should:**
 ```bash
 # Test frontend returns text for CLI
-RESULT=$(curl -s http://localhost:80/users/123)
+RESULT=$(curl -q -LSsf http://localhost:80/users/123)
 if echo "$RESULT" | grep -q "testuser"; then
     echo "✓ Frontend returns user data"
 else
@@ -18877,7 +19629,7 @@ else
 fi
 
 # Test frontend returns HTML for browser (optional, just check Content-Type)
-CONTENT_TYPE=$(curl -s -H "Accept: text/html" -I http://localhost:80/users/123 | grep -i "content-type")
+CONTENT_TYPE=$(curl -q -LSsfI -H "Accept: text/html" http://localhost:80/users/123 | grep -i "content-type")
 if echo "$CONTENT_TYPE" | grep -q "text/html"; then
     echo "✓ Frontend serves HTML to browsers"
 fi
@@ -20220,20 +20972,275 @@ dismissAllToasts();
 }
 ```
 
-## PWA Support 
+## PWA Support
 
-**Progressive Web App = Native-like web app (installable, offline, push notifications)**
+**Progressive Web App = Native-like web app (installable, offline, push notifications, GPS)**
+
+**Goal: Indistinguishable from native app** - same UX, capabilities, and performance.
 
 | Feature | Implementation | Notes |
 |---------|----------------|-------|
 | **Manifest** | `/manifest.json` with app metadata | Required for install |
-| **Icons** | Multiple sizes (192x192, 512x512 minimum) | For home screen |
-| **Service Worker** | Cache static assets, handle push | Core of PWA |
+| **Icons** | Multiple sizes including maskable | For all platforms |
+| **Service Worker** | Cache, push, background sync, offline | Core of PWA |
 | **Installable** | Meets PWA install criteria | Add to home screen |
 | **HTTPS** | Required for service workers | Non-negotiable |
 | **Push Notifications** | Web Push API via Service Worker | User opt-in required |
+| **Geolocation** | GPS access via Geolocation API | User permission required |
 | **User Sessions** | Tokens in localStorage/IndexedDB | Persists across restarts |
 | **Background Sync** | Queue actions when offline, sync when online | Seamless offline |
+| **App Updates** | Detect new SW version, prompt user | Keep app current |
+
+### Service Worker Registration
+
+**Register service worker on app load:**
+
+```javascript
+// /static/js/app.js - Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+      console.log('SW registered:', registration.scope);
+
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available
+            showUpdateNotification();
+          }
+        });
+      });
+    } catch (error) {
+      console.error('SW registration failed:', error);
+    }
+  });
+}
+```
+
+### Service Worker Lifecycle
+
+**The service worker has three main lifecycle events:**
+
+| Event | When | Purpose |
+|-------|------|---------|
+| **install** | First registration or new version | Pre-cache static assets |
+| **activate** | After install, when no old SW controlling pages | Clean old caches |
+| **fetch** | Every network request from controlled pages | Serve from cache or network |
+
+```javascript
+// /sw.js - Service Worker
+const CACHE_VERSION = 'v1.0.0';
+const CACHE_NAME = `{appname}-cache-${CACHE_VERSION}`;
+
+// Assets to pre-cache on install
+const PRECACHE_ASSETS = [
+  '/',
+  '/static/css/app.css',
+  '/static/js/app.js',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/offline.html'
+];
+
+// INSTALL - Pre-cache static assets
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting()) // Activate immediately
+  );
+});
+
+// ACTIVATE - Clean old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key.startsWith('{appname}-cache-') && key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      ))
+      .then(() => self.clients.claim()) // Take control immediately
+  );
+});
+
+// FETCH - Serve from cache or network
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') return;
+
+  // Skip API calls (network-only)
+  if (url.pathname.startsWith('/api/')) {
+    return; // Let browser handle normally
+  }
+
+  // Static assets: cache-first
+  if (url.pathname.startsWith('/static/')) {
+    event.respondWith(
+      caches.match(request)
+        .then(cached => cached || fetch(request)
+          .then(response => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+            return response;
+          })
+        )
+    );
+    return;
+  }
+
+  // HTML pages: network-first, cache fallback
+  if (request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request)
+          .then(cached => cached || caches.match('/offline.html'))
+        )
+    );
+    return;
+  }
+
+  // Default: network-first
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
+  );
+});
+```
+
+### Cache Versioning & Updates
+
+**Cache version strategy:**
+
+| Change Type | Action | Example |
+|-------------|--------|---------|
+| **Bug fix** | Increment patch | `v1.0.0` → `v1.0.1` |
+| **New feature** | Increment minor | `v1.0.1` → `v1.1.0` |
+| **Breaking change** | Increment major | `v1.1.0` → `v2.0.0` |
+
+**Cache naming convention:** `{appname}-cache-v{major}.{minor}.{patch}`
+
+**Update flow:**
+```
+1. User visits app
+2. Browser checks for new sw.js
+3. If changed → install event fires
+4. New SW waits until old SW's pages close (or skipWaiting)
+5. activate event fires → clean old caches
+6. New SW controls all pages
+```
+
+**Force update check:**
+```javascript
+// Check for updates every hour when app is active
+setInterval(() => {
+  navigator.serviceWorker.ready.then(reg => reg.update());
+}, 60 * 60 * 1000);
+```
+
+### App Update Notification
+
+**Notify user when new version is available:**
+
+```javascript
+// Show update banner
+function showUpdateNotification() {
+  const banner = document.createElement('div');
+  banner.className = 'update-banner';
+  banner.innerHTML = `
+    <span>A new version is available</span>
+    <button onclick="updateApp()">Update Now</button>
+    <button onclick="this.parentElement.remove()">Later</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+// Apply update
+function updateApp() {
+  navigator.serviceWorker.ready.then(reg => {
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  });
+  // Reload when new SW takes over
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
+```
+
+**In service worker - handle skip waiting message:**
+```javascript
+// sw.js
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+```
+
+### App Install Prompt
+
+**Capture and control the install prompt:**
+
+```javascript
+let deferredPrompt;
+
+// Capture the install prompt
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault(); // Don't show automatically
+  deferredPrompt = event;
+  showInstallButton(); // Show custom install UI
+});
+
+// Custom install button handler
+function installApp() {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    if (result.outcome === 'accepted') {
+      console.log('App installed');
+    }
+    deferredPrompt = null;
+    hideInstallButton();
+  });
+}
+
+// Detect if already installed
+window.addEventListener('appinstalled', () => {
+  console.log('App was installed');
+  hideInstallButton();
+  deferredPrompt = null;
+});
+
+// Check if running as installed PWA
+function isInstalledPWA() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS
+}
+```
+
+**Install button visibility rules:**
+
+| Condition | Show Install Button |
+|-----------|---------------------|
+| `beforeinstallprompt` fired | ✅ Yes |
+| Already installed (standalone mode) | ❌ No |
+| iOS Safari (no prompt event) | ✅ Yes (manual instructions) |
+| Desktop browser | ✅ Yes (if supported) |
 
 ### Push Notifications (PWA)
 
@@ -20249,13 +21256,83 @@ dismissAllToasts();
 **User must grant permission** - prompt on first relevant action, not page load.
 
 ```javascript
-// Service Worker - handle push
-self.addEventListener('push', event => {
-  const data = event.data.json();
-  self.registration.showNotification(data.title, {
-    body: data.body,
-    icon: '/static/icons/icon-192.png'
+// Request permission and subscribe
+async function subscribeToPush() {
+  // Check support
+  if (!('PushManager' in window)) {
+    console.log('Push not supported');
+    return null;
+  }
+
+  // Request permission
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    console.log('Notification permission denied');
+    return null;
+  }
+
+  // Subscribe
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
   });
+
+  // Send subscription to server
+  await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(subscription)
+  });
+
+  return subscription;
+}
+
+// Helper: Convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+```
+
+**Service Worker - handle push:**
+```javascript
+// sw.js
+self.addEventListener('push', event => {
+  const data = event.data?.json() || {};
+  const options = {
+    body: data.body || 'New notification',
+    icon: '/static/icons/icon-192.png',
+    badge: '/static/icons/badge-72.png',
+    vibrate: [100, 50, 100],
+    data: { url: data.url || '/' },
+    actions: data.actions || []
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || '{App Name}', options)
+  );
+});
+
+// Handle notification click
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(windowClients => {
+      // Focus existing window if open
+      for (const client of windowClients) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Open new window
+      return clients.openWindow(url);
+    })
+  );
 });
 ```
 
@@ -20263,6 +21340,180 @@ self.addEventListener('push', event => {
 - Enable/disable push notifications
 - VAPID key generation
 - Test push functionality
+
+### Background Sync
+
+**Queue actions when offline, automatically sync when back online:**
+
+```javascript
+// Register sync when offline action fails
+async function saveDataWithSync(data) {
+  try {
+    await fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    // Network failed - queue for background sync
+    await saveToIndexedDB('pending-sync', data);
+    const registration = await navigator.serviceWorker.ready;
+    await registration.sync.register('sync-data');
+  }
+}
+```
+
+**Service Worker - handle sync:**
+```javascript
+// sw.js
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-data') {
+    event.waitUntil(syncPendingData());
+  }
+});
+
+async function syncPendingData() {
+  const db = await openIndexedDB();
+  const pending = await getAllFromStore(db, 'pending-sync');
+
+  for (const item of pending) {
+    try {
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item.data)
+      });
+      await deleteFromStore(db, 'pending-sync', item.id);
+    } catch (error) {
+      // Will retry on next sync event
+      throw error;
+    }
+  }
+}
+```
+
+**Sync retry behavior:**
+
+| Attempt | Delay | Notes |
+|---------|-------|-------|
+| 1st | Immediate | When connection restored |
+| 2nd | ~5 minutes | If first fails |
+| 3rd | ~15 minutes | Exponential backoff |
+| Final | ~1 hour | Browser may give up |
+
+### Geolocation (GPS Access)
+
+**Access device GPS like a native app:**
+
+```javascript
+// Check if geolocation is available
+function hasGeolocation() {
+  return 'geolocation' in navigator;
+}
+
+// Get current position (one-time)
+async function getCurrentLocation() {
+  if (!hasGeolocation()) {
+    throw new Error('Geolocation not supported');
+  }
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      position => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude,
+        heading: position.coords.heading,
+        speed: position.coords.speed,
+        timestamp: position.timestamp
+      }),
+      error => reject(handleGeolocationError(error)),
+      {
+        enableHighAccuracy: true,  // Use GPS if available
+        timeout: 10000,            // 10 second timeout
+        maximumAge: 60000          // Accept cached position up to 1 minute old
+      }
+    );
+  });
+}
+
+// Watch position (continuous tracking)
+function watchLocation(callback, errorCallback) {
+  if (!hasGeolocation()) {
+    errorCallback(new Error('Geolocation not supported'));
+    return null;
+  }
+
+  return navigator.geolocation.watchPosition(
+    position => callback({
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      altitude: position.coords.altitude,
+      heading: position.coords.heading,
+      speed: position.coords.speed,
+      timestamp: position.timestamp
+    }),
+    error => errorCallback(handleGeolocationError(error)),
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0  // Always get fresh position
+    }
+  );
+}
+
+// Stop watching
+function stopWatchingLocation(watchId) {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+  }
+}
+
+// Handle errors
+function handleGeolocationError(error) {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      return new Error('Location permission denied');
+    case error.POSITION_UNAVAILABLE:
+      return new Error('Location unavailable');
+    case error.TIMEOUT:
+      return new Error('Location request timed out');
+    default:
+      return new Error('Unknown location error');
+  }
+}
+```
+
+**Geolocation options:**
+
+| Option | Value | Purpose |
+|--------|-------|---------|
+| `enableHighAccuracy` | `true` | Use GPS (slower, battery drain) |
+| `enableHighAccuracy` | `false` | Use network location (faster, less accurate) |
+| `timeout` | milliseconds | How long to wait for position |
+| `maximumAge` | milliseconds | Accept cached position if newer than this |
+
+**Permission UX best practices:**
+
+| ❌ Bad | ✅ Good |
+|--------|---------|
+| Request on page load | Request when user taps "Find nearby" |
+| No explanation | Explain why location is needed first |
+| Silent failure | Show clear error if denied |
+| Always high accuracy | Use low accuracy when approximate is fine |
+
+**Location permission states:**
+```javascript
+// Check permission without prompting
+async function checkLocationPermission() {
+  if (!navigator.permissions) return 'unknown';
+
+  const result = await navigator.permissions.query({ name: 'geolocation' });
+  return result.state; // 'granted', 'denied', or 'prompt'
+}
+```
 
 ### User Sessions in PWA
 
@@ -20281,50 +21532,441 @@ self.addEventListener('push', event => {
 
 **Logout clears all:** localStorage, IndexedDB, service worker cache of user data.
 
-**Offline Behavior:**
+```javascript
+// Complete logout - clear all user data
+async function logout() {
+  // Clear localStorage
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_prefs');
+
+  // Clear IndexedDB
+  const databases = await indexedDB.databases();
+  for (const db of databases) {
+    indexedDB.deleteDatabase(db.name);
+  }
+
+  // Clear service worker cache (user data only)
+  const cacheKeys = await caches.keys();
+  for (const key of cacheKeys) {
+    if (key.includes('user-data')) {
+      await caches.delete(key);
+    }
+  }
+
+  // Unsubscribe from push
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+  if (subscription) {
+    await subscription.unsubscribe();
+  }
+
+  // Redirect to login
+  window.location.href = '/login';
+}
+```
+
+### Offline Behavior
 
 | Resource Type | Cache Strategy | Offline Behavior |
 |---------------|----------------|------------------|
 | **Static assets** (CSS, JS, images) | Cache-first | Served from cache |
 | **HTML pages** | Network-first, cache fallback | Show cached version if offline |
-| **API calls** | Network-only | Show offline indicator, queue for retry |
+| **API calls** | Network-only + queue | Show offline indicator, queue for retry |
 | **Fonts** | Cache-first | Served from cache |
+| **User data** | IndexedDB | Full offline access |
 
-**Service Worker Caching:**
-- Cache static assets on install
-- Update cache on service worker activation
-- Maximum cache size: 50MB
-- Cache expiration: 7 days for static assets
-- Never cache: API responses, user-specific data
+**Service Worker Caching Limits:**
 
-**Offline Indicator:**
-- Show banner/toast when offline: "You are offline. Some features may be unavailable."
-- Hide automatically when connection restored
-- Do not block UI - allow browsing cached pages
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Max cache size | 50MB | Browser may evict if exceeded |
+| Cache expiration | 7 days | For static assets |
+| Never cache | API responses | Except explicit offline-first data |
+| Quota check | Before large caches | `navigator.storage.estimate()` |
 
-**manifest.json:**
+**Offline detection:**
+```javascript
+// Check online status
+function isOnline() {
+  return navigator.onLine;
+}
+
+// Listen for connectivity changes
+window.addEventListener('online', () => {
+  hideOfflineIndicator();
+  triggerPendingSync();
+});
+
+window.addEventListener('offline', () => {
+  showOfflineIndicator();
+});
+
+// Offline indicator UI
+function showOfflineIndicator() {
+  const indicator = document.getElementById('offline-indicator');
+  indicator.textContent = 'You are offline. Some features may be unavailable.';
+  indicator.classList.add('visible');
+}
+
+function hideOfflineIndicator() {
+  const indicator = document.getElementById('offline-indicator');
+  indicator.classList.remove('visible');
+}
+```
+
+### Manifest Configuration
+
+**Complete manifest.json:**
 ```json
 {
   "name": "{App Name}",
   "short_name": "{AppName}",
   "description": "{App description}",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "categories": ["utilities"],
   "icons": [
-    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/static/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard?source=shortcut",
+      "icons": [{ "src": "/static/icons/shortcut-dashboard.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/static/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
   ]
 }
 ```
 
-**HTML head:**
-```html
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000">
-<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+**Manifest fields explained:**
+
+| Field | Purpose | Required |
+|-------|---------|----------|
+| `name` | Full app name (install dialog) | ✅ Yes |
+| `short_name` | Abbreviated name (home screen) | ✅ Yes |
+| `start_url` | URL when launched | ✅ Yes |
+| `scope` | URL scope SW controls | Recommended |
+| `display` | `standalone`, `fullscreen`, `minimal-ui`, `browser` | ✅ Yes |
+| `icons` | App icons (multiple sizes) | ✅ Yes |
+| `theme_color` | Browser toolbar color | Recommended |
+| `background_color` | Splash screen background | Recommended |
+| `orientation` | `any`, `portrait`, `landscape` | Optional |
+| `shortcuts` | Quick actions (right-click/long-press) | Optional |
+| `screenshots` | Install dialog preview | Optional |
+
+### Scope and Start URL
+
+**Understanding PWA scope:**
+
+| Concept | Description |
+|---------|-------------|
+| **scope** | URLs the service worker can control |
+| **start_url** | URL opened when app launches |
+| **Rule** | `start_url` must be within `scope` |
+
 ```
+Example:
+  scope: "/app/"
+  start_url: "/app/dashboard"
+
+  ✅ Controlled: /app/*, /app/settings, /app/users/123
+  ❌ Not controlled: /login, /api/*, /admin/*
+```
+
+**Tracking PWA launches:**
+```javascript
+// start_url: "/?source=pwa"
+// Analytics can track PWA vs browser usage
+if (new URLSearchParams(window.location.search).get('source') === 'pwa') {
+  analytics.track('pwa_launch');
+}
+```
+
+### Maskable Icons
+
+**Maskable icons adapt to different Android launcher shapes:**
+
+| Icon Type | Purpose | Safe Zone |
+|-----------|---------|-----------|
+| **Regular** | Standard icon with transparency | Full canvas |
+| **Maskable** | Adaptive icon (Android) | Inner 80% circle |
+
+**Design rules for maskable icons:**
+- Important content in center 80% (safe zone)
+- Background extends to full canvas
+- No transparency (use solid background)
+- Same icon, different padding
+
+```
+┌─────────────────────┐
+│                     │
+│   ┌───────────┐     │
+│   │           │     │  ← Safe zone (80%)
+│   │   LOGO    │     │
+│   │           │     │
+│   └───────────┘     │
+│                     │
+└─────────────────────┘   ← Full canvas
+```
+
+**Testing maskable icons:** https://maskable.app/editor
+
+### iOS-Specific Considerations
+
+**iOS Safari has PWA limitations:**
+
+| Feature | Android | iOS |
+|---------|---------|-----|
+| Push notifications | ✅ Yes | ✅ Yes (iOS 16.4+) |
+| Background sync | ✅ Yes | ❌ No |
+| `beforeinstallprompt` | ✅ Yes | ❌ No |
+| Persistent storage | ✅ Yes | ⚠️ Limited (7 days without use) |
+| Badging API | ✅ Yes | ❌ No |
+| Web Share Target | ✅ Yes | ❌ No |
+
+**iOS-specific meta tags:**
+```html
+<head>
+  <!-- Standard manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <!-- iOS-specific -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{AppName}">
+  <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+
+  <!-- iOS splash screens -->
+  <link rel="apple-touch-startup-image"
+        href="/static/splash/iphone-1179x2556.png"
+        media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image"
+        href="/static/splash/iphone-1284x2778.png"
+        media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+</head>
+```
+
+**iOS install instructions (no beforeinstallprompt):**
+```javascript
+function showIOSInstallInstructions() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isInStandalone = window.navigator.standalone === true;
+
+  if (isIOS && !isInStandalone) {
+    showModal({
+      title: 'Install {App Name}',
+      content: `
+        <ol>
+          <li>Tap the Share button <img src="/static/icons/ios-share.svg" alt="Share"></li>
+          <li>Scroll down and tap "Add to Home Screen"</li>
+          <li>Tap "Add" in the top right</li>
+        </ol>
+      `
+    });
+  }
+}
+```
+
+**iOS storage eviction workaround:**
+```javascript
+// Request persistent storage (iOS may still evict)
+async function requestPersistentStorage() {
+  if (navigator.storage && navigator.storage.persist) {
+    const granted = await navigator.storage.persist();
+    console.log('Persistent storage:', granted ? 'granted' : 'denied');
+  }
+}
+```
+
+### Lighthouse PWA Audit
+
+**Lighthouse checks these PWA criteria:**
+
+| Category | Requirement | How to Pass |
+|----------|-------------|-------------|
+| **Installable** | Valid manifest | All required fields present |
+| **Installable** | Service worker | Registered and controlling |
+| **Installable** | HTTPS | Served over HTTPS |
+| **Installable** | Icons | 192x192 and 512x512 minimum |
+| **Optimized** | Redirects HTTP→HTTPS | Server config |
+| **Optimized** | Splash screen | `theme_color`, `background_color`, icons |
+| **Optimized** | Theme color | `<meta name="theme-color">` and manifest |
+| **Optimized** | Viewport | `<meta name="viewport" content="width=device-width">` |
+| **Optimized** | Content sized | No horizontal scroll at mobile width |
+| **Optimized** | Maskable icon | At least one with `purpose: maskable` |
+
+**Full HTML head for PWA compliance:**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="{App description}">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+
+  <!-- iOS specific -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{AppName}">
+
+  <title>{App Name}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <!-- Offline indicator -->
+  <div id="offline-indicator" aria-live="polite"></div>
+
+  <!-- App content -->
+  <div id="app"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+```
+
+**Run Lighthouse audit:**
+1. Chrome DevTools → Lighthouse tab
+2. Select "Progressive Web App" category
+3. Click "Analyze page load"
+4. Fix any failures before deployment
+
+### PWA File Structure
+
+**Required files for full PWA:**
+
+```
+/
+├── manifest.json                 # App manifest
+├── sw.js                         # Service worker
+├── offline.html                  # Offline fallback page
+├── static/
+│   ├── css/
+│   │   └── app.css
+│   ├── js/
+│   │   └── app.js                # Includes SW registration
+│   ├── icons/
+│   │   ├── favicon-16.png
+│   │   ├── favicon-32.png
+│   │   ├── icon-72.png
+│   │   ├── icon-96.png
+│   │   ├── icon-128.png
+│   │   ├── icon-144.png
+│   │   ├── icon-152.png
+│   │   ├── icon-180.png          # Apple touch icon
+│   │   ├── icon-192.png
+│   │   ├── icon-384.png
+│   │   ├── icon-512.png
+│   │   ├── icon-maskable-192.png # Maskable (Android adaptive)
+│   │   ├── icon-maskable-512.png
+│   │   └── badge-72.png          # Notification badge
+│   ├── splash/                   # iOS splash screens
+│   │   ├── iphone-1179x2556.png
+│   │   └── iphone-1284x2778.png
+│   └── screenshots/              # Install dialog previews
+│       ├── desktop.png
+│       └── mobile.png
+└── index.html                    # With all meta tags
+```
+
+### PWA Checklist
+
+| Item | Status | Notes |
+|------|--------|-------|
+| HTTPS enabled | ◻️ | Required for SW |
+| manifest.json valid | ◻️ | All required fields |
+| Service worker registered | ◻️ | Controls all pages |
+| Offline page exists | ◻️ | `/offline.html` |
+| Icons all sizes | ◻️ | 72 to 512px |
+| Maskable icon included | ◻️ | For Android |
+| Apple meta tags | ◻️ | For iOS |
+| Theme color set | ◻️ | Meta + manifest |
+| Viewport meta | ◻️ | Responsive |
+| Install prompt handled | ◻️ | Custom UI |
+| Update notification | ◻️ | New SW prompt |
+| Offline indicator | ◻️ | Connection status |
+| Push notifications | ◻️ | If needed |
+| Background sync | ◻️ | If needed |
+| Geolocation | ◻️ | If needed |
+| Lighthouse score 100 | ◻️ | All audits pass |
 
 ## HTTP Status Codes 
 
@@ -21185,14 +22827,14 @@ partial/
 ```
 Desktop:
 ┌─────────────────────────────────────────────────────────────────┐
-│  {projectname}                                      [User Icon] │  ← Header
+│  caspaste                                      [User Icon] │  ← Header
 ├─────────────────────────────────────────────────────────────────┤
 │  Home  |  [App Section 1]  |  [App Section 2]  |  ...           │  ← Nav
 └─────────────────────────────────────────────────────────────────┘
 
 Mobile:
 ┌─────────────────────────────────────────────────────────────────┐
-│  {projectname}                                      [User Icon] │  ← Header
+│  caspaste                                      [User Icon] │  ← Header
 ├─────────────────────────────────────────────────────────────────┤
 │                                                      [☰ Menu]   │  ← Nav row
 └─────────────────────────────────────────────────────────────────┘
@@ -21207,7 +22849,7 @@ Mobile:
 ```html
 <!-- Header bar: site name + user icon -->
 <header class="header">
-  <a href="/" class="site-brand">{projectname}</a>
+  <a href="/" class="site-brand">caspaste</a>
 
   <!-- User icon (always visible, far right) -->
   <div class="user-menu">
@@ -21736,8 +23378,8 @@ var ThemePaletteLight = ThemePalette{
 
 | Changes (User-Visible) | Does NOT Change (System) |
 |------------------------|--------------------------|
-| Page titles | Directory names (`{projectname}/`) |
-| Browser tab | System username (`{projectname}`) |
+| Page titles | Directory names (`caspaste/`) |
+| Browser tab | System username (`caspaste`) |
 | Header/logo text | Log filenames |
 | Footer branding | Config paths |
 | Email "From" name | Binary name |
@@ -21751,7 +23393,7 @@ var ThemePaletteLight = ThemePalette{
 server:
   branding:
     # Display name (e.g., "Jokes API")
-    title: "{projectname}"
+    title: "caspaste"
     # Short slogan (e.g., "The best jokes API")
     tagline: ""
     # Longer description for SEO/about
@@ -22114,7 +23756,7 @@ func FetchRemoteImage(ctx context.Context, rawURL string, cfg FetchRemoteImageCo
     }
 
     // Set safe headers
-    req.Header.Set("User-Agent", "{projectname}-server/1.0")
+    req.Header.Set("User-Agent", "caspaste-server/1.0")
     req.Header.Set("Accept", strings.Join(cfg.AllowedTypes, ", "))
 
     resp, err := client.Do(req)
@@ -22183,13 +23825,13 @@ if err != nil {
 
 | Field | Default Value |
 |-------|---------------|
-| `title` | `{projectname}` |
+| `title` | `caspaste` |
 | `tagline` | Empty |
 | `description` | Empty |
 | `keywords` | Empty |
 | All others | Empty |
 
-**Rule:** If `title` is empty, fall back to `{projectname}`. Other fields are optional.
+**Rule:** If `title` is empty, fall back to `caspaste`. Other fields are optional.
 
 ## Announcements 
 
@@ -22458,8 +24100,8 @@ When admin edits `custom_html`, show:
 | Variable | Description |
 |----------|-------------|
 | `{currentyear}` | Current year (e.g., 2025) |
-| `{projectname}` | Project name |
-| `{projectorg}` | Organization name |
+| `caspaste` | Project name |
+| `casjay-forks` | Organization name |
 | `{projectversion}` | Application version |
 | `{builddatetime}` | Build date/time |
 
@@ -22502,14 +24144,14 @@ When admin edits `custom_html`, show:
   <div class="admin-footer-content">
     <!-- Version info -->
     <span class="admin-footer-version">
-      <a href="/{admin_path}/server/info">{projectname} {projectversion}</a>
+      <a href="/{admin_path}/server/info">caspaste {projectversion}</a>
     </span>
 
     <span class="admin-footer-separator">•</span>
 
     <!-- Documentation link -->
     <span class="admin-footer-docs">
-      <a href="https://{projectorg}-{projectname}.readthedocs.io" target="_blank" rel="noopener">
+      <a href="https://{RTD_URL}" target="_blank" rel="noopener">  <!-- Use actual RTD URL -->
         Docs
       </a>
     </span>
@@ -24037,7 +25679,7 @@ func RegisterAdminRoutes(r *mux.Router) {
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║   {PROJECTNAME} {projectversion}                                     ║
+║   CASPASTE {projectversion}                                     ║
 ║                                                                      ║
 ║   Status: Running (first run - setup available)                      ║
 ║                                                                      ║
@@ -24735,7 +26377,7 @@ Admin Panel Header:
 
 | Setting | Control | Default | Restart | Description |
 |---------|---------|---------|---------|-------------|
-| `title` | Text | `{projectname}` | No | App display name |
+| `title` | Text | `caspaste` | No | App display name |
 | `tagline` | Text | (empty) | No | Short slogan |
 | `description` | Textarea | (empty) | No | SEO/about description |
 | `logo` | File | (none) | No | Logo image upload |
@@ -25320,7 +26962,7 @@ The admin panel MUST include a scheduler section with:
 │  Run this command on the target machine:                                       │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │ curl -sSL https://app.example.com/install-agent | sh -s -- \        │    │
+│  │ curl -q -LSsf https://app.example.com/install-agent | sh -s -- \    │    │
 │  │   --server https://app.example.com \                                │    │
 │  │   --token adm_agt_abc123def456ghi789jkl012mno345pqr678              │    │
 │  └─────────────────────────────────────────────────────────────────────┘    │
@@ -25911,7 +27553,7 @@ IMPORTANT NEXT STEPS
 5. Enable two-factor authentication
 
 Keep your admin credentials secure. If you lose access, use:
-  {projectname} --maintenance setup
+  caspaste --maintenance setup
 ────────────────────────────────────────────────────────────────────────
 
 --
@@ -27048,8 +28690,8 @@ server:
         enabled: true
         # Verify after creation (all checks must pass)
         verify: true
-        # Creates: {projectname}_backup_YYYY-MM-DD.tar.gz[.enc] (full)
-        #          {projectname}-daily.tar.gz[.enc] (incremental)
+        # Creates: caspaste_backup_YYYY-MM-DD.tar.gz[.enc] (full)
+        #          caspaste-daily.tar.gz[.enc] (incremental)
         retention:
           max_backups: 1     # 1-365: daily full backups to keep
           keep_weekly: 0     # 0-52: Sunday backups (0 = disabled)
@@ -27060,7 +28702,7 @@ server:
       backup_hourly:
         schedule: "@hourly"
         enabled: false
-        # Creates: {projectname}-hourly.tar.gz[.enc] (incremental since daily)
+        # Creates: caspaste-hourly.tar.gz[.enc] (incremental since daily)
         # Always 1 file (replaced each hour)
 
       # Every 5 minutes
@@ -27314,11 +28956,11 @@ Execute task
 | Verify | Yes | All checks must pass |
 
 **What backup_daily creates (default: 2 files):**
-- `{projectname}_backup_YYYY-MM-DD.tar.gz[.enc]` - Full backup (yesterday's)
-- `{projectname}-daily.tar.gz[.enc]` - Daily incremental
+- `caspaste_backup_YYYY-MM-DD.tar.gz[.enc]` - Full backup (yesterday's)
+- `caspaste-daily.tar.gz[.enc]` - Daily incremental
 
 **What backup_hourly creates (if enabled: +1 file):**
-- `{projectname}-hourly.tar.gz[.enc]` - Hourly incremental
+- `caspaste-hourly.tar.gz[.enc]` - Hourly incremental
 
 ### API Endpoints
 
@@ -27485,7 +29127,7 @@ Authorization: Bearer <token>
 **Prometheus scrape config with token:**
 ```yaml
 scrape_configs:
-  - job_name: '{projectname}'
+  - job_name: 'caspaste'
     static_configs:
       - targets: ['app.internal:8080']
     authorization:
@@ -27533,7 +29175,7 @@ server:
 
 | Rule | Format | Example |
 |------|--------|---------|
-| **Prefix** | `{projectname}_` | `jokes_http_requests_total` |
+| **Prefix** | `caspaste_` | `jokes_http_requests_total` |
 | **Snake case** | `word_word_word` | `http_request_duration_seconds` |
 | **Unit suffix** | `_seconds`, `_bytes`, `_total` | `request_duration_seconds` |
 | **Total suffix** | Counters end with `_total` | `http_requests_total` |
@@ -27567,36 +29209,36 @@ server:
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `{projectname}_app_info` | Gauge | `version`, `commit`, `build_date`, `go_version` | Always 1, labels carry info |
-| `{projectname}_app_uptime_seconds` | Gauge | - | Seconds since start |
-| `{projectname}_app_start_timestamp` | Gauge | - | Unix timestamp of start |
+| `caspaste_app_info` | Gauge | `version`, `commit`, `build_date`, `go_version` | Always 1, labels carry info |
+| `caspaste_app_uptime_seconds` | Gauge | - | Seconds since start |
+| `caspaste_app_start_timestamp` | Gauge | - | Unix timestamp of start |
 
 ### Required: HTTP Metrics
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `{projectname}_http_requests_total` | Counter | `method`, `path`, `status` | Total HTTP requests |
-| `{projectname}_http_request_duration_seconds` | Histogram | `method`, `path` | Request latency |
-| `{projectname}_http_request_size_bytes` | Histogram | `method`, `path` | Request body size |
-| `{projectname}_http_response_size_bytes` | Histogram | `method`, `path` | Response body size |
-| `{projectname}_http_active_requests` | Gauge | - | In-flight requests |
+| `caspaste_http_requests_total` | Counter | `method`, `path`, `status` | Total HTTP requests |
+| `caspaste_http_request_duration_seconds` | Histogram | `method`, `path` | Request latency |
+| `caspaste_http_request_size_bytes` | Histogram | `method`, `path` | Request body size |
+| `caspaste_http_response_size_bytes` | Histogram | `method`, `path` | Response body size |
+| `caspaste_http_active_requests` | Gauge | - | In-flight requests |
 
 ### Required: Database Metrics (if using database)
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `{projectname}_db_queries_total` | Counter | `operation`, `table` | Total queries |
-| `{projectname}_db_query_duration_seconds` | Histogram | `operation`, `table` | Query latency |
-| `{projectname}_db_connections_open` | Gauge | - | Open connections |
-| `{projectname}_db_connections_in_use` | Gauge | - | Active connections |
-| `{projectname}_db_errors_total` | Counter | `operation`, `error_type` | Database errors |
+| `caspaste_db_queries_total` | Counter | `operation`, `table` | Total queries |
+| `caspaste_db_query_duration_seconds` | Histogram | `operation`, `table` | Query latency |
+| `caspaste_db_connections_open` | Gauge | - | Open connections |
+| `caspaste_db_connections_in_use` | Gauge | - | Active connections |
+| `caspaste_db_errors_total` | Counter | `operation`, `error_type` | Database errors |
 
 ### Required: Authentication Metrics
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `{projectname}_auth_attempts_total` | Counter | `method`, `status` | Auth attempts |
-| `{projectname}_auth_sessions_active` | Gauge | - | Active sessions |
+| `caspaste_auth_attempts_total` | Counter | `method`, `status` | Auth attempts |
+| `caspaste_auth_sessions_active` | Gauge | - | Active sessions |
 
 ### Optional: Extended Metrics
 
@@ -27610,7 +29252,7 @@ server:
 
 ## Complete Metrics Reference
 
-**Every metric exported by `/metrics`. All prefixed with `{projectname}_`.**
+**Every metric exported by `/metrics`. All prefixed with `caspaste_`.**
 
 ### Application Metrics (REQUIRED)
 
@@ -27790,132 +29432,132 @@ server:
 **Sample `/metrics` output (Prometheus text format):**
 
 ```
-# HELP {projectname}_app_info Application information
-# TYPE {projectname}_app_info gauge
-{projectname}_app_info{version="1.2.3",commit="abc1234",build_date="2025-01-15",go_version="go1.23"} 1
+# HELP caspaste_app_info Application information
+# TYPE caspaste_app_info gauge
+caspaste_app_info{version="1.2.3",commit="abc1234",build_date="2025-01-15",go_version="go1.23"} 1
 
-# HELP {projectname}_app_uptime_seconds Application uptime in seconds
-# TYPE {projectname}_app_uptime_seconds gauge
-{projectname}_app_uptime_seconds 86423.5
+# HELP caspaste_app_uptime_seconds Application uptime in seconds
+# TYPE caspaste_app_uptime_seconds gauge
+caspaste_app_uptime_seconds 86423.5
 
-# HELP {projectname}_app_start_timestamp Application start timestamp
-# TYPE {projectname}_app_start_timestamp gauge
-{projectname}_app_start_timestamp 1.705312200e+09
+# HELP caspaste_app_start_timestamp Application start timestamp
+# TYPE caspaste_app_start_timestamp gauge
+caspaste_app_start_timestamp 1.705312200e+09
 
-# HELP {projectname}_http_requests_total Total number of HTTP requests
-# TYPE {projectname}_http_requests_total counter
-{projectname}_http_requests_total{method="GET",path="/api/v1/users",status="200"} 1523
-{projectname}_http_requests_total{method="GET",path="/api/v1/users/:id",status="200"} 892
-{projectname}_http_requests_total{method="GET",path="/api/v1/users/:id",status="404"} 23
-{projectname}_http_requests_total{method="POST",path="/api/v1/users",status="201"} 42
-{projectname}_http_requests_total{method="GET",path="/healthz",status="200"} 8640
+# HELP caspaste_http_requests_total Total number of HTTP requests
+# TYPE caspaste_http_requests_total counter
+caspaste_http_requests_total{method="GET",path="/api/v1/users",status="200"} 1523
+caspaste_http_requests_total{method="GET",path="/api/v1/users/:id",status="200"} 892
+caspaste_http_requests_total{method="GET",path="/api/v1/users/:id",status="404"} 23
+caspaste_http_requests_total{method="POST",path="/api/v1/users",status="201"} 42
+caspaste_http_requests_total{method="GET",path="/healthz",status="200"} 8640
 
-# HELP {projectname}_http_request_duration_seconds HTTP request duration in seconds
-# TYPE {projectname}_http_request_duration_seconds histogram
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.001"} 120
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.005"} 890
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.01"} 1400
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.025"} 1500
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.05"} 1510
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.1"} 1520
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="+Inf"} 1523
-{projectname}_http_request_duration_seconds_sum{method="GET",path="/api/v1/users"} 12.456
-{projectname}_http_request_duration_seconds_count{method="GET",path="/api/v1/users"} 1523
+# HELP caspaste_http_request_duration_seconds HTTP request duration in seconds
+# TYPE caspaste_http_request_duration_seconds histogram
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.001"} 120
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.005"} 890
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.01"} 1400
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.025"} 1500
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.05"} 1510
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="0.1"} 1520
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/v1/users",le="+Inf"} 1523
+caspaste_http_request_duration_seconds_sum{method="GET",path="/api/v1/users"} 12.456
+caspaste_http_request_duration_seconds_count{method="GET",path="/api/v1/users"} 1523
 
-# HELP {projectname}_http_active_requests Number of active HTTP requests
-# TYPE {projectname}_http_active_requests gauge
-{projectname}_http_active_requests 3
+# HELP caspaste_http_active_requests Number of active HTTP requests
+# TYPE caspaste_http_active_requests gauge
+caspaste_http_active_requests 3
 
-# HELP {projectname}_db_connections_open Number of open database connections
-# TYPE {projectname}_db_connections_open gauge
-{projectname}_db_connections_open 10
+# HELP caspaste_db_connections_open Number of open database connections
+# TYPE caspaste_db_connections_open gauge
+caspaste_db_connections_open 10
 
-# HELP {projectname}_db_connections_in_use Number of database connections in use
-# TYPE {projectname}_db_connections_in_use gauge
-{projectname}_db_connections_in_use 2
+# HELP caspaste_db_connections_in_use Number of database connections in use
+# TYPE caspaste_db_connections_in_use gauge
+caspaste_db_connections_in_use 2
 
-# HELP {projectname}_cache_hits_total Total number of cache hits
-# TYPE {projectname}_cache_hits_total counter
-{projectname}_cache_hits_total{cache="sessions"} 8234
-{projectname}_cache_hits_total{cache="users"} 1523
+# HELP caspaste_cache_hits_total Total number of cache hits
+# TYPE caspaste_cache_hits_total counter
+caspaste_cache_hits_total{cache="sessions"} 8234
+caspaste_cache_hits_total{cache="users"} 1523
 
-# HELP {projectname}_cache_misses_total Total number of cache misses
-# TYPE {projectname}_cache_misses_total counter
-{projectname}_cache_misses_total{cache="sessions"} 156
-{projectname}_cache_misses_total{cache="users"} 42
+# HELP caspaste_cache_misses_total Total number of cache misses
+# TYPE caspaste_cache_misses_total counter
+caspaste_cache_misses_total{cache="sessions"} 156
+caspaste_cache_misses_total{cache="users"} 42
 
-# HELP {projectname}_auth_attempts_total Total authentication attempts
-# TYPE {projectname}_auth_attempts_total counter
-{projectname}_auth_attempts_total{method="password",status="success"} 523
-{projectname}_auth_attempts_total{method="password",status="failed"} 12
-{projectname}_auth_attempts_total{method="api_token",status="success"} 8923
+# HELP caspaste_auth_attempts_total Total authentication attempts
+# TYPE caspaste_auth_attempts_total counter
+caspaste_auth_attempts_total{method="password",status="success"} 523
+caspaste_auth_attempts_total{method="password",status="failed"} 12
+caspaste_auth_attempts_total{method="api_token",status="success"} 8923
 
-# HELP {projectname}_auth_sessions_active Number of active sessions
-# TYPE {projectname}_auth_sessions_active gauge
-{projectname}_auth_sessions_active 42
+# HELP caspaste_auth_sessions_active Number of active sessions
+# TYPE caspaste_auth_sessions_active gauge
+caspaste_auth_sessions_active 42
 
-# HELP {projectname}_scheduler_tasks_total Total number of scheduled tasks executed
-# TYPE {projectname}_scheduler_tasks_total counter
-{projectname}_scheduler_tasks_total{task="cleanup",status="success"} 288
-{projectname}_scheduler_tasks_total{task="backup",status="success"} 24
-{projectname}_scheduler_tasks_total{task="geoip_update",status="success"} 1
+# HELP caspaste_scheduler_tasks_total Total number of scheduled tasks executed
+# TYPE caspaste_scheduler_tasks_total counter
+caspaste_scheduler_tasks_total{task="cleanup",status="success"} 288
+caspaste_scheduler_tasks_total{task="backup",status="success"} 24
+caspaste_scheduler_tasks_total{task="geoip_update",status="success"} 1
 
-# HELP {projectname}_scheduler_last_run_timestamp Timestamp of last task run
-# TYPE {projectname}_scheduler_last_run_timestamp gauge
-{projectname}_scheduler_last_run_timestamp{task="cleanup"} 1.705398600e+09
-{projectname}_scheduler_last_run_timestamp{task="backup"} 1.705395000e+09
+# HELP caspaste_scheduler_last_run_timestamp Timestamp of last task run
+# TYPE caspaste_scheduler_last_run_timestamp gauge
+caspaste_scheduler_last_run_timestamp{task="cleanup"} 1.705398600e+09
+caspaste_scheduler_last_run_timestamp{task="backup"} 1.705395000e+09
 
-# HELP {projectname}_system_cpu_usage_percent Current CPU usage percentage
-# TYPE {projectname}_system_cpu_usage_percent gauge
-{projectname}_system_cpu_usage_percent 12.5
+# HELP caspaste_system_cpu_usage_percent Current CPU usage percentage
+# TYPE caspaste_system_cpu_usage_percent gauge
+caspaste_system_cpu_usage_percent 12.5
 
-# HELP {projectname}_system_memory_usage_percent Current memory usage percentage
-# TYPE {projectname}_system_memory_usage_percent gauge
-{projectname}_system_memory_usage_percent 45.2
+# HELP caspaste_system_memory_usage_percent Current memory usage percentage
+# TYPE caspaste_system_memory_usage_percent gauge
+caspaste_system_memory_usage_percent 45.2
 
-# HELP {projectname}_system_memory_used_bytes Memory used in bytes
-# TYPE {projectname}_system_memory_used_bytes gauge
-{projectname}_system_memory_used_bytes 3.865470976e+09
+# HELP caspaste_system_memory_used_bytes Memory used in bytes
+# TYPE caspaste_system_memory_used_bytes gauge
+caspaste_system_memory_used_bytes 3.865470976e+09
 
-# HELP {projectname}_system_memory_total_bytes Total memory in bytes
-# TYPE {projectname}_system_memory_total_bytes gauge
-{projectname}_system_memory_total_bytes 8.589934592e+09
+# HELP caspaste_system_memory_total_bytes Total memory in bytes
+# TYPE caspaste_system_memory_total_bytes gauge
+caspaste_system_memory_total_bytes 8.589934592e+09
 
-# HELP {projectname}_system_disk_usage_percent Disk usage percentage
-# TYPE {projectname}_system_disk_usage_percent gauge
-{projectname}_system_disk_usage_percent{path="/var/lib/myorg/myapp"} 62.3
+# HELP caspaste_system_disk_usage_percent Disk usage percentage
+# TYPE caspaste_system_disk_usage_percent gauge
+caspaste_system_disk_usage_percent{path="/var/lib/myorg/myapp"} 62.3
 
-# HELP {projectname}_go_goroutines Number of goroutines
-# TYPE {projectname}_go_goroutines gauge
-{projectname}_go_goroutines 47
+# HELP caspaste_go_goroutines Number of goroutines
+# TYPE caspaste_go_goroutines gauge
+caspaste_go_goroutines 47
 
-# HELP {projectname}_go_mem_alloc_bytes Bytes allocated and in use
-# TYPE {projectname}_go_mem_alloc_bytes gauge
-{projectname}_go_mem_alloc_bytes 2.4576e+07
+# HELP caspaste_go_mem_alloc_bytes Bytes allocated and in use
+# TYPE caspaste_go_mem_alloc_bytes gauge
+caspaste_go_mem_alloc_bytes 2.4576e+07
 
-# HELP {projectname}_go_gc_runs_total Total number of GC runs
-# TYPE {projectname}_go_gc_runs_total counter
-{projectname}_go_gc_runs_total 1523
+# HELP caspaste_go_gc_runs_total Total number of GC runs
+# TYPE caspaste_go_gc_runs_total counter
+caspaste_go_gc_runs_total 1523
 
-# HELP {projectname}_cluster_nodes_total Total nodes in cluster
-# TYPE {projectname}_cluster_nodes_total gauge
-{projectname}_cluster_nodes_total 3
+# HELP caspaste_cluster_nodes_total Total nodes in cluster
+# TYPE caspaste_cluster_nodes_total gauge
+caspaste_cluster_nodes_total 3
 
-# HELP {projectname}_cluster_nodes_healthy Healthy nodes in cluster
-# TYPE {projectname}_cluster_nodes_healthy gauge
-{projectname}_cluster_nodes_healthy 3
+# HELP caspaste_cluster_nodes_healthy Healthy nodes in cluster
+# TYPE caspaste_cluster_nodes_healthy gauge
+caspaste_cluster_nodes_healthy 3
 
-# HELP {projectname}_cluster_is_primary 1 if this node is primary
-# TYPE {projectname}_cluster_is_primary gauge
-{projectname}_cluster_is_primary 1
+# HELP caspaste_cluster_is_primary 1 if this node is primary
+# TYPE caspaste_cluster_is_primary gauge
+caspaste_cluster_is_primary 1
 
-# HELP {projectname}_tor_enabled 1 if Tor is enabled
-# TYPE {projectname}_tor_enabled gauge
-{projectname}_tor_enabled 1
+# HELP caspaste_tor_enabled 1 if Tor is enabled
+# TYPE caspaste_tor_enabled gauge
+caspaste_tor_enabled 1
 
-# HELP {projectname}_tor_running 1 if Tor process is running
-# TYPE {projectname}_tor_running gauge
-{projectname}_tor_running 1
+# HELP caspaste_tor_running 1 if Tor process is running
+# TYPE caspaste_tor_running gauge
+caspaste_tor_running 1
 ```
 
 ## Metrics Implementation
@@ -27935,7 +29577,7 @@ var (
     // HTTP metrics
     HTTPRequestsTotal = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_http_requests_total",
+            Name: "caspaste_http_requests_total",
             Help: "Total number of HTTP requests",
         },
         []string{"method", "path", "status"},
@@ -27943,7 +29585,7 @@ var (
 
     HTTPRequestDuration = promauto.NewHistogramVec(
         prometheus.HistogramOpts{
-            Name:    "{projectname}_http_request_duration_seconds",
+            Name:    "caspaste_http_request_duration_seconds",
             Help:    "HTTP request duration in seconds",
             Buckets: []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10},
         },
@@ -27952,7 +29594,7 @@ var (
 
     HTTPRequestSize = promauto.NewHistogramVec(
         prometheus.HistogramOpts{
-            Name:    "{projectname}_http_request_size_bytes",
+            Name:    "caspaste_http_request_size_bytes",
             Help:    "HTTP request size in bytes",
             Buckets: []float64{100, 1000, 10000, 100000, 1000000, 10000000},
         },
@@ -27961,7 +29603,7 @@ var (
 
     HTTPResponseSize = promauto.NewHistogramVec(
         prometheus.HistogramOpts{
-            Name:    "{projectname}_http_response_size_bytes",
+            Name:    "caspaste_http_response_size_bytes",
             Help:    "HTTP response size in bytes",
             Buckets: []float64{100, 1000, 10000, 100000, 1000000, 10000000},
         },
@@ -27970,7 +29612,7 @@ var (
 
     HTTPActiveRequests = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_http_active_requests",
+            Name: "caspaste_http_active_requests",
             Help: "Number of active HTTP requests",
         },
     )
@@ -27978,7 +29620,7 @@ var (
     // Database metrics
     DBQueriesTotal = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_db_queries_total",
+            Name: "caspaste_db_queries_total",
             Help: "Total number of database queries",
         },
         []string{"operation", "table"},
@@ -27986,7 +29628,7 @@ var (
 
     DBQueryDuration = promauto.NewHistogramVec(
         prometheus.HistogramOpts{
-            Name:    "{projectname}_db_query_duration_seconds",
+            Name:    "caspaste_db_query_duration_seconds",
             Help:    "Database query duration in seconds",
             Buckets: []float64{0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1},
         },
@@ -27995,21 +29637,21 @@ var (
 
     DBConnectionsOpen = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_db_connections_open",
+            Name: "caspaste_db_connections_open",
             Help: "Number of open database connections",
         },
     )
 
     DBConnectionsInUse = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_db_connections_in_use",
+            Name: "caspaste_db_connections_in_use",
             Help: "Number of database connections in use",
         },
     )
 
     DBErrors = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_db_errors_total",
+            Name: "caspaste_db_errors_total",
             Help: "Total number of database errors",
         },
         []string{"operation", "error_type"},
@@ -28018,7 +29660,7 @@ var (
     // Cache metrics
     CacheHits = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_cache_hits_total",
+            Name: "caspaste_cache_hits_total",
             Help: "Total number of cache hits",
         },
         []string{"cache"},
@@ -28026,7 +29668,7 @@ var (
 
     CacheMisses = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_cache_misses_total",
+            Name: "caspaste_cache_misses_total",
             Help: "Total number of cache misses",
         },
         []string{"cache"},
@@ -28034,7 +29676,7 @@ var (
 
     CacheEvictions = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_cache_evictions_total",
+            Name: "caspaste_cache_evictions_total",
             Help: "Total number of cache evictions",
         },
         []string{"cache"},
@@ -28042,7 +29684,7 @@ var (
 
     CacheSize = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_cache_size",
+            Name: "caspaste_cache_size",
             Help: "Current cache size (items)",
         },
         []string{"cache"},
@@ -28050,7 +29692,7 @@ var (
 
     CacheBytes = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_cache_bytes",
+            Name: "caspaste_cache_bytes",
             Help: "Current cache size (bytes)",
         },
         []string{"cache"},
@@ -28059,7 +29701,7 @@ var (
     // Scheduler metrics
     SchedulerTasksTotal = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_scheduler_tasks_total",
+            Name: "caspaste_scheduler_tasks_total",
             Help: "Total number of scheduled tasks executed",
         },
         []string{"task", "status"},
@@ -28067,7 +29709,7 @@ var (
 
     SchedulerTaskDuration = promauto.NewHistogramVec(
         prometheus.HistogramOpts{
-            Name:    "{projectname}_scheduler_task_duration_seconds",
+            Name:    "caspaste_scheduler_task_duration_seconds",
             Help:    "Scheduled task duration in seconds",
             Buckets: []float64{0.1, 0.5, 1, 5, 10, 30, 60, 300, 600},
         },
@@ -28076,7 +29718,7 @@ var (
 
     SchedulerTasksRunning = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_scheduler_tasks_running",
+            Name: "caspaste_scheduler_tasks_running",
             Help: "Number of currently running scheduled tasks",
         },
         []string{"task"},
@@ -28084,7 +29726,7 @@ var (
 
     SchedulerLastRun = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_scheduler_last_run_timestamp",
+            Name: "caspaste_scheduler_last_run_timestamp",
             Help: "Timestamp of last task run",
         },
         []string{"task"},
@@ -28093,7 +29735,7 @@ var (
     // Authentication metrics
     AuthAttempts = promauto.NewCounterVec(
         prometheus.CounterOpts{
-            Name: "{projectname}_auth_attempts_total",
+            Name: "caspaste_auth_attempts_total",
             Help: "Total authentication attempts",
         },
         []string{"method", "status"},
@@ -28101,7 +29743,7 @@ var (
 
     AuthSessionsActive = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_auth_sessions_active",
+            Name: "caspaste_auth_sessions_active",
             Help: "Number of active sessions",
         },
     )
@@ -28109,21 +29751,21 @@ var (
     // Business metrics
     UsersTotal = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_users_total",
+            Name: "caspaste_users_total",
             Help: "Total number of registered users",
         },
     )
 
     UsersActive = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_users_active",
+            Name: "caspaste_users_active",
             Help: "Number of users active in last 24 hours",
         },
     )
 
     APITokensActive = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_api_tokens_active",
+            Name: "caspaste_api_tokens_active",
             Help: "Number of active API tokens",
         },
     )
@@ -28131,7 +29773,7 @@ var (
     // Application info
     AppInfo = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_app_info",
+            Name: "caspaste_app_info",
             Help: "Application information",
         },
         []string{"version", "commit", "build_date", "go_version"},
@@ -28139,14 +29781,14 @@ var (
 
     AppUptime = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_app_uptime_seconds",
+            Name: "caspaste_app_uptime_seconds",
             Help: "Application uptime in seconds",
         },
     )
 
     AppStartTime = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_app_start_timestamp",
+            Name: "caspaste_app_start_timestamp",
             Help: "Application start timestamp",
         },
     )
@@ -28170,7 +29812,7 @@ import (
     "strconv"
     "time"
 
-    "github.com/{projectorg}/{projectname}/src/server/metrics"
+    "github.com/casjay-forks/caspaste/src/server/metrics"
 )
 
 // metricsMiddleware records HTTP metrics for all requests
@@ -28254,7 +29896,7 @@ import (
     "database/sql"
     "time"
 
-    "github.com/{projectorg}/{projectname}/src/server/metrics"
+    "github.com/casjay-forks/caspaste/src/server/metrics"
 )
 
 // MetricsDB wraps sql.DB with metrics
@@ -28355,7 +29997,7 @@ package cache
 import (
     "time"
 
-    "github.com/{projectorg}/{projectname}/src/server/metrics"
+    "github.com/casjay-forks/caspaste/src/server/metrics"
 )
 
 // MetricsCache wraps a cache with metrics
@@ -28408,7 +30050,7 @@ package scheduler
 import (
     "time"
 
-    "github.com/{projectorg}/{projectname}/src/server/metrics"
+    "github.com/casjay-forks/caspaste/src/server/metrics"
 )
 
 // RecordTaskStart records when a task starts
@@ -28451,35 +30093,35 @@ var (
     // System metrics
     SystemCPUUsage = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_cpu_usage_percent",
+            Name: "caspaste_system_cpu_usage_percent",
             Help: "Current CPU usage percentage",
         },
     )
 
     SystemMemoryUsage = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_memory_usage_percent",
+            Name: "caspaste_system_memory_usage_percent",
             Help: "Current memory usage percentage",
         },
     )
 
     SystemMemoryUsed = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_memory_used_bytes",
+            Name: "caspaste_system_memory_used_bytes",
             Help: "Memory used in bytes",
         },
     )
 
     SystemMemoryTotal = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_memory_total_bytes",
+            Name: "caspaste_system_memory_total_bytes",
             Help: "Total memory in bytes",
         },
     )
 
     SystemDiskUsage = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_disk_usage_percent",
+            Name: "caspaste_system_disk_usage_percent",
             Help: "Disk usage percentage",
         },
         []string{"path"},
@@ -28487,7 +30129,7 @@ var (
 
     SystemDiskUsed = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_disk_used_bytes",
+            Name: "caspaste_system_disk_used_bytes",
             Help: "Disk used in bytes",
         },
         []string{"path"},
@@ -28495,7 +30137,7 @@ var (
 
     SystemDiskTotal = promauto.NewGaugeVec(
         prometheus.GaugeOpts{
-            Name: "{projectname}_system_disk_total_bytes",
+            Name: "caspaste_system_disk_total_bytes",
             Help: "Total disk in bytes",
         },
         []string{"path"},
@@ -28504,35 +30146,35 @@ var (
     // Go runtime metrics
     GoGoroutines = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_go_goroutines",
+            Name: "caspaste_go_goroutines",
             Help: "Number of goroutines",
         },
     )
 
     GoMemAlloc = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_go_mem_alloc_bytes",
+            Name: "caspaste_go_mem_alloc_bytes",
             Help: "Bytes allocated and in use",
         },
     )
 
     GoMemSys = promauto.NewGauge(
         prometheus.GaugeOpts{
-            Name: "{projectname}_go_mem_sys_bytes",
+            Name: "caspaste_go_mem_sys_bytes",
             Help: "Bytes obtained from system",
         },
     )
 
     GoGCRuns = promauto.NewCounter(
         prometheus.CounterOpts{
-            Name: "{projectname}_go_gc_runs_total",
+            Name: "caspaste_go_gc_runs_total",
             Help: "Total number of GC runs",
         },
     )
 
     GoGCPauseTotal = promauto.NewCounter(
         prometheus.CounterOpts{
-            Name: "{projectname}_go_gc_pause_total_seconds",
+            Name: "caspaste_go_gc_pause_total_seconds",
             Help: "Total GC pause time in seconds",
         },
     )
@@ -28680,35 +30322,35 @@ func StartUptimeUpdater() {
 ## Metrics Endpoint Output
 
 ```
-# HELP {projectname}_http_requests_total Total number of HTTP requests
-# TYPE {projectname}_http_requests_total counter
-{projectname}_http_requests_total{method="GET",path="/api/{api_version}/users",status="200"} 1523
-{projectname}_http_requests_total{method="POST",path="/api/{api_version}/users",status="201"} 42
+# HELP caspaste_http_requests_total Total number of HTTP requests
+# TYPE caspaste_http_requests_total counter
+caspaste_http_requests_total{method="GET",path="/api/{api_version}/users",status="200"} 1523
+caspaste_http_requests_total{method="POST",path="/api/{api_version}/users",status="201"} 42
 
-# HELP {projectname}_http_request_duration_seconds HTTP request duration in seconds
-# TYPE {projectname}_http_request_duration_seconds histogram
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="0.01"} 1400
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="0.1"} 1520
-{projectname}_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="+Inf"} 1523
-{projectname}_http_request_duration_seconds_sum{method="GET",path="/api/{api_version}/users"} 12.456
-{projectname}_http_request_duration_seconds_count{method="GET",path="/api/{api_version}/users"} 1523
+# HELP caspaste_http_request_duration_seconds HTTP request duration in seconds
+# TYPE caspaste_http_request_duration_seconds histogram
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="0.01"} 1400
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="0.1"} 1520
+caspaste_http_request_duration_seconds_bucket{method="GET",path="/api/{api_version}/users",le="+Inf"} 1523
+caspaste_http_request_duration_seconds_sum{method="GET",path="/api/{api_version}/users"} 12.456
+caspaste_http_request_duration_seconds_count{method="GET",path="/api/{api_version}/users"} 1523
 
-# HELP {projectname}_db_connections_open Number of open database connections
-# TYPE {projectname}_db_connections_open gauge
-{projectname}_db_connections_open 5
+# HELP caspaste_db_connections_open Number of open database connections
+# TYPE caspaste_db_connections_open gauge
+caspaste_db_connections_open 5
 
-# HELP {projectname}_cache_hits_total Total number of cache hits
-# TYPE {projectname}_cache_hits_total counter
-{projectname}_cache_hits_total{cache="sessions"} 8234
-{projectname}_cache_hits_total{cache="users"} 1523
+# HELP caspaste_cache_hits_total Total number of cache hits
+# TYPE caspaste_cache_hits_total counter
+caspaste_cache_hits_total{cache="sessions"} 8234
+caspaste_cache_hits_total{cache="users"} 1523
 
-# HELP {projectname}_app_info Application information
-# TYPE {projectname}_app_info gauge
-{projectname}_app_info{version="1.2.3",commit="abc123",build_date="2025-01-15",go_version="go1.23"} 1
+# HELP caspaste_app_info Application information
+# TYPE caspaste_app_info gauge
+caspaste_app_info{version="1.2.3",commit="abc123",build_date="2025-01-15",go_version="go1.23"} 1
 
-# HELP {projectname}_app_uptime_seconds Application uptime in seconds
-# TYPE {projectname}_app_uptime_seconds gauge
-{projectname}_app_uptime_seconds 86423.5
+# HELP caspaste_app_uptime_seconds Application uptime in seconds
+# TYPE caspaste_app_uptime_seconds gauge
+caspaste_app_uptime_seconds 86423.5
 ```
 
 ## Alerting Rules (Prometheus)
@@ -28716,13 +30358,13 @@ func StartUptimeUpdater() {
 ```yaml
 # alerts.yml - Example Prometheus alerting rules
 groups:
-  - name: {projectname}_alerts
+  - name: caspaste_alerts
     rules:
       # High error rate
       - alert: HighErrorRate
         expr: |
-          sum(rate({projectname}_http_requests_total{status=~"5.."}[5m]))
-          / sum(rate({projectname}_http_requests_total[5m])) > 0.05
+          sum(rate(caspaste_http_requests_total{status=~"5.."}[5m]))
+          / sum(rate(caspaste_http_requests_total[5m])) > 0.05
         for: 5m
         labels:
           severity: critical
@@ -28733,7 +30375,7 @@ groups:
       # High latency
       - alert: HighLatency
         expr: |
-          histogram_quantile(0.95, rate({projectname}_http_request_duration_seconds_bucket[5m])) > 1
+          histogram_quantile(0.95, rate(caspaste_http_request_duration_seconds_bucket[5m])) > 1
         for: 5m
         labels:
           severity: warning
@@ -28744,7 +30386,7 @@ groups:
       # Database connection pool exhausted
       - alert: DBConnectionPoolExhausted
         expr: |
-          {projectname}_db_connections_in_use / {projectname}_db_connections_open > 0.9
+          caspaste_db_connections_in_use / caspaste_db_connections_open > 0.9
         for: 5m
         labels:
           severity: warning
@@ -28753,7 +30395,7 @@ groups:
 
       # High memory usage
       - alert: HighMemoryUsage
-        expr: {projectname}_system_memory_usage_percent > 90
+        expr: caspaste_system_memory_usage_percent > 90
         for: 10m
         labels:
           severity: warning
@@ -28762,7 +30404,7 @@ groups:
 
       # Disk space low
       - alert: DiskSpaceLow
-        expr: {projectname}_system_disk_usage_percent > 85
+        expr: caspaste_system_disk_usage_percent > 85
         for: 5m
         labels:
           severity: warning
@@ -28771,18 +30413,18 @@ groups:
 
       # Application down
       - alert: ApplicationDown
-        expr: up{job="{projectname}"} == 0
+        expr: up{job="caspaste"} == 0
         for: 1m
         labels:
           severity: critical
         annotations:
-          summary: "{projectname} is down"
+          summary: "caspaste is down"
 
       # Goroutine leak
       - alert: GoroutineLeak
         expr: |
-          {projectname}_go_goroutines > 1000
-          and increase({projectname}_go_goroutines[1h]) > 100
+          caspaste_go_goroutines > 1000
+          and increase(caspaste_go_goroutines[1h]) > 100
         for: 30m
         labels:
           severity: warning
@@ -28793,7 +30435,7 @@ groups:
       # Scheduler task failing
       - alert: SchedulerTaskFailing
         expr: |
-          increase({projectname}_scheduler_tasks_total{status="error"}[1h]) > 3
+          increase(caspaste_scheduler_tasks_total{status="error"}[1h]) > 3
         for: 0m
         labels:
           severity: warning
@@ -28805,72 +30447,72 @@ groups:
 
 ```json
 {
-  "title": "{PROJECTNAME} Metrics",
+  "title": "CASPASTE Metrics",
   "panels": [
     {
       "title": "Request Rate",
       "type": "graph",
       "targets": [
-        {"expr": "sum(rate({projectname}_http_requests_total[5m]))"}
+        {"expr": "sum(rate(caspaste_http_requests_total[5m]))"}
       ]
     },
     {
       "title": "Error Rate",
       "type": "graph",
       "targets": [
-        {"expr": "sum(rate({projectname}_http_requests_total{status=~\"5..\"}[5m])) / sum(rate({projectname}_http_requests_total[5m]))"}
+        {"expr": "sum(rate(caspaste_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(caspaste_http_requests_total[5m]))"}
       ]
     },
     {
       "title": "Latency (p50, p95, p99)",
       "type": "graph",
       "targets": [
-        {"expr": "histogram_quantile(0.50, rate({projectname}_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p50"},
-        {"expr": "histogram_quantile(0.95, rate({projectname}_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95"},
-        {"expr": "histogram_quantile(0.99, rate({projectname}_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p99"}
+        {"expr": "histogram_quantile(0.50, rate(caspaste_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, rate(caspaste_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, rate(caspaste_http_request_duration_seconds_bucket[5m]))", "legendFormat": "p99"}
       ]
     },
     {
       "title": "Active Requests",
       "type": "stat",
       "targets": [
-        {"expr": "{projectname}_http_active_requests"}
+        {"expr": "caspaste_http_active_requests"}
       ]
     },
     {
       "title": "Database Connections",
       "type": "graph",
       "targets": [
-        {"expr": "{projectname}_db_connections_open", "legendFormat": "open"},
-        {"expr": "{projectname}_db_connections_in_use", "legendFormat": "in_use"}
+        {"expr": "caspaste_db_connections_open", "legendFormat": "open"},
+        {"expr": "caspaste_db_connections_in_use", "legendFormat": "in_use"}
       ]
     },
     {
       "title": "Cache Hit Rate",
       "type": "graph",
       "targets": [
-        {"expr": "sum(rate({projectname}_cache_hits_total[5m])) / (sum(rate({projectname}_cache_hits_total[5m])) + sum(rate({projectname}_cache_misses_total[5m])))"}
+        {"expr": "sum(rate(caspaste_cache_hits_total[5m])) / (sum(rate(caspaste_cache_hits_total[5m])) + sum(rate(caspaste_cache_misses_total[5m])))"}
       ]
     },
     {
       "title": "Memory Usage",
       "type": "gauge",
       "targets": [
-        {"expr": "{projectname}_system_memory_usage_percent"}
+        {"expr": "caspaste_system_memory_usage_percent"}
       ]
     },
     {
       "title": "Goroutines",
       "type": "graph",
       "targets": [
-        {"expr": "{projectname}_go_goroutines"}
+        {"expr": "caspaste_go_goroutines"}
       ]
     },
     {
       "title": "Uptime",
       "type": "stat",
       "targets": [
-        {"expr": "{projectname}_app_uptime_seconds"}
+        {"expr": "caspaste_app_uptime_seconds"}
       ]
     }
   ]
@@ -28896,7 +30538,7 @@ groups:
 ## Backup Command
 
 ```bash
-{projectname} --maintenance backup [filename]
+caspaste --maintenance backup [filename]
 ```
 
 ### Backup Contents
@@ -28928,7 +30570,7 @@ groups:
 ### Backup Format
 
 - Single `.tar.gz` file (or `.tar.gz.enc` if encrypted)
-- Filename: `{projectname}_backup_YYYY-MM-DD_HHMMSS.tar.gz[.enc]`
+- Filename: `caspaste_backup_YYYY-MM-DD_HHMMSS.tar.gz[.enc]`
 - Includes manifest with version info
 - Encrypted if backup password was set during setup
 
@@ -29031,14 +30673,14 @@ When `server.compliance.enabled: true`:
 
 ```bash
 # If encryption password set during setup:
-{projectname} --maintenance backup
+caspaste --maintenance backup
 # Prompts for password, creates encrypted backup
 
 # Override with explicit password:
-{projectname} --maintenance backup --password "mypassword"
+caspaste --maintenance backup --password "mypassword"
 
 # Restore encrypted backup:
-{projectname} --maintenance restore backup.tar.gz.enc
+caspaste --maintenance restore backup.tar.gz.enc
 # Prompts for password
 ```
 
@@ -29106,9 +30748,9 @@ server:
 **Backup Creation Flow (backup_daily task at 02:00):**
 
 ```
-1. Create full backup: {projectname}_backup_YYYY-MM-DD.tar.gz[.enc]
+1. Create full backup: caspaste_backup_YYYY-MM-DD.tar.gz[.enc]
 2. Verify full backup (all checks must pass)
-3. Create daily incremental: {projectname}-daily.tar.gz[.enc]
+3. Create daily incremental: caspaste-daily.tar.gz[.enc]
 4. Verify daily incremental (all checks must pass)
 5. If ALL verifications pass:
    - Apply retention policy (delete old backups per retention settings)
@@ -29178,9 +30820,9 @@ Every backup is verified **immediately after creation** - backups must be 100% w
 
 | File | Description | Retention |
 |------|-------------|-----------|
-| `{projectname}_backup_YYYY-MM-DD.tar.gz[.enc]` | Full backup (yesterday's data) | Controlled by `max_backups` |
-| `{projectname}-daily.tar.gz[.enc]` | Daily incremental (changes since full) | Always 1 (replaced each run) |
-| `{projectname}-hourly.tar.gz[.enc]` | Hourly incremental (if enabled) | Always 1 (replaced each run) |
+| `caspaste_backup_YYYY-MM-DD.tar.gz[.enc]` | Full backup (yesterday's data) | Controlled by `max_backups` |
+| `caspaste-daily.tar.gz[.enc]` | Daily incremental (changes since full) | Always 1 (replaced each run) |
+| `caspaste-hourly.tar.gz[.enc]` | Hourly incremental (if enabled) | Always 1 (replaced each run) |
 
 ### Retention Configuration
 
@@ -29360,7 +31002,7 @@ on a Sunday counts as daily + weekly + monthly + yearly - uses highest priority)
 ## Restore Command
 
 ```bash
-{projectname} --maintenance restore <backup-file>
+caspaste --maintenance restore <backup-file>
 ```
 
 ### Restore Authorization
@@ -29389,16 +31031,16 @@ on a Sunday counts as daily + weekly + monthly + yearly - uses highest priority)
 
 ```bash
 # Encrypted backup - prompts for password
-{projectname} --maintenance restore backup_2025-01-15.tar.gz.enc
+caspaste --maintenance restore backup_2025-01-15.tar.gz.enc
 Enter backup password: ••••••••••••
 Verifying backup integrity... OK
 Restoring...
 
 # Encrypted backup - password via flag
-{projectname} --maintenance restore backup_2025-01-15.tar.gz.enc --password "mypassword"
+caspaste --maintenance restore backup_2025-01-15.tar.gz.enc --password "mypassword"
 
 # Unencrypted backup - no password needed
-{projectname} --maintenance restore backup_2025-01-15.tar.gz
+caspaste --maintenance restore backup_2025-01-15.tar.gz
 ```
 
 **WebUI Restore:**
@@ -29501,7 +31143,7 @@ Your existing password and settings will be preserved.
 ## Admin Recovery Command
 
 ```bash
-{projectname} --maintenance setup
+caspaste --maintenance setup
 ```
 
 **Purpose:** Resets admin credentials and generates a new setup token. This is the ONLY way for a Server Admin to recover access if they have lost their password, API token, AND recovery keys.
@@ -29541,10 +31183,10 @@ Your existing password and settings will be preserved.
 
 ```bash
 # Stop the service first (recommended)
-{projectname} --service stop
+caspaste --service stop
 
 # Run setup reset
-{projectname} --maintenance setup
+caspaste --maintenance setup
 
 # Output:
 # ╔══════════════════════════════════════════════════════════════════╗
@@ -29557,14 +31199,14 @@ Your existing password and settings will be preserved.
 # ║  │  a1b2c3d4e5f67890abcdef1234567890                          │  ║
 # ║  └────────────────────────────────────────────────────────────┘  ║
 # ║                                                                  ║
-# ║  1. Start the service: {projectname} --service start             ║
+# ║  1. Start the service: caspaste --service start             ║
 # ║  2. Go to: http://{fqdn}:{port}/{admin_path}                     ║
 # ║  3. Enter the setup token above                                  ║
 # ║  4. Create new admin account via setup wizard                    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # Start the service
-{projectname} --service start
+caspaste --service start
 ```
 
 ### Security Considerations
@@ -29599,7 +31241,7 @@ Your existing password and settings will be preserved.
 │  Admin locked out (no password, no token, no recovery keys)     │
 │                           │                                     │
 │                           ▼                                     │
-│  Server admin runs: {projectname} --maintenance setup           │
+│  Server admin runs: caspaste --maintenance setup           │
 │                           │                                     │
 │                           ▼                                     │
 │  Admin credentials cleared, new setup token generated           │
@@ -29659,17 +31301,17 @@ Your existing password and settings will be preserved.
 
 ```bash
 # Check for updates (no privileges required)
-{projectname} --update check
+caspaste --update check
 
 # Perform update (these are equivalent)
-{projectname} --update
-{projectname} --update yes
-{projectname} --maintenance update
+caspaste --update
+caspaste --update yes
+caspaste --maintenance update
 
 # Switch channels
-{projectname} --update branch beta
-{projectname} --update branch daily
-{projectname} --update branch stable
+caspaste --update branch beta
+caspaste --update branch daily
+caspaste --update branch stable
 ```
 
 ## Self-Update Implementation
@@ -29850,10 +31492,10 @@ func CheckForUpdate(ctx context.Context, currentVersion, branch string) (*Releas
     var url string
     switch branch {
     case "stable":
-        url = "https://api.github.com/repos/{projectorg}/{projectname}/releases/latest"
+        url = "https://api.github.com/repos/casjay-forks/caspaste/releases/latest"
     default:
         // For beta/daily, get all releases and filter
-        url = "https://api.github.com/repos/{projectorg}/{projectname}/releases"
+        url = "https://api.github.com/repos/casjay-forks/caspaste/releases"
     }
 
     req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
@@ -29916,7 +31558,7 @@ func DoUpdate(ctx context.Context, release *Release) error {
     }
 
     // Download to temp file
-    tmpFile, err := os.CreateTemp("", "{projectname}-update-*")
+    tmpFile, err := os.CreateTemp("", "caspaste-update-*")
     if err != nil {
         return fmt.Errorf("failed to create temp file: %w", err)
     }
@@ -29967,7 +31609,7 @@ func DoUpdate(ctx context.Context, release *Release) error {
 
 // getBinaryName returns the expected binary name for this platform
 func getBinaryName() string {
-    name := "{projectname}-" + runtime.GOOS + "-" + runtime.GOARCH
+    name := "caspaste-" + runtime.GOOS + "-" + runtime.GOARCH
     if runtime.GOOS == "windows" {
         name += ".exe"
     }
@@ -30023,11 +31665,11 @@ func restartService() error {
 func restartLinuxService() error {
     // Try systemd first
     if _, err := exec.LookPath("systemctl"); err == nil {
-        cmd := exec.Command("systemctl", "restart", "{projectname}")
+        cmd := exec.Command("systemctl", "restart", "caspaste")
         return cmd.Run()
     }
     // Fall back to generic service command
-    cmd := exec.Command("service", "{projectname}", "restart")
+    cmd := exec.Command("service", "caspaste", "restart")
     return cmd.Run()
 }
 
@@ -30036,7 +31678,7 @@ func restartLinuxService() error {
 // +build darwin
 
 func restartDarwinService() error {
-    label := "{projectorg}.{projectname}"
+    label := "casjay-forks.caspaste"
     // kickstart -k kills existing and starts fresh
     cmd := exec.Command("launchctl", "kickstart", "-k", "system/"+label)
     return cmd.Run()
@@ -30048,14 +31690,14 @@ func restartDarwinService() error {
 
 func restartWindowsService() error {
     // Stop service
-    stopCmd := exec.Command("sc", "stop", "{projectname}")
+    stopCmd := exec.Command("sc", "stop", "caspaste")
     stopCmd.Run() // Ignore error if not running
 
     // Wait for stop
     time.Sleep(2 * time.Second)
 
     // Start service
-    startCmd := exec.Command("sc", "start", "{projectname}")
+    startCmd := exec.Command("sc", "start", "caspaste")
     return startCmd.Run()
 }
 
@@ -30064,7 +31706,7 @@ func restartWindowsService() error {
 // +build freebsd openbsd netbsd
 
 func restartBSDService() error {
-    cmd := exec.Command("service", "{projectname}", "restart")
+    cmd := exec.Command("service", "caspaste", "restart")
     return cmd.Run()
 }
 ```
@@ -30105,7 +31747,7 @@ func verifyChecksum(filePath, expectedHash string) error {
 
 Application user creation **REQUIRES** privilege escalation. If the user cannot escalate privileges, the application runs as the current user with user-level directories.
 
-**IMPORTANT: See PART 5 "Smart Escalation Logic" (lines ~6493-6528) for the complete escalation flow:**
+**IMPORTANT: See PART 5 "Smart Escalation Logic" (lines ~6668-6703) for the complete escalation flow:**
 - Binary first checks if already root/admin → skips escalation prompt entirely
 - Only prompts if user CAN actually escalate (is in sudoers/wheel/admin group)
 - Never prompts if user cannot escalate → shows informative error instead
@@ -30215,7 +31857,7 @@ ON --service --disable:
 ## Service Help Output
 
 ```bash
-$ {projectname} --service --help
+$ caspaste --service --help
 Service management commands:
 
   start       Start the service
@@ -30237,11 +31879,11 @@ Current status:
 ## Maintenance Help Output
 
 ```bash
-$ {projectname} --maintenance --help
+$ caspaste --maintenance --help
 Maintenance commands:
 
   backup [file]     Create backup of all data
-                    Default: {backup_dir}/{projectname}-{timestamp}.tar.gz
+                    Default: {backup_dir}/caspaste-{timestamp}.tar.gz
 
   restore <file>    Restore from backup file
                     Stops server, restores data, restarts server
@@ -30259,19 +31901,19 @@ Maintenance commands:
                     Creates primary Server Admin, configures server
 
 Examples:
-  {projectname} --maintenance backup
-  {projectname} --maintenance backup /path/to/backup.tar.gz
-  {projectname} --maintenance restore /path/to/backup.tar.gz
-  {projectname} --maintenance update check
-  {projectname} --maintenance update yes
-  {projectname} --maintenance mode development
-  {projectname} --maintenance setup
+  caspaste --maintenance backup
+  caspaste --maintenance backup /path/to/backup.tar.gz
+  caspaste --maintenance restore /path/to/backup.tar.gz
+  caspaste --maintenance update check
+  caspaste --maintenance update yes
+  caspaste --maintenance mode development
+  caspaste --maintenance setup
 ```
 
 ## Shell Help Output
 
 ```bash
-$ {projectname} --shell --help
+$ caspaste --shell --help
 Shell integration commands:
 
   completions [SHELL]   Print shell completion script
@@ -30283,21 +31925,21 @@ Shell integration commands:
 
 Usage:
   # Add to shell profile for persistent completions
-  {projectname} --shell init >> ~/.bashrc      # bash
-  {projectname} --shell init >> ~/.zshrc       # zsh
-  {projectname} --shell init >> ~/.config/fish/config.fish  # fish
+  caspaste --shell init >> ~/.bashrc      # bash
+  caspaste --shell init >> ~/.zshrc       # zsh
+  caspaste --shell init >> ~/.config/fish/config.fish  # fish
 
   # Or eval directly for current session
-  eval "$({projectname} --shell init)"
+  eval "$(caspaste --shell init)"
 
   # Generate completion script only
-  {projectname} --shell completions bash > /etc/bash_completion.d/{projectname}
+  caspaste --shell completions bash > /etc/bash_completion.d/caspaste
 ```
 
 ## Update Help Output
 
 ```bash
-$ {projectname} --update --help
+$ caspaste --update --help
 Update management:
 
   check                 Check for available updates
@@ -30312,9 +31954,9 @@ Update management:
                         daily  - Daily builds (development)
 
 Examples:
-  {projectname} --update check
-  {projectname} --update yes
-  {projectname} --update branch beta
+  caspaste --update check
+  caspaste --update yes
+  caspaste --update branch beta
 
 Current:
   Version:  {projectversion}
@@ -30325,12 +31967,12 @@ Current:
 ## CLI Admin Help Output
 
 ```bash
-$ {projectname}-cli --admin --help
+$ caspaste-cli --admin --help
 Admin CLI - manage users, organizations, and API tokens.
 
 AUTHENTICATION REQUIRED:
   Admin token must be set and valid. Use one of:
-  1. Environment variable: {PROJECTNAME}_TOKEN=adm_xxx...
+  1. Environment variable: CASPASTE_TOKEN=adm_xxx...
   2. Flag: --token adm_xxx...
 
   Token must have admin scope (prefix: adm_). User tokens (usr_) will be rejected.
@@ -30367,16 +32009,16 @@ Global Flags:
   --quiet               Suppress non-essential output
 
 Examples:
-  {projectname}-cli --admin user list
-  {projectname}-cli --admin user create newuser
-  {projectname}-cli --admin org create myorg
-  {projectname}-cli --admin token create "CI Token"
+  caspaste-cli --admin user list
+  caspaste-cli --admin user create newuser
+  caspaste-cli --admin org create myorg
+  caspaste-cli --admin token create "CI Token"
 ```
 
 ## CLI Admin User Help Output
 
 ```bash
-$ {projectname}-cli --admin user --help
+$ caspaste-cli --admin user --help
 User management commands:
 
   list                  List all users
@@ -30406,18 +32048,18 @@ User management commands:
                         Disable two-factor authentication for user
 
 Examples:
-  {projectname}-cli --admin user list
-  {projectname}-cli --admin user list --status suspended
-  {projectname}-cli --admin user get johndoe
-  {projectname}-cli --admin user create johndoe --email john@example.com
-  {projectname}-cli --admin user suspend johndoe
-  {projectname}-cli --admin user reset-password johndoe
+  caspaste-cli --admin user list
+  caspaste-cli --admin user list --status suspended
+  caspaste-cli --admin user get johndoe
+  caspaste-cli --admin user create johndoe --email john@example.com
+  caspaste-cli --admin user suspend johndoe
+  caspaste-cli --admin user reset-password johndoe
 ```
 
 ## CLI Admin Org Help Output
 
 ```bash
-$ {projectname}-cli --admin org --help
+$ caspaste-cli --admin org --help
 Organization management commands:
 
   list                  List all organizations
@@ -30446,16 +32088,16 @@ Organization management commands:
     --force             Skip confirmation prompt
 
 Examples:
-  {projectname}-cli --admin org list
-  {projectname}-cli --admin org create myorg --display-name "My Organization"
-  {projectname}-cli --admin org members myorg
-  {projectname}-cli --admin org add-member myorg johndoe --role admin
+  caspaste-cli --admin org list
+  caspaste-cli --admin org create myorg --display-name "My Organization"
+  caspaste-cli --admin org members myorg
+  caspaste-cli --admin org add-member myorg johndoe --role admin
 ```
 
 ## CLI Admin Token Help Output
 
 ```bash
-$ {projectname}-cli --admin token --help
+$ caspaste-cli --admin token --help
 API token management commands:
 
   list                  List all tokens
@@ -30473,21 +32115,21 @@ API token management commands:
     --format FORMAT     Output format (table|json|yaml)
 
 Examples:
-  {projectname}-cli --admin token list
-  {projectname}-cli --admin token create "CI Token" --expires 90d --scopes read,write
-  {projectname}-cli --admin token revoke tk_abc123
-  {projectname}-cli --admin token info tk_abc123
+  caspaste-cli --admin token list
+  caspaste-cli --admin token create "CI Token" --expires 90d --scopes read,write
+  caspaste-cli --admin token revoke tk_abc123
+  caspaste-cli --admin token info tk_abc123
 ```
 
 ## CLI Admin Server Help Output
 
 ```bash
-$ {projectname}-cli --admin server --help
+$ caspaste-cli --admin server --help
 Server admin CLI - server configuration and management.
 
 AUTHENTICATION REQUIRED:
   Server admin token must be set and valid. Use one of:
-  1. Environment variable: {PROJECTNAME}_TOKEN=adm_xxx...
+  1. Environment variable: CASPASTE_TOKEN=adm_xxx...
   2. Flag: --token adm_xxx...
 
   Token must have Server Admin scope (prefix: adm_). User tokens (usr_) and
@@ -30516,17 +32158,17 @@ Global Flags:
   --format {table|json|yaml}  Output format (default: table)
 
 Examples:
-  {projectname}-cli --admin server config list
-  {projectname}-cli --admin server config get registration.mode
-  {projectname}-cli --admin server config set registration.mode private
-  {projectname}-cli --admin server admin list
-  {projectname}-cli --admin server stats overview
+  caspaste-cli --admin server config list
+  caspaste-cli --admin server config get registration.mode
+  caspaste-cli --admin server config set registration.mode private
+  caspaste-cli --admin server admin list
+  caspaste-cli --admin server stats overview
 ```
 
 ## CLI Admin Server Config Help Output
 
 ```bash
-$ {projectname}-cli --admin server config --help
+$ caspaste-cli --admin server config --help
 Server configuration commands:
 
   get [key]             Get configuration value
@@ -30553,17 +32195,17 @@ Common Configuration Keys:
   email.from_address    From email address
 
 Examples:
-  {projectname}-cli --admin server config list
-  {projectname}-cli --admin server config get registration.mode
-  {projectname}-cli --admin server config set registration.mode private
-  {projectname}-cli --admin server config set branding.title "My Server"
-  {projectname}-cli --admin server config reset registration.mode
+  caspaste-cli --admin server config list
+  caspaste-cli --admin server config get registration.mode
+  caspaste-cli --admin server config set registration.mode private
+  caspaste-cli --admin server config set branding.title "My Server"
+  caspaste-cli --admin server config reset registration.mode
 ```
 
 ## CLI Admin Server Admin Help Output
 
 ```bash
-$ {projectname}-cli --admin server admin --help
+$ caspaste-cli --admin server admin --help
 Server admin management commands:
 
   list                  List all server admins
@@ -30584,16 +32226,16 @@ Server admin management commands:
 Note: Primary server admin cannot be removed. Use --maintenance setup for recovery.
 
 Examples:
-  {projectname}-cli --admin server admin list
-  {projectname}-cli --admin server admin invite newadmin --email admin@example.com
-  {projectname}-cli --admin server admin remove oldadmin
-  {projectname}-cli --admin server admin reset-password adminuser
+  caspaste-cli --admin server admin list
+  caspaste-cli --admin server admin invite newadmin --email admin@example.com
+  caspaste-cli --admin server admin remove oldadmin
+  caspaste-cli --admin server admin reset-password adminuser
 ```
 
 ## CLI Admin Server Stats Help Output
 
 ```bash
-$ {projectname}-cli --admin server stats --help
+$ caspaste-cli --admin server stats --help
 Server statistics commands:
 
   overview              General server statistics
@@ -30613,24 +32255,24 @@ Flags:
   --period PERIOD       Time period (1h|24h|7d|30d, default: 24h)
 
 Examples:
-  {projectname}-cli --admin server stats overview
-  {projectname}-cli --admin server stats users --period 30d
-  {projectname}-cli --admin server stats storage --format json
-  {projectname}-cli --admin server stats performance
+  caspaste-cli --admin server stats overview
+  caspaste-cli --admin server stats users --period 30d
+  caspaste-cli --admin server stats storage --format json
+  caspaste-cli --admin server stats performance
 ```
 
 ## System User Requirements 
 
 | Requirement | Value |
 |-------------|-------|
-| Username | `{projectname}` |
-| Group | `{projectname}` |
+| Username | `caspaste` |
+| Group | `caspaste` |
 | UID/GID | **Must match** - same value for both UID and GID |
 | UID/GID Range | **200-899** (safe system range, avoids well-known service IDs) |
 | Shell | `/sbin/nologin` or `/usr/sbin/nologin` |
-| Home | Config directory (`/etc/{projectorg}/{projectname}`) or data directory (`/var/lib/{projectorg}/{projectname}`) |
+| Home | Config directory (`/etc/casjay-forks/caspaste`) or data directory (`/var/lib/casjay-forks/caspaste`) |
 | Type | System user (no password, no login) |
-| Gecos | `{projectname} service account` |
+| Gecos | `caspaste service account` |
 
 ### UID/GID Selection Logic
 
@@ -30728,14 +32370,14 @@ func findAvailableSystemID() (int, error) {
 **Linux:**
 ```bash
 # Create group with specific GID
-groupadd --system --gid {id} {projectname}
+groupadd --system --gid {id} caspaste
 
 # Create user with matching UID, same primary group
 useradd --system --uid {id} --gid {id} \
-  --home-dir /etc/{projectorg}/{projectname} \
+  --home-dir /etc/casjay-forks/caspaste \
   --shell /sbin/nologin \
-  --comment "{projectname} service account" \
-  {projectname}
+  --comment "caspaste service account" \
+  caspaste
 ```
 
 ### macOS Service Account
@@ -30746,10 +32388,10 @@ useradd --system --uid {id} --gid {id} \
 |-------|-----------|---------|
 | Start | root | launchd starts binary as root |
 | Bind | root | Bind privileged ports (<1024) |
-| Drop | root→`{projectname}` | Binary drops privileges |
-| Run | `{projectname}` | Serve requests as unprivileged user |
+| Drop | root→`caspaste` | Binary drops privileges |
+| Run | `caspaste` | Serve requests as unprivileged user |
 
-**The `{projectname}` user is created automatically by the binary on first startup.**
+**The `caspaste` user is created automatically by the binary on first startup.**
 
 macOS uses `dscl` (Directory Service Command Line) to create system users. The user is hidden from login screen and has no shell access.
 
@@ -30771,21 +32413,21 @@ Same reserved IDs as Linux apply (see Reserved/Well-Known UIDs table above).
 # Start at 399, work down, skip reserved IDs
 
 # Create group with specific GID
-dscl . -create /Groups/{projectname}
-dscl . -create /Groups/{projectname} PrimaryGroupID {id}
-dscl . -create /Groups/{projectname} Password "*"
+dscl . -create /Groups/caspaste
+dscl . -create /Groups/caspaste PrimaryGroupID {id}
+dscl . -create /Groups/caspaste Password "*"
 
 # Create user with matching UID
-dscl . -create /Users/{projectname}
-dscl . -create /Users/{projectname} UniqueID {id}
-dscl . -create /Users/{projectname} PrimaryGroupID {id}
-dscl . -create /Users/{projectname} UserShell /usr/bin/false
-dscl . -create /Users/{projectname} RealName "{projectname} service account"
-dscl . -create /Users/{projectname} NFSHomeDirectory /usr/local/var/{projectorg}/{projectname}
-dscl . -create /Users/{projectname} Password "*"
+dscl . -create /Users/caspaste
+dscl . -create /Users/caspaste UniqueID {id}
+dscl . -create /Users/caspaste PrimaryGroupID {id}
+dscl . -create /Users/caspaste UserShell /usr/bin/false
+dscl . -create /Users/caspaste RealName "caspaste service account"
+dscl . -create /Users/caspaste NFSHomeDirectory /usr/local/var/casjay-forks/caspaste
+dscl . -create /Users/caspaste Password "*"
 
 # Hide user from login window
-dscl . -create /Users/{projectname} IsHidden 1
+dscl . -create /Users/caspaste IsHidden 1
 ```
 
 **launchd plist (runs as root, binary drops privileges):**
@@ -30795,14 +32437,14 @@ dscl . -create /Users/{projectname} IsHidden 1
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>{projectorg}.{projectname}</string>
+    <string>casjay-forks.caspaste</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/{projectname}</string>
+        <string>/usr/local/bin/caspaste</string>
     </array>
 
-    <!-- No UserName/GroupName - starts as root, binary drops to {projectname} user -->
+    <!-- No UserName/GroupName - starts as root, binary drops to caspaste user -->
 
     <key>RunAtLoad</key>
     <true/>
@@ -30811,10 +32453,10 @@ dscl . -create /Users/{projectname} IsHidden 1
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/var/log/{projectorg}/{projectname}/stdout.log</string>
+    <string>/var/log/casjay-forks/caspaste/stdout.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/var/log/{projectorg}/{projectname}/stderr.log</string>
+    <string>/var/log/casjay-forks/caspaste/stderr.log</string>
 </dict>
 </plist>
 ```
@@ -30823,11 +32465,11 @@ dscl . -create /Users/{projectname} IsHidden 1
 
 | Directory | Path | Purpose |
 |-----------|------|---------|
-| Binary | `/usr/local/bin/{projectname}` | Executable |
-| Config | `/usr/local/etc/{projectorg}/{projectname}/` | Configuration files |
-| Data | `/usr/local/var/{projectorg}/{projectname}/` | Application data |
-| Logs | `/usr/local/var/log/{projectorg}/{projectname}/` | Log files |
-| launchd plist | `/Library/LaunchDaemons/{projectorg}.{projectname}.plist` | Service definition |
+| Binary | `/usr/local/bin/caspaste` | Executable |
+| Config | `/usr/local/etc/casjay-forks/caspaste/` | Configuration files |
+| Data | `/usr/local/var/casjay-forks/caspaste/` | Application data |
+| Logs | `/usr/local/var/log/casjay-forks/caspaste/` | Log files |
+| launchd plist | `/Library/LaunchDaemons/casjay-forks.caspaste.plist` | Service definition |
 
 **Go Implementation (macOS):**
 ```go
@@ -30886,11 +32528,11 @@ func createMacOSServiceUser(name string, id int, homeDir string) error {
 **FreeBSD:**
 ```bash
 # Create user and group with matching ID
-pw groupadd -n {projectname} -g {id}
-pw useradd -n {projectname} -u {id} -g {id} \
-  -d /var/lib/{projectorg}/{projectname} \
+pw groupadd -n caspaste -g {id}
+pw useradd -n caspaste -u {id} -g {id} \
+  -d /var/lib/casjay-forks/caspaste \
   -s /usr/sbin/nologin \
-  -c "{projectname} service account"
+  -c "caspaste service account"
 ```
 
 ### Windows Service Account
@@ -30910,33 +32552,33 @@ pw useradd -n {projectname} -u {id} -g {id} \
 
 Virtual Service Accounts are automatically managed by Windows, require no password management, and have minimal privileges. They are created automatically when the service is installed.
 
-**Service Account Format:** `NT SERVICE\{projectname}`
+**Service Account Format:** `NT SERVICE\caspaste`
 
 ```powershell
 # Create service with Virtual Service Account (automatic)
-New-Service -Name "{projectname}" `
-  -BinaryPathName "C:\Program Files\{projectorg}\{projectname}\{projectname}.exe" `
-  -DisplayName "{projectname}" `
-  -Description "{projectname} service" `
+New-Service -Name "caspaste" `
+  -BinaryPathName "C:\Program Files\casjay-forks\caspaste\caspaste.exe" `
+  -DisplayName "caspaste" `
+  -Description "caspaste service" `
   -StartupType Automatic
 
-# Service automatically runs as NT SERVICE\{projectname}
+# Service automatically runs as NT SERVICE\caspaste
 # No user creation needed - Windows manages it
 ```
 
 **Directory Permissions:**
 ```powershell
 # Grant Virtual Service Account access to config/data directories
-$acl = Get-Acl "C:\ProgramData\{projectorg}\{projectname}"
+$acl = Get-Acl "C:\ProgramData\casjay-forks\caspaste"
 $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
-    "NT SERVICE\{projectname}",
+    "NT SERVICE\caspaste",
     "FullControl",
     "ContainerInherit,ObjectInherit",
     "None",
     "Allow"
 )
 $acl.SetAccessRule($rule)
-Set-Acl "C:\ProgramData\{projectorg}\{projectname}" $acl
+Set-Acl "C:\ProgramData\casjay-forks\caspaste" $acl
 ```
 
 **Go Implementation (Windows):**
@@ -30957,11 +32599,11 @@ func installWindowsService() error {
     // Create service - runs as Virtual Service Account by default
     // when ServiceStartName is empty or "NT SERVICE\{name}"
     s, err := m.CreateService(
-        "{projectname}",
+        "caspaste",
         exePath,
         mgr.Config{
-            DisplayName:     "{projectname}",
-            Description:     "{projectname} service",
+            DisplayName:     "caspaste",
+            Description:     "caspaste service",
             StartType:       mgr.StartAutomatic,
             // Empty = Virtual Service Account
             ServiceStartName: "",
@@ -30980,17 +32622,17 @@ func installWindowsService() error {
 
 | Directory | Path | Purpose |
 |-----------|------|---------|
-| Binary | `C:\Program Files\{projectorg}\{projectname}\` | Executable |
-| Config | `C:\ProgramData\{projectorg}\{projectname}\config\` | Configuration files |
-| Data | `C:\ProgramData\{projectorg}\{projectname}\data\` | Application data |
-| Logs | `C:\ProgramData\{projectorg}\{projectname}\logs\` | Log files |
+| Binary | `C:\Program Files\casjay-forks\caspaste\` | Executable |
+| Config | `C:\ProgramData\casjay-forks\caspaste\config\` | Configuration files |
+| Data | `C:\ProgramData\casjay-forks\caspaste\data\` | Application data |
+| Logs | `C:\ProgramData\casjay-forks\caspaste\logs\` | Log files |
 
 ### Home Directory Selection
 
 | Directory | Use When |
 |-----------|----------|
-| Config dir (`/etc/{projectorg}/{projectname}`) | Default - user needs access to config files |
-| Data dir (`/var/lib/{projectorg}/{projectname}`) | When data dir contains user-writable content |
+| Config dir (`/etc/casjay-forks/caspaste`) | Default - user needs access to config files |
+| Data dir (`/var/lib/casjay-forks/caspaste`) | When data dir contains user-writable content |
 
 **Note:** Home directory must exist before user creation. Create directories first, then user, then set ownership.
 
@@ -31018,25 +32660,25 @@ func installWindowsService() error {
 
 ## Service Templates
 
-**Unix: Service starts as root, binary drops to `{projectname}` user after port binding.**
-**Windows: Service runs as Virtual Service Account (`NT SERVICE\{projectname}`).**
+**Unix: Service starts as root, binary drops to `caspaste` user after port binding.**
+**Windows: Service runs as Virtual Service Account (`NT SERVICE\caspaste`).**
 
 This allows any port configuration without service file changes.
 
 ### systemd (Linux)
 
-**Installation path:** `/etc/systemd/system/{projectname}.service`
+**Installation path:** `/etc/systemd/system/caspaste.service`
 
 ```ini
 [Unit]
-Description={projectname} service
-Documentation=https://{projectorg}.github.io/{projectname}
+Description=caspaste service
+Documentation=https://casjay-forks.github.io/caspaste
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/{projectname}
+ExecStart=/usr/local/bin/caspaste
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal
@@ -31046,10 +32688,10 @@ StandardError=journal
 ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
-ReadWritePaths=/etc/{projectorg}/{projectname}
-ReadWritePaths=/var/lib/{projectorg}/{projectname}
-ReadWritePaths=/var/cache/{projectorg}/{projectname}
-ReadWritePaths=/var/log/{projectorg}/{projectname}
+ReadWritePaths=/etc/casjay-forks/caspaste
+ReadWritePaths=/var/lib/casjay-forks/caspaste
+ReadWritePaths=/var/cache/casjay-forks/caspaste
+ReadWritePaths=/var/log/casjay-forks/caspaste
 
 [Install]
 WantedBy=multi-user.target
@@ -31057,10 +32699,10 @@ WantedBy=multi-user.target
 
 ### runit (Linux)
 
-**Installation path:** `/etc/sv/{projectname}/`
+**Installation path:** `/etc/sv/caspaste/`
 
 ```
-/etc/sv/{projectname}/
+/etc/sv/caspaste/
 ├── run           # Main service script
 ├── log/
 │   └── run       # Logging script
@@ -31070,31 +32712,31 @@ WantedBy=multi-user.target
 **run script:**
 ```bash
 #!/bin/sh
-exec /usr/local/bin/{projectname} 2>&1
+exec /usr/local/bin/caspaste 2>&1
 ```
 
 **log/run script:**
 ```bash
 #!/bin/sh
-exec svlogd -tt /var/log/{projectorg}/{projectname}
+exec svlogd -tt /var/log/casjay-forks/caspaste
 ```
 
 ### rc.d (FreeBSD)
 
-**Installation path:** `/usr/local/etc/rc.d/{projectname}`
+**Installation path:** `/usr/local/etc/rc.d/caspaste`
 
 ```bash
 #!/bin/sh
 
-# PROVIDE: {projectname}
+# PROVIDE: caspaste
 # REQUIRE: NETWORKING
 # KEYWORD: shutdown
 
 . /etc/rc.subr
 
-name="{projectname}"
-rcvar="{projectname}_enable"
-command="/usr/local/bin/{projectname}"
+name="caspaste"
+rcvar="caspaste_enable"
+command="/usr/local/bin/caspaste"
 
 load_rc_config $name
 run_rc_command "$1"
@@ -31102,7 +32744,7 @@ run_rc_command "$1"
 
 ### launchd (macOS)
 
-**Installation path:** `/Library/LaunchDaemons/{projectorg}.{projectname}.plist`
+**Installation path:** `/Library/LaunchDaemons/casjay-forks.caspaste.plist`
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -31110,19 +32752,19 @@ run_rc_command "$1"
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>{projectorg}.{projectname}</string>
+    <string>casjay-forks.caspaste</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/local/bin/{projectname}</string>
+        <string>/usr/local/bin/caspaste</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/var/log/{projectorg}/{projectname}/stdout.log</string>
+    <string>/var/log/casjay-forks/caspaste/stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/var/log/{projectorg}/{projectname}/stderr.log</string>
+    <string>/var/log/casjay-forks/caspaste/stderr.log</string>
 </dict>
 </plist>
 ```
@@ -31130,13 +32772,13 @@ run_rc_command "$1"
 **Commands:**
 ```bash
 # Load and start service
-sudo launchctl load /Library/LaunchDaemons/{projectorg}.{projectname}.plist
+sudo launchctl load /Library/LaunchDaemons/casjay-forks.caspaste.plist
 
 # Unload service
-sudo launchctl unload /Library/LaunchDaemons/{projectorg}.{projectname}.plist
+sudo launchctl unload /Library/LaunchDaemons/casjay-forks.caspaste.plist
 
 # Check status
-sudo launchctl list | grep {projectname}
+sudo launchctl list | grep caspaste
 ```
 
 ### Windows Service
@@ -31145,7 +32787,7 @@ sudo launchctl list | grep {projectname}
 
 | Account | Description |
 |---------|-------------|
-| `NT SERVICE\{projectname}` | Virtual Service Account - auto-managed by Windows |
+| `NT SERVICE\caspaste` | Virtual Service Account - auto-managed by Windows |
 
 Use `golang.org/x/sys/windows/svc` for Windows service integration:
 
@@ -31155,7 +32797,7 @@ Use `golang.org/x/sys/windows/svc` for Windows service integration:
 import "golang.org/x/sys/windows/svc"
 
 func runAsService() error {
-    return svc.Run("{projectname}", &windowsService{})
+    return svc.Run("caspaste", &windowsService{})
 }
 
 type windowsService struct{}
@@ -31189,7 +32831,7 @@ func (ws *windowsService) Execute(args []string, r <-chan svc.ChangeRequest, s c
 
 | Target | Purpose | Output Location | When to Use |
 |--------|---------|-----------------|-------------|
-| `dev` | Quick development build | `${TMPDIR}/${PROJECTORG}/${PROJECTNAME}-XXXXXX/` | Active coding, quick tests |
+| `dev` | Quick development build | `${TMPDIR}/$CASJAY-FORKS/$CASPASTE-XXXXXX/` | Active coding, quick tests |
 | `local` | Production test build | `binaries/` (with version) | Test prod builds locally |
 | `build` | Full release (all 8 platforms) | `binaries/` | Before release |
 | `test` | Run unit tests | Coverage report | After code changes |
@@ -31285,13 +32927,13 @@ format_version_tag() {
 
 ### Naming Pattern
 
-**Pattern: `{projectname}[-type]-{os}-{arch}[.exe]`**
+**Pattern: `caspaste[-type]-{os}-{arch}[.exe]`**
 
 | Binary | Local Build | Distribution |
 |--------|------------|--------------|
-| **Server** | `{projectname}` | `{projectname}-{os}-{arch}` |
-| **CLI** | `{projectname}-cli` | `{projectname}-cli-{os}-{arch}` |
-| **Agent** | `{projectname}-agent` | `{projectname}-agent-{os}-{arch}` |
+| **Server** | `caspaste` | `caspaste-{os}-{arch}` |
+| **CLI** | `caspaste-cli` | `caspaste-cli-{os}-{arch}` |
+| **Agent** | `caspaste-agent` | `caspaste-agent-{os}-{arch}` |
 
 ### Examples
 
@@ -31305,22 +32947,22 @@ format_version_tag() {
 
 ```
 binaries/
-├── {projectname}                      # Local server binary
-├── {projectname}-cli                  # Local CLI binary (if src/client/ exists)
-├── {projectname}-agent                # Local agent binary (if src/agent/ exists)
-├── {projectname}-linux-amd64          # Server distributions
-├── {projectname}-linux-arm64
-├── {projectname}-darwin-amd64
-├── {projectname}-darwin-arm64
-├── {projectname}-windows-amd64.exe
-├── {projectname}-windows-arm64.exe
-├── {projectname}-freebsd-amd64
-├── {projectname}-freebsd-arm64
-├── {projectname}-cli-linux-amd64      # CLI distributions
-├── {projectname}-cli-linux-arm64
+├── caspaste                      # Local server binary
+├── caspaste-cli                  # Local CLI binary (if src/client/ exists)
+├── caspaste-agent                # Local agent binary (if src/agent/ exists)
+├── caspaste-linux-amd64          # Server distributions
+├── caspaste-linux-arm64
+├── caspaste-darwin-amd64
+├── caspaste-darwin-arm64
+├── caspaste-windows-amd64.exe
+├── caspaste-windows-arm64.exe
+├── caspaste-freebsd-amd64
+├── caspaste-freebsd-arm64
+├── caspaste-cli-linux-amd64      # CLI distributions
+├── caspaste-cli-linux-arm64
 ├── ...
-├── {projectname}-agent-linux-amd64    # Agent distributions
-├── {projectname}-agent-linux-arm64
+├── caspaste-agent-linux-amd64    # Agent distributions
+├── caspaste-agent-linux-arm64
 └── ...
 ```
 
@@ -31328,7 +32970,7 @@ binaries/
 
 | Context | Path |
 |---------|------|
-| Temp build | `$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")` |
+| Temp build | `$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")` |
 
 **If built with musl → strip binary before release. Final name has NO `-musl` suffix.**
 
@@ -31644,8 +33286,8 @@ All Docker builds use persistent Go module caching to avoid re-downloading depen
 2. Creates cache directories if needed
 3. Downloads Go modules (cached)
 4. Creates `binaries/` directory
-5. Builds local binary: `binaries/{projectname}`
-6. Builds all platform binaries: `binaries/{projectname}-{os}-{arch}`
+5. Builds local binary: `binaries/caspaste`
+6. Builds all platform binaries: `binaries/caspaste-{os}-{arch}`
 7. Uses `CGO_ENABLED=0` for static binaries
 8. Embeds Version, CommitID, BuildDate via `-ldflags`
 9. All builds via Docker (`golang:alpine`)
@@ -31684,9 +33326,9 @@ All Docker builds use persistent Go module caching to avoid re-downloading depen
 1. Quick build for local development/testing
 2. Builds local platform only (fastest)
 3. No `-ldflags` (version info not embedded)
-4. Outputs to `{tempdir}/{projectorg}/{projectname}-XXXXXX/` (isolated, org-identifiable)
+4. Outputs to `{tempdir}/casjay-forks/caspaste-XXXXXX/` (isolated, org-identifiable)
 5. Uses Docker (`golang:alpine`) - keeps local machine clean
-6. Easy cleanup: `rm -rf "${TMPDIR:-/tmp}"/${PROJECTORG}.*/` or auto-deleted on reboot
+6. Easy cleanup: `rm -rf "${TMPDIR:-/tmp}"/$CASJAY-FORKS.*/` or auto-deleted on reboot
 
 ### `make local`
 
@@ -31701,7 +33343,7 @@ All Docker builds use persistent Go module caching to avoid re-downloading depen
 
 | Command | Purpose | Output | When to Use |
 |---------|---------|--------|-------------|
-| `make dev` | **Development & Debugging** | `${TMPDIR}/${PROJECTORG}/${PROJECTNAME}-XXXXXX/` | Active coding, quick tests, debugging |
+| `make dev` | **Development & Debugging** | `${TMPDIR}/$CASJAY-FORKS/$CASPASTE-XXXXXX/` | Active coding, quick tests, debugging |
 | `make local` | **Production Testing** | `binaries/` (with version) | Test production builds locally before release |
 | `make build` | **Full Release Build** | `binaries/` (all 8 platforms) | Before tagging release, cross-platform verification |
 | `make test` | **Unit Tests** | Coverage report | After code changes, before commits |
@@ -31721,13 +33363,13 @@ All Docker builds use persistent Go module caching to avoid re-downloading depen
 
 ```bash
 # After make dev, test in Docker with debug tools
-BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-*/ 2>/dev/null | head -1)
+BUILD_DIR=$(ls -td ${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-*/ 2>/dev/null | head -1)
 docker run --rm -it \
   -v "$BUILD_DIR:/app" \
   alpine:latest sh -c "
     apk add --no-cache curl bash file jq
-    /app/${PROJECTNAME} --help
-    /app/${PROJECTNAME} --version
+    /app/$CASPASTE --help
+    /app/$CASPASTE --version
     # Debug interactively...
   "
 ```
@@ -31813,34 +33455,34 @@ The **only** time binaries are copied is during CI/CD release process, where the
 
 | File | Description |
 |------|-------------|
-| `{projectname}-linux-amd64` | Linux AMD64 server binary |
-| `{projectname}-linux-arm64` | Linux ARM64 server binary |
-| `{projectname}-darwin-amd64` | macOS AMD64 server binary |
-| `{projectname}-darwin-arm64` | macOS ARM64 (Apple Silicon) server binary |
-| `{projectname}-windows-amd64.exe` | Windows AMD64 server binary |
-| `{projectname}-windows-arm64.exe` | Windows ARM64 server binary |
-| `{projectname}-freebsd-amd64` | FreeBSD AMD64 server binary |
-| `{projectname}-freebsd-arm64` | FreeBSD ARM64 server binary |
+| `caspaste-linux-amd64` | Linux AMD64 server binary |
+| `caspaste-linux-arm64` | Linux ARM64 server binary |
+| `caspaste-darwin-amd64` | macOS AMD64 server binary |
+| `caspaste-darwin-arm64` | macOS ARM64 (Apple Silicon) server binary |
+| `caspaste-windows-amd64.exe` | Windows AMD64 server binary |
+| `caspaste-windows-arm64.exe` | Windows ARM64 server binary |
+| `caspaste-freebsd-amd64` | FreeBSD AMD64 server binary |
+| `caspaste-freebsd-arm64` | FreeBSD ARM64 server binary |
 
 ### CLI Binaries (If Project Has CLI)
 
 | File | Description |
 |------|-------------|
-| `{projectname}-cli-linux-amd64` | Linux AMD64 CLI binary |
-| `{projectname}-cli-linux-arm64` | Linux ARM64 CLI binary |
-| `{projectname}-cli-darwin-amd64` | macOS AMD64 CLI binary |
-| `{projectname}-cli-darwin-arm64` | macOS ARM64 (Apple Silicon) CLI binary |
-| `{projectname}-cli-windows-amd64.exe` | Windows AMD64 CLI binary |
-| `{projectname}-cli-windows-arm64.exe` | Windows ARM64 CLI binary |
-| `{projectname}-cli-freebsd-amd64` | FreeBSD AMD64 CLI binary |
-| `{projectname}-cli-freebsd-arm64` | FreeBSD ARM64 CLI binary |
+| `caspaste-cli-linux-amd64` | Linux AMD64 CLI binary |
+| `caspaste-cli-linux-arm64` | Linux ARM64 CLI binary |
+| `caspaste-cli-darwin-amd64` | macOS AMD64 CLI binary |
+| `caspaste-cli-darwin-arm64` | macOS ARM64 (Apple Silicon) CLI binary |
+| `caspaste-cli-windows-amd64.exe` | Windows AMD64 CLI binary |
+| `caspaste-cli-windows-arm64.exe` | Windows ARM64 CLI binary |
+| `caspaste-cli-freebsd-amd64` | FreeBSD AMD64 CLI binary |
+| `caspaste-cli-freebsd-arm64` | FreeBSD ARM64 CLI binary |
 
 ### Metadata Files (Always)
 
 | File | Description | Example Content |
 |------|-------------|-----------------|
 | `version.txt` | Version string only | `1.2.3`, `20251218060432-beta`, `20251218060432` |
-| `{projectname}-{version}-source.tar.gz` | Source code archive | Excludes `.git`, `.github`, `binaries/`, `releases/` |
+| `caspaste-{version}-source.tar.gz` | Source code archive | Excludes `.git`, `.github`, `binaries/`, `releases/` |
 
 ### version.txt Content
 
@@ -31980,7 +33622,7 @@ docker/
 | Meta labels | All OCI labels (see below) |
 | Required packages | git, curl, bash, tini, tor |
 | Tor handling | Installed but **binary controls** (see PART 32) |
-| Binary location | `/usr/local/bin/{projectname}` |
+| Binary location | `/usr/local/bin/caspaste` |
 | Entrypoint script | `/usr/local/bin/entrypoint.sh` |
 | Init system | **tini** |
 | Internal port | **80** |
@@ -31992,21 +33634,21 @@ docker/
 
 | Path | Purpose |
 |------|---------|
-| `/config/{projectname}/` | Binary's {config_dir} (server.yml, etc.) |
-| `/config/{projectname}/security/` | Security databases (geoip, blocklists, cve, trivy) |
-| `/config/{projectname}/tor/` | Tor config (torrc) - binary owns Tor |
+| `/config/caspaste/` | Binary's {config_dir} (server.yml, etc.) |
+| `/config/caspaste/security/` | Security databases (geoip, blocklists, cve, trivy) |
+| `/config/caspaste/tor/` | Tor config (torrc) - binary owns Tor |
 | `/config/{servicename}/` | External service configs (valkey, nginx, etc.) |
-| `/data/{projectname}/` | Binary's {data_dir} |
-| `/data/{projectname}/tor/` | Tor data (hidden service keys) - binary owns Tor |
+| `/data/caspaste/` | Binary's {data_dir} |
+| `/data/caspaste/tor/` | Tor data (hidden service keys) - binary owns Tor |
 | `/data/db/{dbtype}/` | Database data (postgres, valkey, mssql, etc.) |
-| `/data/log/{projectname}/` | App logs (access.log, error.log, tor.log, etc.) |
+| `/data/log/caspaste/` | App logs (access.log, error.log, tor.log, etc.) |
 | `/data/log/{servicename}/` | Service logs (nginx, caddy, etc.) |
-| `/data/backups/{projectname}/` | Backup archives |
+| `/data/backups/caspaste/` | Backup archives |
 | `/data/{servicename}/` | External service data (nginx, apache, etc.) |
-| `/usr/local/bin/{projectname}` | Application binary |
+| `/usr/local/bin/caspaste` | Application binary |
 | `/root/Dockerfile` | Build reference and backup |
 
-**Key principle:** Binary owns Tor completely - Tor dirs are under `{projectname}/`, not separate.
+**Key principle:** Binary owns Tor completely - Tor dirs are under `caspaste/`, not separate.
 
 ### OCI Meta Labels (Required)
 
@@ -32015,11 +33657,11 @@ All Dockerfiles MUST include these labels:
 | Label | Value |
 |-------|-------|
 | `maintainer` | `{maintainer_name} <{maintainer_email}>` |
-| `org.opencontainers.image.vendor` | `{projectorg}` |
-| `org.opencontainers.image.authors` | `{projectorg}` |
-| `org.opencontainers.image.title` | `{projectname}` |
-| `org.opencontainers.image.base.name` | `{projectname}` |
-| `org.opencontainers.image.description` | `{projectname} - standard image (alpine)` or `{projectname} - all-in-one (...)` |
+| `org.opencontainers.image.vendor` | `casjay-forks` |
+| `org.opencontainers.image.authors` | `casjay-forks` |
+| `org.opencontainers.image.title` | `caspaste` |
+| `org.opencontainers.image.base.name` | `caspaste` |
+| `org.opencontainers.image.description` | `caspaste - standard image (alpine)` or `caspaste - all-in-one (...)` |
 | `org.opencontainers.image.licenses` | License (e.g., `MIT`) |
 | `org.opencontainers.image.created` | `${BUILD_DATE}` (ARG) |
 | `org.opencontainers.image.version` | `${VERSION}` (ARG) |
@@ -32093,7 +33735,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
     -ldflags "-s -w -X 'main.Version=${VERSION}' -X 'main.CommitID=${COMMIT_ID}' -X 'main.BuildDate=${BUILD_DATE}' -X 'main.OfficialSite=${OFFICIALSITE}'" \
-    -o /build/binary/{projectname} src
+    -o /build/binary/caspaste src
 
 # =============================================================================
 # Runtime Stage - Minimal Alpine image
@@ -32108,11 +33750,11 @@ ARG LICENSE=MIT
 
 # Static Labels
 LABEL maintainer="{maintainer_name} <{maintainer_email}>" \
-      org.opencontainers.image.vendor="{projectorg}" \
-      org.opencontainers.image.authors="{projectorg}" \
-      org.opencontainers.image.title="{projectname}" \
-      org.opencontainers.image.base.name="{projectname}" \
-      org.opencontainers.image.description="{projectname} - standard image (alpine)" \
+      org.opencontainers.image.vendor="casjay-forks" \
+      org.opencontainers.image.authors="casjay-forks" \
+      org.opencontainers.image.title="caspaste" \
+      org.opencontainers.image.base.name="caspaste" \
+      org.opencontainers.image.description="caspaste - standard image (alpine)" \
       org.opencontainers.image.url="{PLATFORM_REPO_URL}" \
       org.opencontainers.image.source="{PLATFORM_REPO_URL}" \
       org.opencontainers.image.documentation="{PLATFORM_REPO_URL}" \
@@ -32140,7 +33782,7 @@ RUN apk add --no-cache \
 # Docker volume mounts auto-create mount points
 
 # Copy binary from builder stage (multi-stage build)
-COPY --from=builder /build/binary/{projectname} /usr/local/bin/{projectname}
+COPY --from=builder /build/binary/caspaste /usr/local/bin/caspaste
 
 # Copy BUILD-TIME overlay (entrypoint.sh) from docker/file_system/ into image
 # Note: This is docker/file_system/ (build context), NOT runtime ./rootfs/ volumes
@@ -32165,7 +33807,7 @@ STOPSIGNAL SIGRTMIN+3
 
 # Health check (long start period for services that need initialization)
 HEALTHCHECK --start-period=10m --interval=5m --timeout=15s --retries=3 \
-    CMD /usr/local/bin/{projectname} --status || exit 1
+    CMD /usr/local/bin/caspaste --status || exit 1
 
 # Use tini as init with signal propagation
 # -p SIGTERM: propagate SIGTERM to child processes
@@ -32206,7 +33848,7 @@ set -e
 # Binary handles: directories, permissions, user/group, Tor, etc.
 # =============================================================================
 
-APP_NAME="{projectname}"
+APP_NAME="caspaste"
 APP_BIN="/usr/local/bin/${APP_NAME}"
 
 # Export environment defaults (binary reads these)
@@ -32307,23 +33949,23 @@ exec $APP_BIN $FLAGS "$@"
 |-------------|-------|
 | `build:` | **NEVER include** |
 | `version:` | **NEVER include** |
-| `name:` | `{projectname}` (top-level) |
-| `container_name:` | `{projectname}-{servicename}` |
+| `name:` | `caspaste` (top-level) |
+| `container_name:` | `caspaste-{servicename}` |
 | Main service name | `server` (not `app`) |
 | `pull_policy:` | `always` |
 | `restart:` | `always` |
 | `x-logging:` | Anchor for consistent logging (see below) |
-| Network | Custom `{projectname}` with `external: false` |
+| Network | Custom `caspaste` with `external: false` |
 | Environment variables | **Hardcode with sane defaults** (NEVER use .env files) |
 | **environment: MODE** | **production** (strict host validation) |
 
 ### Docker Compose Structure 
 
 ```yaml
-# {projectname} - {brief description}
+# caspaste - {brief description}
 # nginx proxy address - http://172.17.0.1:{port}
 
-name: {projectname}
+name: caspaste
 
 x-logging: &default-logging
   options:
@@ -32333,8 +33975,8 @@ x-logging: &default-logging
 
 services:
   server:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
-    container_name: {projectname}-server
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste-server
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -32350,17 +33992,17 @@ services:
     ports:
       - '172.17.0.1:64580:80'
     healthcheck:
-      test: /usr/local/bin/{projectname} --status
+      test: /usr/local/bin/caspaste --status
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 90s
     networks:
-      - {projectname}
+      - caspaste
 
 networks:
-  {projectname}:
-    name: {projectname}
+  caspaste:
+    name: caspaste
     external: false
 ```
 
@@ -32368,14 +34010,14 @@ networks:
 
 | Field | Value | Description |
 |-------|-------|-------------|
-| `name:` | `{projectname}` | Top-level compose project name |
-| `container_name:` | `{projectname}-{servicename}` | e.g., `jokes-server`, `jokes-db`, `jokes-cache` |
+| `name:` | `caspaste` | Top-level compose project name |
+| `container_name:` | `caspaste-{servicename}` | e.g., `jokes-server`, `jokes-db`, `jokes-cache` |
 | Main service | `server` | Primary application service (not `app`) |
 | `hostname:` | `${BASE_HOST_NAME:-$HOSTNAME}` | Uses env or system hostname |
 | `restart:` | `always` | Always restart on failure |
 | `pull_policy:` | `always` | Always pull latest image |
 | `logging:` | `*default-logging` | Use the logging anchor |
-| `networks:` | `{projectname}` | Isolated network per project |
+| `networks:` | `caspaste` | Isolated network per project |
 
 ### Logging Anchor 
 
@@ -32399,10 +34041,10 @@ services:
 ### Multi-Service Example
 
 ```yaml
-# {projectname} - with Redis cache
+# caspaste - with Redis cache
 # nginx proxy address - http://172.17.0.1:64580
 
-name: {projectname}
+name: caspaste
 
 x-logging: &default-logging
   options:
@@ -32412,8 +34054,8 @@ x-logging: &default-logging
 
 services:
   server:
-    image: ghcr.io/{projectorg}/{projectname}:latest
-    container_name: {projectname}-server
+    image: ghcr.io/casjay-forks/caspaste:latest
+    container_name: caspaste-server
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -32429,7 +34071,7 @@ services:
     ports:
       - '172.17.0.1:64580:80'
     healthcheck:
-      test: /usr/local/bin/{projectname} --status
+      test: /usr/local/bin/caspaste --status
       interval: 10s
       timeout: 5s
       retries: 3
@@ -32438,11 +34080,11 @@ services:
       cache:
         condition: service_healthy
     networks:
-      - {projectname}
+      - caspaste
 
   cache:
     image: redis:alpine
-    container_name: {projectname}-cache
+    container_name: caspaste-cache
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -32456,11 +34098,11 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - {projectname}
+      - caspaste
 
 networks:
-  {projectname}:
-    name: {projectname}
+  caspaste:
+    name: caspaste
     external: false
 ```
 
@@ -32493,7 +34135,7 @@ networks:
 - Uses SQLite (embedded) or embedded key-value store
 - Valkey/Redis runs inside container via supervisor or embedded
 - Service name: `server`
-- Container name: `{projectname}-server`
+- Container name: `caspaste-server`
 - Simpler deployment, single image
 - **Trade-offs:** No horizontal scaling, single point of failure, harder to debug
 
@@ -32509,11 +34151,11 @@ networks:
 **All-in-One docker-compose (`docker/all-in-one.yml`):**
 
 ```yaml
-# {projectname} - All-in-One (app + embedded DB)
+# caspaste - All-in-One (app + embedded DB)
 # nginx proxy address - http://172.17.0.1:64580
 # Usage: docker compose -f all-in-one.yml up -d
 
-name: {projectname}
+name: caspaste
 
 x-logging: &default-logging
   options:
@@ -32523,8 +34165,8 @@ x-logging: &default-logging
 
 services:
   server:
-    image: ghcr.io/{projectorg}/{projectname}-aio:latest
-    container_name: {projectname}-server
+    image: ghcr.io/casjay-forks/caspaste-aio:latest
+    container_name: caspaste-server
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -32540,17 +34182,17 @@ services:
     ports:
       - '172.17.0.1:64580:80'
     healthcheck:
-      test: /usr/local/bin/{projectname} --status
+      test: /usr/local/bin/caspaste --status
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 90s
     networks:
-      - {projectname}
+      - caspaste
 
 networks:
-  {projectname}:
-    name: {projectname}
+  caspaste:
+    name: caspaste
     external: false
 ```
 
@@ -32581,13 +34223,13 @@ networks:
 ```dockerfile
 # All-in-One Dockerfile - includes app + postgresql + valkey + tor
 # Base: debian:latest (stable, broad compatibility)
-# Image name: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}-aio:latest
+# Image name: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste-aio:latest
 # PORTS: Only 80 exposed (db/cache are internal-only)
 
 FROM debian:latest
 
 LABEL org.opencontainers.image.source="{PLATFORM_REPO_URL}"
-LABEL org.opencontainers.image.description="{projectname} - all-in-one (debian + postgresql + valkey + tor)"
+LABEL org.opencontainers.image.description="caspaste - all-in-one (debian + postgresql + valkey + tor)"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Install dependencies (PostgreSQL + Valkey + Tor + Supervisor)
@@ -32603,11 +34245,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create directories - organized by component
-RUN mkdir -p /config/{projectname} /config/{projectname}/security /config/{projectname}/tor \
+RUN mkdir -p /config/caspaste /config/caspaste/security /config/caspaste/tor \
              /config/valkey /config/postgres \
-             /data/{projectname} /data/{projectname}/tor \
+             /data/caspaste /data/caspaste/tor \
              /data/db/postgres /data/db/valkey \
-             /data/log/{projectname} /data/backups/{projectname} \
+             /data/log/caspaste /data/backups/caspaste \
              /run/postgresql /run/valkey \
     && chown -R postgres:postgres /data/db/postgres /run/postgresql
 
@@ -32615,8 +34257,8 @@ RUN mkdir -p /config/{projectname} /config/{projectname}/security /config/{proje
 COPY docker/file_system/ /
 
 # Copy application binary from builder or pre-built
-COPY {projectname} /usr/local/bin/
-RUN chmod +x /usr/local/bin/{projectname} /usr/local/bin/entrypoint.sh
+COPY caspaste /usr/local/bin/
+RUN chmod +x /usr/local/bin/caspaste /usr/local/bin/entrypoint.sh
 
 # Default environment
 ENV MODE=production \
@@ -32625,8 +34267,8 @@ ENV MODE=production \
     TZ=America/New_York \
     PGDATA=/data/db \
     DB_HOST=/run/postgresql \
-    DB_NAME={projectname} \
-    DB_USER={projectname} \
+    DB_NAME=caspaste \
+    DB_USER=caspaste \
     VALKEY_SOCKET=/run/valkey/valkey.sock
 
 # Only expose app port - db/cache are internal
@@ -32672,7 +34314,7 @@ stdout_logfile=/data/log/tor.log
 stderr_logfile=/data/log/tor.log
 
 [program:app]
-command=/usr/local/bin/{projectname}
+command=/usr/local/bin/caspaste
 autostart=true
 autorestart=true
 priority=100
@@ -32791,9 +34433,9 @@ if [ ! -f /data/db/postgres/PG_VERSION ]; then
     sleep 3
 
     # Create application database and user
-    su - postgres -c "psql -c \"CREATE USER ${DB_USER:-{projectname}} WITH PASSWORD '${DB_PASSWORD:-{projectname}}';\""
-    su - postgres -c "psql -c \"CREATE DATABASE ${DB_NAME:-{projectname}} OWNER ${DB_USER:-{projectname}};\""
-    su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME:-{projectname}} TO ${DB_USER:-{projectname}};\""
+    su - postgres -c "psql -c \"CREATE USER ${DB_USER:-caspaste} WITH PASSWORD '${DB_PASSWORD:-caspaste}';\""
+    su - postgres -c "psql -c \"CREATE DATABASE ${DB_NAME:-caspaste} OWNER ${DB_USER:-caspaste};\""
+    su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME:-caspaste} TO ${DB_USER:-caspaste};\""
 
     # Stop PostgreSQL (supervisor will start it)
     su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /data/db/postgres stop"
@@ -32821,9 +34463,9 @@ exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 | `PORT` | `80` | Application port |
 | `DEBUG` | `false` | Debug mode |
 | `TZ` | `America/New_York` | Timezone |
-| `DB_NAME` | `{projectname}` | PostgreSQL database name |
-| `DB_USER` | `{projectname}` | PostgreSQL username |
-| `DB_PASSWORD` | `{projectname}` | PostgreSQL password |
+| `DB_NAME` | `caspaste` | PostgreSQL database name |
+| `DB_USER` | `caspaste` | PostgreSQL username |
+| `DB_PASSWORD` | `caspaste` | PostgreSQL password |
 | `TOR_ENABLED` | `false` | Enable Tor hidden service |
 
 **App Connection Strings (internal):**
@@ -32840,10 +34482,10 @@ valkeyURL := "unix:///run/valkey/valkey.sock"
 
 ```bash
 # Standard image (context is project root)
-docker build -t {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest -f docker/Dockerfile .
+docker build -t {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest -f docker/Dockerfile .
 
 # All-in-one image (context is project root)
-docker build -t {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}-aio:latest -f docker/Dockerfile.aio .
+docker build -t {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste-aio:latest -f docker/Dockerfile.aio .
 ```
 
 **When to use All-in-One:**
@@ -32909,16 +34551,16 @@ $TEMP_DIR/
 
 | Container Path | Contents |
 |----------------|----------|
-| `/config/{projectname}/` | Binary's {config_dir} - server.yml, etc. |
-| `/config/{projectname}/security/` | TLS certs, keys, security DBs |
-| `/config/{projectname}/tor/` | Tor config (torrc) - binary owns Tor |
+| `/config/caspaste/` | Binary's {config_dir} - server.yml, etc. |
+| `/config/caspaste/security/` | TLS certs, keys, security DBs |
+| `/config/caspaste/tor/` | Tor config (torrc) - binary owns Tor |
 | `/config/{servicename}/` | External service configs (valkey, nginx, etc.) |
-| `/data/{projectname}/` | Binary's {data_dir} |
-| `/data/{projectname}/tor/` | Tor data (hidden service keys) - binary owns Tor |
+| `/data/caspaste/` | Binary's {data_dir} |
+| `/data/caspaste/tor/` | Tor data (hidden service keys) - binary owns Tor |
 | `/data/db/{dbtype}/` | Database data (postgres, valkey, sqlite, etc.) |
-| `/data/log/{projectname}/` | App logs (access.log, error.log, tor.log) |
+| `/data/log/caspaste/` | App logs (access.log, error.log, tor.log) |
 | `/data/log/{servicename}/` | Service logs (nginx, caddy, etc.) |
-| `/data/backups/{projectname}/` | Backup files |
+| `/data/backups/caspaste/` | Backup files |
 | `/data/{servicename}/` | External service data (nginx, apache, etc.) |
 
 **Rules:**
@@ -32939,12 +34581,12 @@ $TEMP_DIR/
 5. Data lives in temp dir, isolated from project
 
 ```bash
-# Setup (uses OS temp dir: {ostempdir}/{projectorg}/{projectname}-XXXXXX/)
+# Setup (uses OS temp dir: {ostempdir}/casjay-forks/caspaste-XXXXXX/)
 # Set PROJECT_ROOT to your actual project location
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"  # Use git top-level
 # Or use absolute path: PROJECT_ROOT="/path/to/your/project"
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 
 # Copy docker-compose.yml
@@ -33016,12 +34658,12 @@ rm -rf "$TEMP_DIR"
 Development mode with optional debug. Humans run this manually for local development.
 
 ```yaml
-name: {projectname}-dev
+name: caspaste-dev
 
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
-    container_name: {projectname}-dev
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste-dev
     restart: unless-stopped
     environment:
       # Development: relaxed security, verbose logging, no caching
@@ -33039,18 +34681,18 @@ services:
       - ./rootfs/config:/config
       - ./rootfs/data:/data
     networks:
-      - {projectname}-dev
+      - caspaste-dev
 
 networks:
-  {projectname}-dev:
-    name: {projectname}-dev
+  caspaste-dev:
+    name: caspaste-dev
     external: false
 ```
 
 **Run:**
 ```bash
-mkdir -p "${TMPDIR:-/tmp}/{projectorg}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/{projectorg}/{projectname}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/casjay-forks"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/casjay-forks/caspaste-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 cp docker/docker-compose.dev.yml "$TEMP_DIR/docker-compose.yml"
 cd "$TEMP_DIR" && docker compose up -d
@@ -33065,12 +34707,12 @@ cd "$TEMP_DIR" && docker compose up -d
 Production has NO debug options. Debug must be set via CLI if needed. Humans deploy this for production use.
 
 ```yaml
-name: {projectname}
+name: caspaste
 
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
-    container_name: {projectname}
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste
     restart: unless-stopped
     environment:
       # Production: strict security, minimal logging, caching enabled
@@ -33093,18 +34735,18 @@ services:
       - ./rootfs/config:/config:z
       - ./rootfs/data:/data:z
     networks:
-      - {projectname}
+      - caspaste
 
 networks:
-  {projectname}:
-    name: {projectname}
+  caspaste:
+    name: caspaste
     external: false
 ```
 
 **Run:**
 ```bash
-mkdir -p "${TMPDIR:-/tmp}/{projectorg}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/{projectorg}/{projectname}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/casjay-forks"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/casjay-forks/caspaste-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 cp docker/docker-compose.yml "$TEMP_DIR/"
 cd "$TEMP_DIR" && docker compose up -d
@@ -33119,12 +34761,12 @@ cd "$TEMP_DIR" && docker compose up -d
 Debug enabled for test visibility. **MUST be copied to temp directory before use - NEVER run from project directory.**
 
 ```yaml
-name: {projectname}-test
+name: caspaste-test
 
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
-    container_name: {projectname}-test
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste-test
     restart: "no"
     environment:
       - MODE=development
@@ -33139,18 +34781,18 @@ services:
       - ./rootfs/config:/config
       - ./rootfs/data:/data
     networks:
-      - {projectname}-test
+      - caspaste-test
 
 networks:
-  {projectname}-test:
-    name: {projectname}-test
+  caspaste-test:
+    name: caspaste-test
     external: false
 ```
 
 **AI/Automated Testing Workflow (REQUIRED):**
 ```bash
-mkdir -p "${TMPDIR:-/tmp}/{projectorg}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/{projectorg}/{projectname}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/casjay-forks"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/casjay-forks/caspaste-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 cp docker/docker-compose.test.yml "$TEMP_DIR/docker-compose.yml"
 cd "$TEMP_DIR" && docker compose up --abort-on-container-exit
@@ -33162,12 +34804,12 @@ rm -rf "$TEMP_DIR"  # Cleanup after tests
 **Location:** `docker/docker-compose.yml`
 
 ```yaml
-name: {projectname}
+name: caspaste
 
 services:
-  {projectname}:
-    image: {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
-    container_name: {projectname}
+  caspaste:
+    image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste
     restart: unless-stopped
     depends_on:
       - postgres
@@ -33180,9 +34822,9 @@ services:
       # - DOMAIN=myapp.com,www.myapp.com,api.myapp.com
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME={projectname}
-      - DB_USER={projectname}
-      - DB_PASS={projectname}
+      - DB_NAME=caspaste
+      - DB_USER=caspaste
+      - DB_PASS=caspaste
     ports:
       # Production: bound to Docker bridge only (reverse proxy handles external)
       - "172.17.0.1:64580:80"
@@ -33190,25 +34832,25 @@ services:
       - ./rootfs/config:/config:z
       - ./rootfs/data:/data:z
     networks:
-      - {projectname}
+      - caspaste
 
   postgres:
     image: postgres:alpine
-    container_name: {projectname}-postgres
+    container_name: caspaste-postgres
     restart: unless-stopped
     environment:
-      - POSTGRES_DB={projectname}
-      - POSTGRES_USER={projectname}
-      - POSTGRES_PASSWORD={projectname}
+      - POSTGRES_DB=caspaste
+      - POSTGRES_USER=caspaste
+      - POSTGRES_PASSWORD=caspaste
       - TZ=America/New_York
     volumes:
       - ./rootfs/data/db/postgres:/var/lib/postgresql/data:z
     networks:
-      - {projectname}
+      - caspaste
 
 networks:
-  {projectname}:
-    name: {projectname}
+  caspaste:
+    name: caspaste
     external: false
 ```
 
@@ -33219,15 +34861,15 @@ networks:
 | Setting | Value |
 |---------|-------|
 | Internal port | **80** (always) |
-| Config dir | `/config/{projectname}/` (binary's {config_dir}) |
-| Security dir | `/config/{projectname}/security/` |
-| Tor config dir | `/config/{projectname}/tor/` (binary owns Tor) |
-| Data dir | `/data/{projectname}/` (binary's {data_dir}) |
-| Tor data dir | `/data/{projectname}/tor/` (binary owns Tor) |
+| Config dir | `/config/caspaste/` (binary's {config_dir}) |
+| Security dir | `/config/caspaste/security/` |
+| Tor config dir | `/config/caspaste/tor/` (binary owns Tor) |
+| Data dir | `/data/caspaste/` (binary's {data_dir}) |
+| Tor data dir | `/data/caspaste/tor/` (binary owns Tor) |
 | Database dir | `/data/db/{dbtype}/` (postgres, valkey, sqlite) |
-| Log dir | `/data/log/{projectname}/` |
-| Backup dir | `/data/backups/{projectname}/` |
-| Binary | `/usr/local/bin/{projectname}` |
+| Log dir | `/data/log/caspaste/` |
+| Backup dir | `/data/backups/caspaste/` |
+| Binary | `/usr/local/bin/caspaste` |
 | HEALTHCHECK | `{binary} --status` |
 
 **Path Mapping (Container vs Local):**
@@ -33236,8 +34878,8 @@ networks:
 |----------------|-----------|---------|
 | `/config` | `./rootfs/config` | Configuration root (organized by component) |
 | `/data` | `./rootfs/data` | Data root (organized by component) |
-| `/config/{projectname}/` | `./rootfs/config/{projectname}/` | Binary's config |
-| `/data/{projectname}/` | `./rootfs/data/{projectname}/` | Binary's data |
+| `/config/caspaste/` | `./rootfs/config/caspaste/` | Binary's config |
+| `/data/caspaste/` | `./rootfs/data/caspaste/` | Binary's data |
 | `/data/db/` | `./rootfs/data/db/` | Database data |
 | `/data/log/` | `./rootfs/data/log/` | Log files |
 
@@ -33249,10 +34891,10 @@ networks:
 |----------|-------------|
 | Auto-detection | Tor starts automatically if `tor` binary is installed |
 | Always enabled | Docker image includes `tor`, so always enabled in containers |
-| Config location | Torrc in `/config/{projectname}/tor/torrc` |
-| Data persistence | Tor keys in `/data/{projectname}/tor/site/` (survives restart) |
+| Config location | Torrc in `/config/caspaste/tor/torrc` |
+| Data persistence | Tor keys in `/data/caspaste/tor/site/` (survives restart) |
 | .onion address | Persists across container restarts via volume mount |
-| Binary owns Tor | Tor dirs under `{projectname}/`, not separate service |
+| Binary owns Tor | Tor dirs under `caspaste/`, not separate service |
 
 ## Container Detection
 
@@ -33275,17 +34917,17 @@ networks:
 
 | Tag | Description | Example |
 |-----|-------------|---------|
-| `{PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest` | Latest stable release | `ghcr.io/myorg/myapp:latest` |
-| `{PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:{version}` | Specific version | `ghcr.io/myorg/myapp:1.2.3` |
-| `{PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:{YYMM}` | Year/month tag | `ghcr.io/myorg/myapp:2512` |
-| `{PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:{commit}` | Git commit (7 char) | `ghcr.io/myorg/myapp:abc1234` |
+| `{PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest` | Latest stable release | `ghcr.io/myorg/myapp:latest` |
+| `{PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:{version}` | Specific version | `ghcr.io/myorg/myapp:1.2.3` |
+| `{PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:{YYMM}` | Year/month tag | `ghcr.io/myorg/myapp:2512` |
+| `{PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:{commit}` | Git commit (7 char) | `ghcr.io/myorg/myapp:abc1234` |
 
 ### Development Tags (Local)
 
 | Tag | Description | Example |
 |-----|-------------|---------|
-| `{projectname}:dev` | Local development build | `myapp:dev` |
-| `{projectname}:test` | Local test build | `myapp:test` |
+| `caspaste:dev` | Local development build | `myapp:dev` |
+| `caspaste:test` | Local test build | `myapp:test` |
 
 ### Registry
 
@@ -33296,7 +34938,7 @@ networks:
 
 ### Tag Rules
 
-1. **Release builds** MUST push to `{PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}`
+1. **Release builds** MUST push to `{PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste`
 2. **Development builds** MUST use local-only tags (no registry prefix)
 3. **NEVER push `:dev` or `:test` tags to production registry**
 4. All release images built for `linux/amd64` AND `linux/arm64`
@@ -33380,7 +35022,7 @@ on:
       - '[0-9]*.[0-9]*.[0-9]*'
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -33534,7 +35176,7 @@ on:
       - beta
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -33659,7 +35301,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -33827,7 +35469,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -33899,8 +35541,8 @@ jobs:
             BUILD_DATE=${{ env.BUILD_DATE }}
             COMMIT_ID=${{ env.COMMIT_ID }}
           labels: |
-            org.opencontainers.image.vendor={projectorg}
-            org.opencontainers.image.authors={projectorg}
+            org.opencontainers.image.vendor=casjay-forks
+            org.opencontainers.image.authors=casjay-forks
             org.opencontainers.image.title=${{ env.PROJECTNAME }}
             org.opencontainers.image.base.name=${{ env.PROJECTNAME }}
             org.opencontainers.image.description=${{ env.PROJECTNAME }} - standard image (alpine)
@@ -33912,8 +35554,8 @@ jobs:
             org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
           annotations: |
-            manifest:org.opencontainers.image.vendor={projectorg}
-            manifest:org.opencontainers.image.authors={projectorg}
+            manifest:org.opencontainers.image.vendor=casjay-forks
+            manifest:org.opencontainers.image.authors=casjay-forks
             manifest:org.opencontainers.image.title=${{ env.PROJECTNAME }}
             manifest:org.opencontainers.image.base.name=${{ env.PROJECTNAME }}
             manifest:org.opencontainers.image.description=${{ env.PROJECTNAME }} - standard image (alpine)
@@ -33994,8 +35636,8 @@ jobs:
             BUILD_DATE=${{ env.BUILD_DATE }}
             COMMIT_ID=${{ env.COMMIT_ID }}
           labels: |
-            org.opencontainers.image.vendor={projectorg}
-            org.opencontainers.image.authors={projectorg}
+            org.opencontainers.image.vendor=casjay-forks
+            org.opencontainers.image.authors=casjay-forks
             org.opencontainers.image.title=${{ env.PROJECTNAME }}-aio
             org.opencontainers.image.description=${{ env.PROJECTNAME }} - all-in-one (debian + postgresql + valkey + tor)
             org.opencontainers.image.version=${{ env.VERSION }}
@@ -34006,8 +35648,8 @@ jobs:
             org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.licenses=MIT
           annotations: |
-            manifest:org.opencontainers.image.vendor={projectorg}
-            manifest:org.opencontainers.image.authors={projectorg}
+            manifest:org.opencontainers.image.vendor=casjay-forks
+            manifest:org.opencontainers.image.authors=casjay-forks
             manifest:org.opencontainers.image.title=${{ env.PROJECTNAME }}-aio
             manifest:org.opencontainers.image.description=${{ env.PROJECTNAME }} - all-in-one (debian + postgresql + valkey + tor)
             manifest:org.opencontainers.image.version=${{ env.VERSION }}
@@ -34097,7 +35739,7 @@ on:
       - '[0-9]*.[0-9]*.[0-9]*'
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -34249,7 +35891,7 @@ on:
       - beta
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -34374,7 +36016,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
 
 jobs:
   build:
@@ -34521,7 +36163,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECTNAME: {projectname}
+  PROJECTNAME: caspaste
   # Registry auto-detected from Gitea instance (works with self-hosted)
   # Format: {gitea-server}/owner/repo -> extracts server for registry
   IMAGE_NAME: ${{ gitea.repository }}
@@ -34608,8 +36250,8 @@ jobs:
             BUILD_DATE=${{ env.BUILD_DATE }}
             COMMIT_ID=${{ env.COMMIT_ID }}
           labels: |
-            org.opencontainers.image.vendor={projectorg}
-            org.opencontainers.image.authors={projectorg}
+            org.opencontainers.image.vendor=casjay-forks
+            org.opencontainers.image.authors=casjay-forks
             org.opencontainers.image.title=${{ env.PROJECTNAME }}
             org.opencontainers.image.base.name=${{ env.PROJECTNAME }}
             org.opencontainers.image.description=${{ env.PROJECTNAME }} - standard image (alpine)
@@ -34621,8 +36263,8 @@ jobs:
             org.opencontainers.image.documentation=${{ gitea.server_url }}/${{ gitea.repository }}
             org.opencontainers.image.licenses=MIT
           annotations: |
-            manifest:org.opencontainers.image.vendor={projectorg}
-            manifest:org.opencontainers.image.authors={projectorg}
+            manifest:org.opencontainers.image.vendor=casjay-forks
+            manifest:org.opencontainers.image.authors=casjay-forks
             manifest:org.opencontainers.image.title=${{ env.PROJECTNAME }}
             manifest:org.opencontainers.image.base.name=${{ env.PROJECTNAME }}
             manifest:org.opencontainers.image.description=${{ env.PROJECTNAME }} - standard image (alpine)
@@ -34710,8 +36352,8 @@ jobs:
             BUILD_DATE=${{ env.BUILD_DATE }}
             COMMIT_ID=${{ env.COMMIT_ID }}
           labels: |
-            org.opencontainers.image.vendor={projectorg}
-            org.opencontainers.image.authors={projectorg}
+            org.opencontainers.image.vendor=casjay-forks
+            org.opencontainers.image.authors=casjay-forks
             org.opencontainers.image.title=${{ env.PROJECTNAME }}-aio
             org.opencontainers.image.description=${{ env.PROJECTNAME }} - all-in-one (debian + postgresql + valkey + tor)
             org.opencontainers.image.version=${{ env.VERSION }}
@@ -34722,8 +36364,8 @@ jobs:
             org.opencontainers.image.documentation=${{ gitea.server_url }}/${{ gitea.repository }}
             org.opencontainers.image.licenses=MIT
           annotations: |
-            manifest:org.opencontainers.image.vendor={projectorg}
-            manifest:org.opencontainers.image.authors={projectorg}
+            manifest:org.opencontainers.image.vendor=casjay-forks
+            manifest:org.opencontainers.image.authors=casjay-forks
             manifest:org.opencontainers.image.title=${{ env.PROJECTNAME }}-aio
             manifest:org.opencontainers.image.description=${{ env.PROJECTNAME }} - all-in-one (debian + postgresql + valkey + tor)
             manifest:org.opencontainers.image.version=${{ env.VERSION }}
@@ -34795,12 +36437,12 @@ All `$CI_*` variables are auto-populated by GitLab (works with self-hosted).
 **File:** `.gitlab-ci.yml`
 
 ```yaml
-# GitLab CI/CD Pipeline for {projectname}
+# GitLab CI/CD Pipeline for caspaste
 # Equivalent to GitHub Actions: release.yml, beta.yml, daily.yml, docker.yml
 
 variables:
-  PROJECTNAME: "{projectname}"
-  PROJECTORG: "{projectorg}"
+  PROJECTNAME: "caspaste"
+  PROJECTORG: "casjay-forks"
   CGO_ENABLED: "0"
   GOOS: linux
   GOARCH: amd64
@@ -34838,12 +36480,12 @@ build:linux-amd64:
     GOOS: linux
     GOARCH: amd64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-amd64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-amd64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-amd64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-amd64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-amd64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-amd64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-linux-amd64*
+      - $CASPASTE-linux-amd64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34855,12 +36497,12 @@ build:linux-arm64:
     GOOS: linux
     GOARCH: arm64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-arm64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-arm64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-arm64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-arm64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-arm64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-arm64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-linux-arm64*
+      - $CASPASTE-linux-arm64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34872,12 +36514,12 @@ build:darwin-amd64:
     GOOS: darwin
     GOARCH: amd64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-amd64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-amd64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-amd64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-amd64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-amd64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-amd64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-darwin-amd64*
+      - $CASPASTE-darwin-amd64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34889,12 +36531,12 @@ build:darwin-arm64:
     GOOS: darwin
     GOARCH: arm64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-arm64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-arm64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-arm64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-arm64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-arm64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-arm64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-darwin-arm64*
+      - $CASPASTE-darwin-arm64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34906,12 +36548,12 @@ build:windows-amd64:
     GOOS: windows
     GOARCH: amd64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-amd64.exe ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-amd64.exe ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-amd64.exe ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-amd64.exe ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-amd64.exe ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-amd64.exe ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-windows-amd64*.exe
+      - $CASPASTE-windows-amd64*.exe
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34923,12 +36565,12 @@ build:windows-arm64:
     GOOS: windows
     GOARCH: arm64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-arm64.exe ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-arm64.exe ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-arm64.exe ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-arm64.exe ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-arm64.exe ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-arm64.exe ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-windows-arm64*.exe
+      - $CASPASTE-windows-arm64*.exe
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34940,12 +36582,12 @@ build:freebsd-amd64:
     GOOS: freebsd
     GOARCH: amd64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-amd64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-amd64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-amd64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-amd64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-amd64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-amd64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-freebsd-amd64*
+      - $CASPASTE-freebsd-amd64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -34957,12 +36599,12 @@ build:freebsd-arm64:
     GOOS: freebsd
     GOARCH: arm64
   script:
-    - go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-arm64 ./src
-    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-arm64 ./src/client; fi
-    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-arm64 ./src/agent; fi
+    - go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-arm64 ./src
+    - if [ -d "src/client" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-arm64 ./src/client; fi
+    - if [ -d "src/agent" ]; then go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-arm64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-freebsd-arm64*
+      - $CASPASTE-freebsd-arm64*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
@@ -35004,29 +36646,29 @@ release:
   artifacts:
     paths:
       - version.txt
-      - ${PROJECTNAME}-*
+      - $CASPASTE-*
   release:
     tag_name: $CI_COMMIT_TAG
     name: "Release $CI_COMMIT_TAG"
     description: "Release created by GitLab CI"
     assets:
       links:
-        - name: "${PROJECTNAME}-linux-amd64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-linux-amd64?job=build:linux-amd64"
-        - name: "${PROJECTNAME}-linux-arm64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-linux-arm64?job=build:linux-arm64"
-        - name: "${PROJECTNAME}-darwin-amd64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-darwin-amd64?job=build:darwin-amd64"
-        - name: "${PROJECTNAME}-darwin-arm64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-darwin-arm64?job=build:darwin-arm64"
-        - name: "${PROJECTNAME}-windows-amd64.exe"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-windows-amd64.exe?job=build:windows-amd64"
-        - name: "${PROJECTNAME}-windows-arm64.exe"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-windows-arm64.exe?job=build:windows-arm64"
-        - name: "${PROJECTNAME}-freebsd-amd64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-freebsd-amd64?job=build:freebsd-amd64"
-        - name: "${PROJECTNAME}-freebsd-arm64"
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/${PROJECTNAME}-freebsd-arm64?job=build:freebsd-arm64"
+        - name: "$CASPASTE-linux-amd64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-linux-amd64?job=build:linux-amd64"
+        - name: "$CASPASTE-linux-arm64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-linux-arm64?job=build:linux-arm64"
+        - name: "$CASPASTE-darwin-amd64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-darwin-amd64?job=build:darwin-amd64"
+        - name: "$CASPASTE-darwin-arm64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-darwin-arm64?job=build:darwin-arm64"
+        - name: "$CASPASTE-windows-amd64.exe"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-windows-amd64.exe?job=build:windows-amd64"
+        - name: "$CASPASTE-windows-arm64.exe"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-windows-arm64.exe?job=build:windows-arm64"
+        - name: "$CASPASTE-freebsd-amd64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-freebsd-amd64?job=build:freebsd-amd64"
+        - name: "$CASPASTE-freebsd-arm64"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/$CASPASTE-freebsd-arm64?job=build:freebsd-arm64"
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+/
 
@@ -35045,35 +36687,35 @@ build:beta:
     - export LDFLAGS="-s -w -X 'main.Version=${VERSION}' -X 'main.CommitID=${COMMIT_ID}' -X 'main.BuildDate=${BUILD_DATE}' -X 'main.OfficialSite=${OFFICIALSITE}'"
   script:
     # Build all 8 platforms
-    - GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-amd64 ./src
-    - GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-arm64 ./src
-    - GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-amd64 ./src
-    - GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-arm64 ./src
-    - GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-amd64.exe ./src
-    - GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-arm64.exe ./src
-    - GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-amd64 ./src
-    - GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-arm64 ./src
+    - GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-amd64 ./src
+    - GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-arm64 ./src
+    - GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-amd64 ./src
+    - GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-arm64 ./src
+    - GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-amd64.exe ./src
+    - GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-arm64.exe ./src
+    - GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-amd64 ./src
+    - GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-arm64 ./src
     # Build CLI if exists
-    - if [ -d "src/client" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-arm64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-arm64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-amd64.exe ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-arm64.exe ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-amd64.exe ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-arm64.exe ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-arm64 ./src/client; fi
     # Build Agent if exists
-    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-arm64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-arm64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-amd64.exe ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-arm64.exe ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-amd64.exe ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-arm64.exe ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-arm64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-*
+      - $CASPASTE-*
     expire_in: 1 week
   rules:
     - if: $CI_COMMIT_BRANCH == "beta"
@@ -35093,35 +36735,35 @@ build:daily:
     - export LDFLAGS="-s -w -X 'main.Version=${VERSION}' -X 'main.CommitID=${COMMIT_ID}' -X 'main.BuildDate=${BUILD_DATE}' -X 'main.OfficialSite=${OFFICIALSITE}'"
   script:
     # Build all 8 platforms
-    - GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-amd64 ./src
-    - GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-linux-arm64 ./src
-    - GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-amd64 ./src
-    - GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-darwin-arm64 ./src
-    - GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-amd64.exe ./src
-    - GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-windows-arm64.exe ./src
-    - GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-amd64 ./src
-    - GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-freebsd-arm64 ./src
+    - GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-amd64 ./src
+    - GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-linux-arm64 ./src
+    - GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-amd64 ./src
+    - GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-darwin-arm64 ./src
+    - GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-amd64.exe ./src
+    - GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-windows-arm64.exe ./src
+    - GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-amd64 ./src
+    - GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-freebsd-arm64 ./src
     # Build CLI if exists
-    - if [ -d "src/client" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-linux-arm64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-darwin-arm64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-amd64.exe ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-windows-arm64.exe ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-amd64 ./src/client; fi
-    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli-freebsd-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-linux-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-darwin-arm64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-amd64.exe ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-windows-arm64.exe ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-amd64 ./src/client; fi
+    - if [ -d "src/client" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli-freebsd-arm64 ./src/client; fi
     # Build Agent if exists
-    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-linux-arm64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-darwin-arm64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-amd64.exe ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-windows-arm64.exe ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-amd64 ./src/agent; fi
-    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-agent-freebsd-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=linux GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-linux-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=darwin GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-darwin-arm64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-amd64.exe ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=windows GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-windows-arm64.exe ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-amd64 ./src/agent; fi
+    - if [ -d "src/agent" ]; then GOOS=freebsd GOARCH=arm64 go build -ldflags "${LDFLAGS}" -o $CASPASTE-agent-freebsd-arm64 ./src/agent; fi
   artifacts:
     paths:
-      - ${PROJECTNAME}-*
+      - $CASPASTE-*
     expire_in: 1 day
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
@@ -35167,11 +36809,11 @@ docker:build:
         --build-arg VERSION="${VERSION}" \
         --build-arg COMMIT_ID="${CI_COMMIT_SHORT_SHA}" \
         --build-arg BUILD_DATE="${BUILD_DATE}" \
-        --label "org.opencontainers.image.vendor=${PROJECTORG}" \
-        --label "org.opencontainers.image.authors=${PROJECTORG}" \
-        --label "org.opencontainers.image.title=${PROJECTNAME}" \
-        --label "org.opencontainers.image.base.name=${PROJECTNAME}" \
-        --label "org.opencontainers.image.description=${PROJECTNAME} - standard image (alpine)" \
+        --label "org.opencontainers.image.vendor=$CASJAY-FORKS" \
+        --label "org.opencontainers.image.authors=$CASJAY-FORKS" \
+        --label "org.opencontainers.image.title=$CASPASTE" \
+        --label "org.opencontainers.image.base.name=$CASPASTE" \
+        --label "org.opencontainers.image.description=$CASPASTE - standard image (alpine)" \
         --label "org.opencontainers.image.licenses=MIT" \
         --label "org.opencontainers.image.version=${VERSION}" \
         --label "org.opencontainers.image.created=${BUILD_DATE}" \
@@ -35179,11 +36821,11 @@ docker:build:
         --label "org.opencontainers.image.url=${CI_PROJECT_URL}" \
         --label "org.opencontainers.image.source=${CI_PROJECT_URL}" \
         --label "org.opencontainers.image.documentation=${CI_PROJECT_URL}" \
-        --annotation "manifest:org.opencontainers.image.vendor=${PROJECTORG}" \
-        --annotation "manifest:org.opencontainers.image.authors=${PROJECTORG}" \
-        --annotation "manifest:org.opencontainers.image.title=${PROJECTNAME}" \
-        --annotation "manifest:org.opencontainers.image.base.name=${PROJECTNAME}" \
-        --annotation "manifest:org.opencontainers.image.description=${PROJECTNAME} - standard image (alpine)" \
+        --annotation "manifest:org.opencontainers.image.vendor=$CASJAY-FORKS" \
+        --annotation "manifest:org.opencontainers.image.authors=$CASJAY-FORKS" \
+        --annotation "manifest:org.opencontainers.image.title=$CASPASTE" \
+        --annotation "manifest:org.opencontainers.image.base.name=$CASPASTE" \
+        --annotation "manifest:org.opencontainers.image.description=$CASPASTE - standard image (alpine)" \
         --annotation "manifest:org.opencontainers.image.licenses=MIT" \
         --annotation "manifest:org.opencontainers.image.version=${VERSION}" \
         --annotation "manifest:org.opencontainers.image.created=${BUILD_DATE}" \
@@ -35234,10 +36876,10 @@ docker:build-aio:
         --build-arg VERSION="${VERSION}" \
         --build-arg COMMIT_ID="${CI_COMMIT_SHORT_SHA}" \
         --build-arg BUILD_DATE="${BUILD_DATE}" \
-        --label "org.opencontainers.image.vendor=${PROJECTORG}" \
-        --label "org.opencontainers.image.authors=${PROJECTORG}" \
-        --label "org.opencontainers.image.title=${PROJECTNAME}-aio" \
-        --label "org.opencontainers.image.description=${PROJECTNAME} - all-in-one (debian + postgresql + valkey + tor)" \
+        --label "org.opencontainers.image.vendor=$CASJAY-FORKS" \
+        --label "org.opencontainers.image.authors=$CASJAY-FORKS" \
+        --label "org.opencontainers.image.title=$CASPASTE-aio" \
+        --label "org.opencontainers.image.description=$CASPASTE - all-in-one (debian + postgresql + valkey + tor)" \
         --label "org.opencontainers.image.licenses=MIT" \
         --label "org.opencontainers.image.version=${VERSION}" \
         --label "org.opencontainers.image.created=${BUILD_DATE}" \
@@ -35245,10 +36887,10 @@ docker:build-aio:
         --label "org.opencontainers.image.url=${CI_PROJECT_URL}" \
         --label "org.opencontainers.image.source=${CI_PROJECT_URL}" \
         --label "org.opencontainers.image.documentation=${CI_PROJECT_URL}" \
-        --annotation "manifest:org.opencontainers.image.vendor=${PROJECTORG}" \
-        --annotation "manifest:org.opencontainers.image.authors=${PROJECTORG}" \
-        --annotation "manifest:org.opencontainers.image.title=${PROJECTNAME}-aio" \
-        --annotation "manifest:org.opencontainers.image.description=${PROJECTNAME} - all-in-one (debian + postgresql + valkey + tor)" \
+        --annotation "manifest:org.opencontainers.image.vendor=$CASJAY-FORKS" \
+        --annotation "manifest:org.opencontainers.image.authors=$CASJAY-FORKS" \
+        --annotation "manifest:org.opencontainers.image.title=$CASPASTE-aio" \
+        --annotation "manifest:org.opencontainers.image.description=$CASPASTE - all-in-one (debian + postgresql + valkey + tor)" \
         --annotation "manifest:org.opencontainers.image.licenses=MIT" \
         --annotation "manifest:org.opencontainers.image.version=${VERSION}" \
         --annotation "manifest:org.opencontainers.image.created=${BUILD_DATE}" \
@@ -35346,12 +36988,12 @@ pipeline {
     }
 
     environment {
-        PROJECTNAME = '{projectname}'
-        PROJECTORG = '{projectorg}'
+        PROJECTNAME = 'caspaste'
+        PROJECTORG = 'casjay-forks'
         BINDIR = 'binaries'
         RELDIR = 'releases'
-        GODIR = "/tmp/${PROJECTORG}/go"
-        GOCACHE = "/tmp/${PROJECTORG}/go/build"
+        GODIR = "/tmp/$CASJAY-FORKS/go"
+        GOCACHE = "/tmp/$CASJAY-FORKS/go/build"
 
         // =========================================================================
         // GIT PROVIDER CONFIGURATION
@@ -35361,22 +37003,22 @@ pipeline {
         // ----- GITHUB (default) -----
         GIT_FQDN = 'github.com'
         GIT_TOKEN = credentials('github-token')  // Jenkins credentials ID
-        REGISTRY = "ghcr.io/${PROJECTORG}/${PROJECTNAME}"
+        REGISTRY = "ghcr.io/$CASJAY-FORKS/$CASPASTE"
 
         // ----- GITEA / FORGEJO (self-hosted) -----
         // GIT_FQDN = 'git.example.com'  // Your Gitea/Forgejo domain
         // GIT_TOKEN = credentials('gitea-token')  // Jenkins credentials ID
-        // REGISTRY = "${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}"
+        // REGISTRY = "${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE"
 
         // ----- GITLAB (gitlab.com or self-hosted) -----
         // GIT_FQDN = 'gitlab.com'  // or your self-hosted GitLab domain
         // GIT_TOKEN = credentials('gitlab-token')  // Jenkins credentials ID
-        // REGISTRY = "registry.${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}"
+        // REGISTRY = "registry.${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE"
 
         // ----- DOCKER HUB -----
         // GIT_FQDN = 'github.com'  // Git provider (separate from registry)
         // GIT_TOKEN = credentials('github-token')
-        // REGISTRY = "docker.io/${PROJECTORG}/${PROJECTNAME}"
+        // REGISTRY = "docker.io/$CASJAY-FORKS/$CASPASTE"
 
         // =========================================================================
     }
@@ -35431,7 +37073,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-linux-amd64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-linux-amd64 ./src
                         '''
                     }
                 }
@@ -35448,7 +37090,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-linux-arm64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-linux-arm64 ./src
                         '''
                     }
                 }
@@ -35466,7 +37108,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-darwin-amd64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-darwin-amd64 ./src
                         '''
                     }
                 }
@@ -35483,7 +37125,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-darwin-arm64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-darwin-arm64 ./src
                         '''
                     }
                 }
@@ -35501,7 +37143,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-windows-amd64.exe ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-windows-amd64.exe ./src
                         '''
                     }
                 }
@@ -35518,7 +37160,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-windows-arm64.exe ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-windows-arm64.exe ./src
                         '''
                     }
                 }
@@ -35536,7 +37178,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-freebsd-amd64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-freebsd-amd64 ./src
                         '''
                     }
                 }
@@ -35553,7 +37195,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-freebsd-arm64 ./src
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-freebsd-arm64 ./src
                         '''
                     }
                 }
@@ -35579,7 +37221,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-linux-amd64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-linux-amd64 ./src/client
                         '''
                     }
                 }
@@ -35596,7 +37238,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-linux-arm64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-linux-arm64 ./src/client
                         '''
                     }
                 }
@@ -35613,7 +37255,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-darwin-amd64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-darwin-amd64 ./src/client
                         '''
                     }
                 }
@@ -35630,7 +37272,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-darwin-arm64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-darwin-arm64 ./src/client
                         '''
                     }
                 }
@@ -35647,7 +37289,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-windows-amd64.exe ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-windows-amd64.exe ./src/client
                         '''
                     }
                 }
@@ -35664,7 +37306,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-windows-arm64.exe ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-windows-arm64.exe ./src/client
                         '''
                     }
                 }
@@ -35681,7 +37323,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-freebsd-amd64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-freebsd-amd64 ./src/client
                         '''
                     }
                 }
@@ -35698,7 +37340,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-cli-freebsd-arm64 ./src/client
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-cli-freebsd-arm64 ./src/client
                         '''
                     }
                 }
@@ -35724,7 +37366,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-linux-amd64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-linux-amd64 ./src/agent
                         '''
                     }
                 }
@@ -35741,7 +37383,7 @@ pipeline {
                                 -e GOOS=linux \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-linux-arm64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-linux-arm64 ./src/agent
                         '''
                     }
                 }
@@ -35758,7 +37400,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-darwin-amd64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-darwin-amd64 ./src/agent
                         '''
                     }
                 }
@@ -35775,7 +37417,7 @@ pipeline {
                                 -e GOOS=darwin \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-darwin-arm64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-darwin-arm64 ./src/agent
                         '''
                     }
                 }
@@ -35792,7 +37434,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-windows-amd64.exe ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-windows-amd64.exe ./src/agent
                         '''
                     }
                 }
@@ -35809,7 +37451,7 @@ pipeline {
                                 -e GOOS=windows \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-windows-arm64.exe ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-windows-arm64.exe ./src/agent
                         '''
                     }
                 }
@@ -35826,7 +37468,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=amd64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-freebsd-amd64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-freebsd-amd64 ./src/agent
                         '''
                     }
                 }
@@ -35843,7 +37485,7 @@ pipeline {
                                 -e GOOS=freebsd \
                                 -e GOARCH=arm64 \
                                 golang:alpine \
-                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/${PROJECTNAME}-agent-freebsd-arm64 ./src/agent
+                                go build -ldflags "${LDFLAGS}" -o ${BINDIR}/$CASPASTE-agent-freebsd-arm64 ./src/agent
                         '''
                     }
                 }
@@ -35875,7 +37517,7 @@ pipeline {
                 sh '''
                     echo "${VERSION}" > ${RELDIR}/version.txt
 
-                    for f in ${BINDIR}/${PROJECTNAME}-*; do
+                    for f in ${BINDIR}/$CASPASTE-*; do
                         [ -f "$f" ] || continue
                         cp "$f" ${RELDIR}/
                     done
@@ -35883,7 +37525,7 @@ pipeline {
                     tar --exclude='.git' --exclude='.github' --exclude='.gitea' \
                         --exclude='.forgejo' --exclude='binaries' --exclude='releases' \
                         --exclude='*.tar.gz' \
-                        -czf ${RELDIR}/${PROJECTNAME}-${VERSION}-source.tar.gz .
+                        -czf ${RELDIR}/$CASPASTE-${VERSION}-source.tar.gz .
                 '''
                 archiveArtifacts artifacts: 'releases/*', fingerprint: true
             }
@@ -35899,7 +37541,7 @@ pipeline {
                 sh '''
                     echo "${VERSION}" > ${RELDIR}/version.txt
 
-                    for f in ${BINDIR}/${PROJECTNAME}-*; do
+                    for f in ${BINDIR}/$CASPASTE-*; do
                         [ -f "$f" ] || continue
                         cp "$f" ${RELDIR}/
                     done
@@ -35918,7 +37560,7 @@ pipeline {
                 sh '''
                     echo "${VERSION}" > ${RELDIR}/version.txt
 
-                    for f in ${BINDIR}/${PROJECTNAME}-*; do
+                    for f in ${BINDIR}/$CASPASTE-*; do
                         [ -f "$f" ] || continue
                         cp "$f" ${RELDIR}/
                     done
@@ -35952,42 +37594,42 @@ pipeline {
                     // Login to container registry
                     // Works with: ghcr.io, registry.gitlab.com, gitea/forgejo, docker.io
                     sh """
-                        echo "\${GIT_TOKEN}" | docker login ${REGISTRY.split('/')[0]} -u ${PROJECTORG} --password-stdin
+                        echo "\${GIT_TOKEN}" | docker login ${REGISTRY.split('/')[0]} -u $CASJAY-FORKS --password-stdin
                     """
 
                     // Build multi-arch with OCI labels and manifest annotations
                     sh """
-                        docker buildx create --name ${PROJECTNAME}-builder --use 2>/dev/null || docker buildx use ${PROJECTNAME}-builder
+                        docker buildx create --name $CASPASTE-builder --use 2>/dev/null || docker buildx use $CASPASTE-builder
                         docker buildx build \
                             -f docker/Dockerfile \
                             --platform linux/amd64,linux/arm64 \
                             --build-arg VERSION="${VERSION}" \
                             --build-arg COMMIT_ID="${COMMIT_ID}" \
                             --build-arg BUILD_DATE="${BUILD_DATE}" \
-                            --label "org.opencontainers.image.vendor=${PROJECTORG}" \
-                            --label "org.opencontainers.image.authors=${PROJECTORG}" \
-                            --label "org.opencontainers.image.title=${PROJECTNAME}" \
-                            --label "org.opencontainers.image.base.name=${PROJECTNAME}" \
-                            --label "org.opencontainers.image.description=${PROJECTNAME} - standard image (alpine)" \
+                            --label "org.opencontainers.image.vendor=$CASJAY-FORKS" \
+                            --label "org.opencontainers.image.authors=$CASJAY-FORKS" \
+                            --label "org.opencontainers.image.title=$CASPASTE" \
+                            --label "org.opencontainers.image.base.name=$CASPASTE" \
+                            --label "org.opencontainers.image.description=$CASPASTE - standard image (alpine)" \
                             --label "org.opencontainers.image.licenses=MIT" \
                             --label "org.opencontainers.image.version=${VERSION}" \
                             --label "org.opencontainers.image.created=${BUILD_DATE}" \
                             --label "org.opencontainers.image.revision=${COMMIT_ID}" \
-                            --label "org.opencontainers.image.url=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --label "org.opencontainers.image.source=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --label "org.opencontainers.image.documentation=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.vendor=${PROJECTORG}" \
-                            --annotation "manifest:org.opencontainers.image.authors=${PROJECTORG}" \
-                            --annotation "manifest:org.opencontainers.image.title=${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.base.name=${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.description=${PROJECTNAME} - standard image (alpine)" \
+                            --label "org.opencontainers.image.url=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --label "org.opencontainers.image.source=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --label "org.opencontainers.image.documentation=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.vendor=$CASJAY-FORKS" \
+                            --annotation "manifest:org.opencontainers.image.authors=$CASJAY-FORKS" \
+                            --annotation "manifest:org.opencontainers.image.title=$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.base.name=$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.description=$CASPASTE - standard image (alpine)" \
                             --annotation "manifest:org.opencontainers.image.licenses=MIT" \
                             --annotation "manifest:org.opencontainers.image.version=${VERSION}" \
                             --annotation "manifest:org.opencontainers.image.created=${BUILD_DATE}" \
                             --annotation "manifest:org.opencontainers.image.revision=${COMMIT_ID}" \
-                            --annotation "manifest:org.opencontainers.image.url=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.source=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.documentation=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
+                            --annotation "manifest:org.opencontainers.image.url=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.source=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.documentation=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
                             ${tags} \
                             --push \
                             .
@@ -36022,40 +37664,40 @@ pipeline {
 
                     // Login to container registry
                     sh """
-                        echo "\${GIT_TOKEN}" | docker login ${REGISTRY.split('/')[0]} -u ${PROJECTORG} --password-stdin
+                        echo "\${GIT_TOKEN}" | docker login ${REGISTRY.split('/')[0]} -u $CASJAY-FORKS --password-stdin
                     """
 
                     // Build multi-arch all-in-one with OCI labels and manifest annotations
                     sh """
-                        docker buildx create --name ${PROJECTNAME}-builder --use 2>/dev/null || docker buildx use ${PROJECTNAME}-builder
+                        docker buildx create --name $CASPASTE-builder --use 2>/dev/null || docker buildx use $CASPASTE-builder
                         docker buildx build \
                             -f docker/Dockerfile.aio \
                             --platform linux/amd64,linux/arm64 \
                             --build-arg VERSION="${VERSION}" \
                             --build-arg COMMIT_ID="${COMMIT_ID}" \
                             --build-arg BUILD_DATE="${BUILD_DATE}" \
-                            --label "org.opencontainers.image.vendor=${PROJECTORG}" \
-                            --label "org.opencontainers.image.authors=${PROJECTORG}" \
-                            --label "org.opencontainers.image.title=${PROJECTNAME}-aio" \
-                            --label "org.opencontainers.image.description=${PROJECTNAME} - all-in-one (debian + postgresql + valkey + tor)" \
+                            --label "org.opencontainers.image.vendor=$CASJAY-FORKS" \
+                            --label "org.opencontainers.image.authors=$CASJAY-FORKS" \
+                            --label "org.opencontainers.image.title=$CASPASTE-aio" \
+                            --label "org.opencontainers.image.description=$CASPASTE - all-in-one (debian + postgresql + valkey + tor)" \
                             --label "org.opencontainers.image.licenses=MIT" \
                             --label "org.opencontainers.image.version=${VERSION}" \
                             --label "org.opencontainers.image.created=${BUILD_DATE}" \
                             --label "org.opencontainers.image.revision=${COMMIT_ID}" \
-                            --label "org.opencontainers.image.url=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --label "org.opencontainers.image.source=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --label "org.opencontainers.image.documentation=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.vendor=${PROJECTORG}" \
-                            --annotation "manifest:org.opencontainers.image.authors=${PROJECTORG}" \
-                            --annotation "manifest:org.opencontainers.image.title=${PROJECTNAME}-aio" \
-                            --annotation "manifest:org.opencontainers.image.description=${PROJECTNAME} - all-in-one (debian + postgresql + valkey + tor)" \
+                            --label "org.opencontainers.image.url=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --label "org.opencontainers.image.source=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --label "org.opencontainers.image.documentation=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.vendor=$CASJAY-FORKS" \
+                            --annotation "manifest:org.opencontainers.image.authors=$CASJAY-FORKS" \
+                            --annotation "manifest:org.opencontainers.image.title=$CASPASTE-aio" \
+                            --annotation "manifest:org.opencontainers.image.description=$CASPASTE - all-in-one (debian + postgresql + valkey + tor)" \
                             --annotation "manifest:org.opencontainers.image.licenses=MIT" \
                             --annotation "manifest:org.opencontainers.image.version=${VERSION}" \
                             --annotation "manifest:org.opencontainers.image.created=${BUILD_DATE}" \
                             --annotation "manifest:org.opencontainers.image.revision=${COMMIT_ID}" \
-                            --annotation "manifest:org.opencontainers.image.url=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.source=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
-                            --annotation "manifest:org.opencontainers.image.documentation=https://${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}" \
+                            --annotation "manifest:org.opencontainers.image.url=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.source=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
+                            --annotation "manifest:org.opencontainers.image.documentation=https://${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE" \
                             ${tags} \
                             --push \
                             .
@@ -36082,7 +37724,7 @@ pipeline {
 | Agent labels | `amd64` and `arm64` MUST be available |
 | Docker | Required on all agents (builds use golang:alpine) |
 | Docker buildx | Required on amd64 agent for multi-arch builds |
-| Go caches | `/tmp/{projectorg}/go-cache` and `/tmp/{projectorg}/go-mod-cache` |
+| Go caches | `/tmp/casjay-forks/go-cache` and `/tmp/casjay-forks/go-mod-cache` |
 
 ### Credentials Setup (Jenkins → Credentials → Add Credentials)
 
@@ -36113,17 +37755,17 @@ In the Jenkinsfile, uncomment the appropriate block:
 // ----- GITHUB (default) -----
 GIT_FQDN = 'github.com'
 GIT_TOKEN = credentials('github-token')
-REGISTRY = "ghcr.io/${PROJECTORG}/${PROJECTNAME}"
+REGISTRY = "ghcr.io/$CASJAY-FORKS/$CASPASTE"
 
 // ----- GITEA / FORGEJO (self-hosted) -----
 // GIT_FQDN = 'git.example.com'
 // GIT_TOKEN = credentials('gitea-token')
-// REGISTRY = "${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}"
+// REGISTRY = "${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE"
 
 // ----- GITLAB (gitlab.com or self-hosted) -----
 // GIT_FQDN = 'gitlab.com'
 // GIT_TOKEN = credentials('gitlab-token')
-// REGISTRY = "registry.${GIT_FQDN}/${PROJECTORG}/${PROJECTNAME}"
+// REGISTRY = "registry.${GIT_FQDN}/$CASJAY-FORKS/$CASPASTE"
 ```
 
 ### Triggers Comparison
@@ -36168,8 +37810,8 @@ Before proceeding, confirm you understand:
 
 | REQUIRED | Example |
 |----------|---------|
-| Temp directory | `/tmp/{projectorg}/{projectname}-XXXXXX/` |
-| Volume mounts | `/tmp/{projectorg}/{projectname}-XXXXXX/rootfs/` |
+| Temp directory | `/tmp/casjay-forks/caspaste-XXXXXX/` |
+| Volume mounts | `/tmp/casjay-forks/caspaste-XXXXXX/rootfs/` |
 | Test databases | In temp directory, never project |
 
 **The project directory is for SOURCE CODE ONLY. All runtime/test data goes to the OS temp directory.**
@@ -36200,8 +37842,8 @@ Before proceeding, confirm you understand:
 **AI testing workflow:**
 ```bash
 # 1. Create temp directory (REQUIRED)
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 
 # 2. Copy ONLY docker-compose.test.yml to temp dir
@@ -36243,7 +37885,7 @@ Config files are NEVER in the repository. They are generated at RUNTIME:
 | File | Location | Created When |
 |------|----------|--------------|
 | `server.yml` | `{config_dir}/server.yml` (see PART 4) | Server first run |
-| `cli.yml` | `~/.config/{projectorg}/{projectname}/cli.yml` | CLI first run |
+| `cli.yml` | `~/.config/casjay-forks/caspaste/cli.yml` | CLI first run |
 | Tor config | `{config_dir}/tor/torrc` (see PART 32) | When Tor enabled |
 | Tor data | `{data_dir}/tor/` (see PART 32) | When Tor enabled |
 
@@ -36270,28 +37912,28 @@ Config files are NEVER in the repository. They are generated at RUNTIME:
 
 ## Temporary Directory Structure 
 
-**CRITICAL: NEVER use `/tmp` root directory directly. ALWAYS use `/tmp/{projectorg}/{projectname}-XXXXXX` structure.**
+**CRITICAL: NEVER use `/tmp` root directory directly. ALWAYS use `/tmp/casjay-forks/caspaste-XXXXXX` structure.**
 
 **FORBIDDEN:**
 - ❌ `/tmp/myfile` - Root tmp directory
-- ❌ `/tmp/{projectname}` - Missing org prefix
+- ❌ `/tmp/caspaste` - Missing org prefix
 - ❌ `mktemp -d` - No org/project structure
 - ❌ `/tmp/test-data` - Generic paths
 
 **REQUIRED:**
-- ✓ `/tmp/{projectorg}/{projectname}-XXXXXX/` - Full structure
+- ✓ `/tmp/casjay-forks/caspaste-XXXXXX/` - Full structure
 - ✓ `/tmp/cloudops/echoip-aB3xY9/` - Org + project + random
-- ✓ `mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX"` - Proper command
+- ✓ `mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX"` - Proper command
 
 **See "Inferring Variables from Path" section for how to detect `ORG` and `PROJECT`.**
 
 ### Creating Temp Directories
 
-**Always use `{projectorg}/{projectname}-` structure for identifiable temp dirs:**
+**Always use `casjay-forks/caspaste-` structure for identifiable temp dirs:**
 
 | Language | How to Create Prefixed Temp Dir |
 |----------|--------------------------------|
-| Shell | `mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}" && mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX"` |
+| Shell | `mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS" && mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX"` |
 | Go | `os.MkdirAll(filepath.Join(os.TempDir(), projectOrg), 0755); os.MkdirTemp(filepath.Join(os.TempDir(), projectOrg), projectName+"-")` |
 | Python | `os.makedirs(f"{tempfile.gettempdir()}/{project_org}", exist_ok=True); tempfile.mkdtemp(prefix=f"{project_name}-", dir=f"{tempfile.gettempdir()}/{project_org}")` |
 
@@ -36301,9 +37943,9 @@ Config files are NEVER in the repository. They are generated at RUNTIME:
 
 | Purpose | Path Pattern | Example |
 |---------|--------------|---------|
-| Dev/Test runtime | `{tempdir}/{projectorg}/{projectname}-XXXXXX/` | `/tmp/{projectorg}/{projectname}-aB3xY9/` |
-| Config volume | `{tempdir}/{projectorg}/{projectname}-XXXXXX/rootfs/config/` | `/tmp/{projectorg}/{projectname}-aB3xY9/rootfs/config/` |
-| Data volume | `{tempdir}/{projectorg}/{projectname}-XXXXXX/rootfs/data/` | `/tmp/{projectorg}/{projectname}-aB3xY9/rootfs/data/` |
+| Dev/Test runtime | `{tempdir}/casjay-forks/caspaste-XXXXXX/` | `/tmp/casjay-forks/caspaste-aB3xY9/` |
+| Config volume | `{tempdir}/casjay-forks/caspaste-XXXXXX/rootfs/config/` | `/tmp/casjay-forks/caspaste-aB3xY9/rootfs/config/` |
+| Data volume | `{tempdir}/casjay-forks/caspaste-XXXXXX/rootfs/data/` | `/tmp/casjay-forks/caspaste-aB3xY9/rootfs/data/` |
 
 ### OS Temp Directories
 
@@ -36321,44 +37963,44 @@ Config files are NEVER in the repository. They are generated at RUNTIME:
 | **NEVER** | Use project directory for test/runtime data |
 | **NEVER** | Hardcode `/tmp` - use `os.TempDir()` or `mktemp` |
 | **NEVER** | Use bare `mktemp -d` without org prefix |
-| **ALWAYS** | Use `{projectorg}/{projectname}-` structure for all temp dirs |
+| **ALWAYS** | Use `casjay-forks/caspaste-` structure for all temp dirs |
 | **ALWAYS** | Detect org from git remote or directory path |
 
 ### Cleanup
 
 ```bash
 # Find all temp dirs for this org
-ls -la "${TMPDIR:-/tmp}/${PROJECTORG}/"
+ls -la "${TMPDIR:-/tmp}/$CASJAY-FORKS/"
 
 # Clean all temp dirs for this org
-rm -rf "${TMPDIR:-/tmp}/${PROJECTORG}/"
+rm -rf "${TMPDIR:-/tmp}/$CASJAY-FORKS/"
 ```
 
 ### Correct vs Incorrect
 
 | WRONG | RIGHT | Why |
 |-------|-------|-----|
-| `/tmp/` | `/tmp/{projectorg}/{projectname}-XXXXXX/` | NEVER use root tmp |
+| `/tmp/` | `/tmp/casjay-forks/caspaste-XXXXXX/` | NEVER use root tmp |
 | `/tmp/myfile` | `/tmp/cloudops/echoip-aB3xY9/myfile` | Always use org/project structure |
 | `/tmp/echoip` | `/tmp/cloudops/echoip-kL9mN2/` | Missing org, missing random suffix |
 | `/tmp/test-data/` | `/tmp/devtools/quotesvc-Qw5rT1/test-data/` | Generic path not allowed |
-| `mktemp -d` | `mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX"` | Must include org/project |
+| `mktemp -d` | `mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX"` | Must include org/project |
 | `os.TempDir()` alone | `os.MkdirTemp(filepath.Join(os.TempDir(), projectOrg), projectName+"-")` | Must nest under org |
 | Hardcoded org name | Detect from git remote or path | Auto-detect, never hardcode |
 
-**Rule: ALL temp directories MUST be under `/tmp/{projectorg}/{projectname}-XXXXXX/` - no exceptions.**
+**Rule: ALL temp directories MUST be under `/tmp/casjay-forks/caspaste-XXXXXX/` - no exceptions.**
 
 ### Summary: Temp Directory Rules
 
 **The ONLY acceptable temp directory pattern:**
 ```
-/tmp/{projectorg}/{projectname}-XXXXXX/
+/tmp/casjay-forks/caspaste-XXXXXX/
 ```
 
 **Breaking it down:**
 - `/tmp/` or `$TMPDIR` - OS temp directory base
-- `{projectorg}/` - Organization directory (cloudops, acmesoft, etc.)
-- `{projectname}-XXXXXX` - Project directory with random suffix
+- `casjay-forks/` - Organization directory (cloudops, acmesoft, etc.)
+- `caspaste-XXXXXX` - Project directory with random suffix
 
 **Examples of CORRECT paths:**
 - `/tmp/cloudops/echoip-aB3xY9/` ✓
@@ -36373,7 +38015,7 @@ rm -rf "${TMPDIR:-/tmp}/${PROJECTORG}/"
 
 **Why this structure:**
 - Prevents conflicts between projects
-- Makes cleanup easy (`rm -rf /tmp/{projectorg}/`)
+- Makes cleanup easy (`rm -rf /tmp/casjay-forks/`)
 - Identifies which project created temp files
 - Prevents pollution of root `/tmp` directory
 - Multiple projects can run simultaneously
@@ -36392,8 +38034,8 @@ rm -rf "${TMPDIR:-/tmp}/${PROJECTORG}/"
 | **NEVER run binaries locally** | All binaries run inside containers, never directly |
 | **NEVER** | Run `go build` directly on local machine |
 | **NEVER** | Run `go test` directly on local machine |
-| **NEVER** | Run `binaries/{projectname}` on local machine |
-| **NEVER** | Run `$BUILD_DIR/{projectname}` on local machine |
+| **NEVER** | Run `binaries/caspaste` on local machine |
+| **NEVER** | Run `$BUILD_DIR/caspaste` on local machine |
 | **ALWAYS** | Build inside container, run inside container |
 
 ### Container Types
@@ -36454,36 +38096,36 @@ rm -rf "${TMPDIR:-/tmp}/${PROJECTORG}/"
 **Frontend Route Testing (ALL routes):**
 ```bash
 # Every frontend route MUST be tested with BOTH:
-curl -H "Accept: text/html" /route          # Returns HTML
-curl -H "Accept: text/plain" /route         # Returns plain text
+curl -q -LSsf -H "Accept: text/html" /route          # Returns HTML
+curl -q -LSsf -H "Accept: text/plain" /route         # Returns plain text
 
 # Example: Test user profile page
-curl -H "Accept: text/html" /users/john     # HTML page
-curl -H "Accept: text/plain" /users/john    # Plain text output
+curl -q -LSsf -H "Accept: text/html" /users/john     # HTML page
+curl -q -LSsf -H "Accept: text/plain" /users/john    # Plain text output
 ```
 
 **Backend/API Route Testing (ALL routes):**
 ```bash
 # Every API route MUST be tested with BOTH:
-curl -H "Accept: application/json" /api/v1/resource    # Returns JSON
-curl -H "Accept: text/plain" /api/v1/resource          # Returns plain text
+curl -q -LSsf -H "Accept: application/json" /api/v1/resource    # Returns JSON
+curl -q -LSsf -H "Accept: text/plain" /api/v1/resource          # Returns plain text
 
 # Example: Test jokes API
-curl -H "Accept: application/json" /api/v1/jokes/random   # JSON response
-curl -H "Accept: text/plain" /api/v1/jokes/random         # Plain text response
+curl -q -LSsf -H "Accept: application/json" /api/v1/jokes/random   # JSON response
+curl -q -LSsf -H "Accept: text/plain" /api/v1/jokes/random         # Plain text response
 ```
 
 **Backend .txt Endpoint Testing (ALL endpoints):**
 ```bash
 # Every *.txt endpoint MUST be tested:
-curl /robots.txt                            # Robots file
-curl /security.txt                          # Security policy
-curl /.well-known/security.txt              # Security policy (well-known)
-curl /api/v1/jokes/random.txt               # API .txt extension
+curl -q -LSsf /robots.txt                            # Robots file
+curl -q -LSsf /security.txt                          # Security policy
+curl -q -LSsf /.well-known/security.txt              # Security policy (well-known)
+curl -q -LSsf /api/v1/jokes/random.txt               # API .txt extension
 
 # ALL API endpoints that support .txt MUST be tested with .txt
-curl /api/v1/users/john.txt                 # User profile as text
-curl /api/v1/weather/Chicago.txt            # Weather as text
+curl -q -LSsf /api/v1/users/john.txt                 # User profile as text
+curl -q -LSsf /api/v1/weather/Chicago.txt            # Weather as text
 ```
 
 **Test Matrix Template:**
@@ -36501,9 +38143,9 @@ frontend_routes=(
 
 for route in "${frontend_routes[@]}"; do
     # Test HTML response
-    curl -sf -H "Accept: text/html" "${BASE_URL}${route}" | grep -q "<!DOCTYPE html" || fail "HTML failed for $route"
+    curl -q -LSsf -H "Accept: text/html" "${BASE_URL}${route}" | grep -q "<!DOCTYPE html" || fail "HTML failed for $route"
     # Test plain text response
-    curl -sf -H "Accept: text/plain" "${BASE_URL}${route}" | head -1 || fail "Plain text failed for $route"
+    curl -q -LSsf -H "Accept: text/plain" "${BASE_URL}${route}" | head -1 || fail "Plain text failed for $route"
 done
 
 # Backend routes - test BOTH application/json and text/plain
@@ -36515,9 +38157,9 @@ api_routes=(
 
 for route in "${api_routes[@]}"; do
     # Test JSON response
-    curl -sf -H "Accept: application/json" "${BASE_URL}${route}" | jq . || fail "JSON failed for $route"
+    curl -q -LSsf -H "Accept: application/json" "${BASE_URL}${route}" | jq . || fail "JSON failed for $route"
     # Test plain text response
-    curl -sf -H "Accept: text/plain" "${BASE_URL}${route}" || fail "Plain text failed for $route"
+    curl -q -LSsf -H "Accept: text/plain" "${BASE_URL}${route}" || fail "Plain text failed for $route"
 done
 
 # Backend .txt endpoints - test ALL of them
@@ -36530,7 +38172,7 @@ txt_endpoints=(
 )
 
 for endpoint in "${txt_endpoints[@]}"; do
-    curl -sf "${BASE_URL}${endpoint}" || fail ".txt failed for $endpoint"
+    curl -q -LSsf "${BASE_URL}${endpoint}" || fail ".txt failed for $endpoint"
 done
 ```
 
@@ -36561,11 +38203,11 @@ PATCH  /api/{api_version}/{admin_path}/users/1      # Update specific user (admi
 DELETE /api/{api_version}/{admin_path}/users/1      # Delete specific user (admin)
 
 # Frontend routes (smart detection) - CLI gets beautiful formatted text via HTML2TextConverter
-curl /users                              # CLI → formatted text (current user)
-browser /users                           # Browser → HTML page (current user)
-curl /{username}                         # CLI → formatted text (public profile)
-curl -H "Accept: text/plain" /{username} # Formatted text (Accept header)
-curl -H "Accept: text/html" /{username}  # HTML (Accept header)
+curl -q -LSsf /users                              # CLI → formatted text (current user)
+browser /users                                    # Browser → HTML page (current user)
+curl -q -LSsf /{username}                         # CLI → formatted text (public profile)
+curl -q -LSsf -H "Accept: text/plain" /{username} # Formatted text (Accept header)
+curl -q -LSsf -H "Accept: text/html" /{username}  # HTML (Accept header)
 ```
 
 **Example: Jokes API (read-only) MUST test:**
@@ -36577,9 +38219,9 @@ GET /api/{api_version}/jokes/programming        # Category filter (JSON)
 GET /api/{api_version}/jokes/search?q=bug       # Search (JSON)
 
 # Frontend endpoints (smart detection) - CLI gets formatted text
-curl /jokes/random                   # CLI → formatted text
-curl /jokes                          # CLI → formatted text list
-curl -H "Accept: text/html" /jokes   # Browser → HTML
+curl -q -LSsf /jokes/random                   # CLI → formatted text
+curl -q -LSsf /jokes                          # CLI → formatted text list
+curl -q -LSsf -H "Accept: text/html" /jokes   # Browser → HTML
 ```
 
 **Example: Weather API (external integration) MUST test:**
@@ -36595,8 +38237,8 @@ GET /api/{api_version}/weather/current/Chicago           # First call (cache mis
 GET /api/{api_version}/weather/current/Chicago           # Second call (cache hit, faster)
 
 # Frontend (smart detection) - CLI gets formatted text
-curl /weather/Chicago                # CLI → formatted text
-curl /weather/forecast/90210         # CLI → formatted text forecast
+curl -q -LSsf /weather/Chicago                # CLI → formatted text
+curl -q -LSsf /weather/forecast/90210         # CLI → formatted text forecast
 ```
 
 **Example: Link Shortener (URL mapping) MUST test:**
@@ -36612,8 +38254,8 @@ GET /abc123                          # Should redirect to destination
 GET /abc123/stats                    # Link statistics (JSON or HTML)
 
 # Frontend (smart detection)
-curl /links                          # User's links list (text)
-curl /links/abc123                   # Link details (text)
+curl -q -LSsf /links                          # User's links list (text)
+curl -q -LSsf /links/abc123                   # Link details (text)
 ```
 
 ### Go Unit Test Requirements
@@ -36873,28 +38515,28 @@ verify_all_endpoints_tested
 
 ```bash
 # 1. Build in Docker (always use Docker for builds)
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 docker run --rm -v $(pwd):/build -w /build -e CGO_ENABLED=0 \
-  golang:alpine go build -o /build/binaries/{projectname} ./src
+  golang:alpine go build -o /build/binaries/caspaste ./src
 
 # 2. Test (prefer Incus, fallback to Docker)
 if command -v incus &>/dev/null; then
   # PREFERRED: Full OS test in Incus (debian + systemd)
   # Use latest Debian stable (currently 12/bookworm)
   echo "Testing with Incus (Debian + systemd)..."
-  incus launch images:debian/12 test-{projectname}
-  incus file push binaries/{projectname} test-{projectname}/usr/local/bin/
-  incus exec test-{projectname} -- chmod +x /usr/local/bin/{projectname}
-  incus exec test-{projectname} -- {projectname} --help
-  incus exec test-{projectname} -- {projectname} --service --install
-  incus exec test-{projectname} -- systemctl status {projectname}
-  incus delete test-{projectname} --force
+  incus launch images:debian/12 test-caspaste
+  incus file push binaries/caspaste test-caspaste/usr/local/bin/
+  incus exec test-caspaste -- chmod +x /usr/local/bin/caspaste
+  incus exec test-caspaste -- caspaste --help
+  incus exec test-caspaste -- caspaste --service --install
+  incus exec test-caspaste -- systemctl status caspaste
+  incus delete test-caspaste --force
 else
   # FALLBACK: Quick test in Docker (alpine, no systemd)
   echo "Incus not available, testing with Docker..."
   docker run --rm -v $(pwd)/binaries:/app alpine:latest \
-    /app/{projectname} --help
+    /app/caspaste --help
 fi
 ```
 
@@ -36953,8 +38595,8 @@ PROJECTNAME=$(basename "$PWD")
 PROJECTORG=$(basename "$(dirname "$PWD")")
 
 # Create temp directory for build
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 trap "rm -rf $BUILD_DIR" EXIT
 
 # Go cache directories (same as Makefile)
@@ -36972,18 +38614,18 @@ GO_DOCKER="docker run --rm \
   golang:alpine"
 
 echo "Building server binary in Docker..."
-$GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}" ./src
+$GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE" ./src
 
 # Build client if exists
 if [ -d "src/client" ]; then
     echo "Building client in Docker..."
-    $GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}-cli" ./src/client
+    $GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE-cli" ./src/client
 fi
 
 # Build agent if exists
 if [ -d "src/agent" ]; then
     echo "Building agent in Docker..."
-    $GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}-agent" ./src/agent
+    $GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE-agent" ./src/agent
 fi
 
 echo "Testing in Docker (Alpine)..."
@@ -36995,22 +38637,22 @@ docker run --rm \
     # Install required tools for testing
     apk add --no-cache curl bash file jq >/dev/null
 
-    chmod +x /app/${PROJECTNAME}
-    [ -f /app/${PROJECTNAME}-cli ] && chmod +x /app/${PROJECTNAME}-cli
-    [ -f /app/${PROJECTNAME}-agent ] && chmod +x /app/${PROJECTNAME}-agent
+    chmod +x /app/$CASPASTE
+    [ -f /app/$CASPASTE-cli ] && chmod +x /app/$CASPASTE-cli
+    [ -f /app/$CASPASTE-agent ] && chmod +x /app/$CASPASTE-agent
 
     echo '=== Version Check ==='
-    /app/${PROJECTNAME} --version
+    /app/$CASPASTE --version
 
     echo '=== Help Check ==='
-    /app/${PROJECTNAME} --help
+    /app/$CASPASTE --help
 
     echo '=== Binary Info ==='
-    ls -lh /app/${PROJECTNAME}
-    file /app/${PROJECTNAME}
+    ls -lh /app/$CASPASTE
+    file /app/$CASPASTE
 
     echo '=== Starting Server for API Tests ==='
-    /app/${PROJECTNAME} --port 64580 > /tmp/server.log 2>&1 &
+    /app/$CASPASTE --port 64580 > /tmp/server.log 2>&1 &
     SERVER_PID=\$!
     sleep 3
     # Show setup token if present (for debugging)
@@ -37018,46 +38660,46 @@ docker run --rm \
 
     echo '=== API Endpoint Tests ==='
     # Test JSON response (default)
-    curl -f http://localhost:64580/api/{api_version}/healthz || echo 'FAILED: /api/{api_version}/healthz'
+    curl -q -LSsf http://localhost:64580/api/{api_version}/healthz || echo 'FAILED: /api/{api_version}/healthz'
 
     # Test .txt extension (plain text)
-    curl -f http://localhost:64580/api/{api_version}/healthz.txt || echo 'FAILED: /api/{api_version}/healthz.txt'
+    curl -q -LSsf http://localhost:64580/api/{api_version}/healthz.txt || echo 'FAILED: /api/{api_version}/healthz.txt'
 
     # Test Accept header: application/json
-    curl -f -H 'Accept: application/json' http://localhost:64580/healthz || echo 'FAILED: Accept JSON'
+    curl -q -LSsf -H 'Accept: application/json' http://localhost:64580/healthz || echo 'FAILED: Accept JSON'
 
     # Test Accept header: text/plain
-    curl -f -H 'Accept: text/plain' http://localhost:64580/healthz || echo 'FAILED: Accept text/plain'
+    curl -q -LSsf -H 'Accept: text/plain' http://localhost:64580/healthz || echo 'FAILED: Accept text/plain'
 
     echo '=== Project-Specific Endpoint Tests ==='
     # MUST test ALL endpoints from IDEA.md - both API and frontend
     # Test FULL CRUD if project has CRUD operations
     #
     # Example for jokes API (API routes with .txt extension):
-    #   curl -f http://localhost:64580/api/{api_version}/jokes/random || echo 'FAILED: API JSON'
-    #   curl -f http://localhost:64580/api/{api_version}/jokes/random.txt || echo 'FAILED: API .txt'
-    #   curl -f -H 'Accept: text/plain' http://localhost:64580/api/{api_version}/jokes/random || echo 'FAILED: API Accept text'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/jokes/random || echo 'FAILED: API JSON'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/jokes/random.txt || echo 'FAILED: API .txt'
+    #   curl -q -LSsf -H 'Accept: text/plain' http://localhost:64580/api/{api_version}/jokes/random || echo 'FAILED: API Accept text'
     #
     # Example for jokes frontend (smart detection, no .txt - test with text for simplicity):
-    #   JOKE=\$(curl -s http://localhost:64580/jokes/random)  # CLI auto-detects text
+    #   JOKE=\$(curl -q -LSsf http://localhost:64580/jokes/random)  # CLI auto-detects text
     #   if echo "\$JOKE" | grep -q "Why"; then echo '✓ Frontend text works'; else echo 'FAILED: Frontend text'; fi
     #   # Optional: verify HTML is served to browsers
-    #   curl -f -s -I -H 'Accept: text/html' http://localhost:64580/jokes/random | grep -q 'text/html' || echo 'FAILED: Frontend HTML'
+    #   curl -q -LSsfI -H 'Accept: text/html' http://localhost:64580/jokes/random | grep -q 'text/html' || echo 'FAILED: Frontend HTML'
     #
     # Example for user CRUD (full test suite):
     #   # API - Current user
-    #   curl -f http://localhost:64580/api/{api_version}/users || echo 'FAILED: GET current user API'
-    #   curl -f -X PATCH -H 'Content-Type: application/json' -d '{\"email\":\"new@test.com\"}' http://localhost:64580/api/{api_version}/users || echo 'FAILED: UPDATE current user API'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/users || echo 'FAILED: GET current user API'
+    #   curl -q -LSsf -X PATCH -H 'Content-Type: application/json' -d '{\"email\":\"new@test.com\"}' http://localhost:64580/api/{api_version}/users || echo 'FAILED: UPDATE current user API'
     #   # API - Public profile (by username)
-    #   curl -f http://localhost:64580/api/{api_version}/users/testuser || echo 'FAILED: READ public profile API JSON'
-    #   curl -f http://localhost:64580/api/{api_version}/users/testuser.txt || echo 'FAILED: READ public profile API .txt'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/users/testuser || echo 'FAILED: READ public profile API JSON'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/users/testuser.txt || echo 'FAILED: READ public profile API .txt'
     #   # API - Admin routes (by ID)
-    #   curl -f http://localhost:64580/api/{api_version}/{admin_path}/users || echo 'FAILED: LIST users admin API'
-    #   curl -f http://localhost:64580/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: READ user admin API'
-    #   curl -f -X DELETE http://localhost:64580/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: DELETE user admin API'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/{admin_path}/users || echo 'FAILED: LIST users admin API'
+    #   curl -q -LSsf http://localhost:64580/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: READ user admin API'
+    #   curl -q -LSsf -X DELETE http://localhost:64580/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: DELETE user admin API'
     #   # Frontend (smart detection - test with text for simplicity)
-    #   USERS=\$(curl -s http://localhost:64580/users)  # CLI auto-detects text (current user)
-    #   USER=\$(curl -s http://localhost:64580/testuser)  # CLI auto-detects text (public profile)
+    #   USERS=\$(curl -q -LSsf http://localhost:64580/users)  # CLI auto-detects text (current user)
+    #   USER=\$(curl -q -LSsf http://localhost:64580/testuser)  # CLI auto-detects text (public profile)
     #
     # Test ALL project-specific endpoints defined in IDEA.md
 
@@ -37069,14 +38711,14 @@ docker run --rm \
         echo \"Setup token found: \${SETUP_TOKEN:0:8}...\"
 
         # Create admin account
-        curl -sf -X POST \\
+        curl -q -LSsf -X POST \\
             -H \"X-Setup-Token: \$SETUP_TOKEN\" \\
             -H \"Content-Type: application/json\" \\
             -d '{\"username\":\"testadmin\",\"password\":\"TestPass123!\"}' \\
             http://localhost:64580/api/{api_version}/{admin_path}/setup || echo 'Admin setup failed (may already exist)'
 
         # Login and get session
-        SESSION=\$(curl -sf -X POST \\
+        SESSION=\$(curl -q -LSsf -X POST \\
             -H \"Content-Type: application/json\" \\
             -d '{\"username\":\"testadmin\",\"password\":\"TestPass123!\"}' \\
             http://localhost:64580/api/{api_version}/{admin_path}/login | grep -oP '\"session_token\":\\s*\"\\K[^\"]+' || echo '')
@@ -37085,7 +38727,7 @@ docker run --rm \
             echo '✓ Admin login successful'
 
             # Generate API token for CLI/Agent testing
-            API_TOKEN=\$(curl -sf -X POST \\
+            API_TOKEN=\$(curl -q -LSsf -X POST \\
                 -H \"Authorization: Bearer \$SESSION\" \\
                 http://localhost:64580/api/{api_version}/{admin_path}/profile/token | grep -oP '\"token\":\\s*\"\\K[^\"]+' || echo '')
 
@@ -37103,7 +38745,7 @@ docker run --rm \
 
     echo '=== Binary Rename Tests ==='
     # Test that binaries show ACTUAL name in --help/--version (not hardcoded)
-    cp /app/${PROJECTNAME} /app/renamed-server
+    cp /app/$CASPASTE /app/renamed-server
     chmod +x /app/renamed-server
     if /app/renamed-server --help 2>&1 | grep -q 'renamed-server'; then
         echo '✓ Server binary rename works (--help shows actual name)'
@@ -37112,12 +38754,12 @@ docker run --rm \
     fi
 
     echo '=== Client Tests (if exists) ==='
-    if [ -f /app/${PROJECTNAME}-cli ]; then
-        /app/${PROJECTNAME}-cli --version || echo 'FAILED: CLI --version'
-        /app/${PROJECTNAME}-cli --help || echo 'FAILED: CLI --help'
+    if [ -f /app/$CASPASTE-cli ]; then
+        /app/$CASPASTE-cli --version || echo 'FAILED: CLI --version'
+        /app/$CASPASTE-cli --help || echo 'FAILED: CLI --help'
 
         # Test binary rename
-        cp /app/${PROJECTNAME}-cli /app/renamed-cli
+        cp /app/$CASPASTE-cli /app/renamed-cli
         chmod +x /app/renamed-cli
         if /app/renamed-cli --help 2>&1 | grep -q 'renamed-cli'; then
             echo '✓ CLI binary rename works'
@@ -37129,24 +38771,24 @@ docker run --rm \
         echo '--- CLI Full Functionality Tests ---'
         if [ -n \"\${API_TOKEN:-}\" ]; then
             # Test with API token
-            /app/${PROJECTNAME}-cli --server http://localhost:64580 --token \"\$API_TOKEN\" status || echo 'CLI status failed'
+            /app/$CASPASTE-cli --server http://localhost:64580 --token \"\$API_TOKEN\" status || echo 'CLI status failed'
             # Project-specific CLI commands go here (IDEA.md)
-            # Example: /app/${PROJECTNAME}-cli --server http://localhost:64580 --token \"\$API_TOKEN\" list
+            # Example: /app/$CASPASTE-cli --server http://localhost:64580 --token \"\$API_TOKEN\" list
         else
             # Test without token (anonymous if allowed)
-            /app/${PROJECTNAME}-cli --server http://localhost:64580 status || echo 'CLI status (no token) failed or not applicable'
+            /app/$CASPASTE-cli --server http://localhost:64580 status || echo 'CLI status (no token) failed or not applicable'
         fi
     else
         echo 'client not built - skipping'
     fi
 
     echo '=== Agent Tests (if exists) ==='
-    if [ -f /app/${PROJECTNAME}-agent ]; then
-        /app/${PROJECTNAME}-agent --version || echo 'FAILED: Agent --version'
-        /app/${PROJECTNAME}-agent --help || echo 'FAILED: Agent --help'
+    if [ -f /app/$CASPASTE-agent ]; then
+        /app/$CASPASTE-agent --version || echo 'FAILED: Agent --version'
+        /app/$CASPASTE-agent --help || echo 'FAILED: Agent --help'
 
         # Test binary rename
-        cp /app/${PROJECTNAME}-agent /app/renamed-agent
+        cp /app/$CASPASTE-agent /app/renamed-agent
         chmod +x /app/renamed-agent
         if /app/renamed-agent --help 2>&1 | grep -q 'renamed-agent'; then
             echo '✓ Agent binary rename works'
@@ -37158,7 +38800,7 @@ docker run --rm \
         echo '--- Agent Full Functionality Tests ---'
         if [ -n \"\${API_TOKEN:-}\" ]; then
             # Test agent registration/status with API token
-            /app/${PROJECTNAME}-agent --server http://localhost:64580 --token \"\$API_TOKEN\" status || echo 'Agent status failed'
+            /app/$CASPASTE-agent --server http://localhost:64580 --token \"\$API_TOKEN\" status || echo 'Agent status failed'
             # Project-specific agent commands go here (IDEA.md)
         else
             echo 'Agent tests skipped (no API token)'
@@ -37194,14 +38836,14 @@ fi
 # Detect project info
 PROJECTNAME=$(basename "$PWD")
 PROJECTORG=$(basename "$(dirname "$PWD")")
-CONTAINER_NAME="test-${PROJECTNAME}-$$"
+CONTAINER_NAME="test-$CASPASTE-$$"
 
 # Incus image - use latest Debian stable (update when new stable releases)
 INCUS_IMAGE="images:debian/12"
 
 # Create temp directory for build
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+BUILD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 trap "rm -rf $BUILD_DIR; incus delete $CONTAINER_NAME --force 2>/dev/null || true" EXIT
 
 # Go cache directories (same as Makefile)
@@ -37219,18 +38861,18 @@ GO_DOCKER="docker run --rm \
   golang:alpine"
 
 echo "Building server binary in Docker..."
-$GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}" ./src
+$GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE" ./src
 
 # Build client if exists
 if [ -d "src/client" ]; then
     echo "Building client in Docker..."
-    $GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}-cli" ./src/client
+    $GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE-cli" ./src/client
 fi
 
 # Build agent if exists
 if [ -d "src/agent" ]; then
     echo "Building agent in Docker..."
-    $GO_DOCKER go build -o "$BUILD_DIR/${PROJECTNAME}-agent" ./src/agent
+    $GO_DOCKER go build -o "$BUILD_DIR/$CASPASTE-agent" ./src/agent
 fi
 
 echo "Launching Incus container (Debian + systemd)..."
@@ -37240,19 +38882,19 @@ incus launch "$INCUS_IMAGE" "$CONTAINER_NAME"
 sleep 2
 
 echo "Copying binaries to container..."
-incus file push "$BUILD_DIR/${PROJECTNAME}" "$CONTAINER_NAME/usr/local/bin/"
-incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/${PROJECTNAME}"
+incus file push "$BUILD_DIR/$CASPASTE" "$CONTAINER_NAME/usr/local/bin/"
+incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/$CASPASTE"
 
 # Copy client if built
-if [ -f "$BUILD_DIR/${PROJECTNAME}-cli" ]; then
-    incus file push "$BUILD_DIR/${PROJECTNAME}-cli" "$CONTAINER_NAME/usr/local/bin/"
-    incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/${PROJECTNAME}-cli"
+if [ -f "$BUILD_DIR/$CASPASTE-cli" ]; then
+    incus file push "$BUILD_DIR/$CASPASTE-cli" "$CONTAINER_NAME/usr/local/bin/"
+    incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/$CASPASTE-cli"
 fi
 
 # Copy agent if built
-if [ -f "$BUILD_DIR/${PROJECTNAME}-agent" ]; then
-    incus file push "$BUILD_DIR/${PROJECTNAME}-agent" "$CONTAINER_NAME/usr/local/bin/"
-    incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/${PROJECTNAME}-agent"
+if [ -f "$BUILD_DIR/$CASPASTE-agent" ]; then
+    incus file push "$BUILD_DIR/$CASPASTE-agent" "$CONTAINER_NAME/usr/local/bin/"
+    incus exec "$CONTAINER_NAME" -- chmod +x "/usr/local/bin/$CASPASTE-agent"
 fi
 
 # Ensure curl is available for testing
@@ -37263,87 +38905,87 @@ incus exec "$CONTAINER_NAME" -- bash -c "
     set -e
 
     echo '=== Version Check ==='
-    ${PROJECTNAME} --version
+    $CASPASTE --version
 
     echo '=== Help Check ==='
-    ${PROJECTNAME} --help
+    $CASPASTE --help
 
     echo '=== Binary Info ==='
-    ls -lh /usr/local/bin/${PROJECTNAME}
-    file /usr/local/bin/${PROJECTNAME}
+    ls -lh /usr/local/bin/$CASPASTE
+    file /usr/local/bin/$CASPASTE
 
     echo '=== Service Install Test ==='
-    ${PROJECTNAME} --service --install
+    $CASPASTE --service --install
 
     echo '=== Service Status ==='
-    systemctl status ${PROJECTNAME} || true
+    systemctl status $CASPASTE || true
 
     echo '=== Service Start Test ==='
-    systemctl start ${PROJECTNAME}
+    systemctl start $CASPASTE
     sleep 2
-    systemctl status ${PROJECTNAME}
+    systemctl status $CASPASTE
 
     echo '=== API Endpoint Tests ==='
     # Test JSON response (default)
-    curl -f http://localhost:80/api/{api_version}/healthz || echo 'FAILED: /api/{api_version}/healthz'
+    curl -q -LSsf http://localhost:80/api/{api_version}/healthz || echo 'FAILED: /api/{api_version}/healthz'
 
     # Test .txt extension (plain text)
-    curl -f http://localhost:80/api/{api_version}/healthz.txt || echo 'FAILED: /api/{api_version}/healthz.txt'
+    curl -q -LSsf http://localhost:80/api/{api_version}/healthz.txt || echo 'FAILED: /api/{api_version}/healthz.txt'
 
     # Test Accept header: application/json
-    curl -f -H 'Accept: application/json' http://localhost:80/healthz || echo 'FAILED: Accept JSON'
+    curl -q -LSsf -H 'Accept: application/json' http://localhost:80/healthz || echo 'FAILED: Accept JSON'
 
     # Test Accept header: text/plain
-    curl -f -H 'Accept: text/plain' http://localhost:80/healthz || echo 'FAILED: Accept text/plain'
+    curl -q -LSsf -H 'Accept: text/plain' http://localhost:80/healthz || echo 'FAILED: Accept text/plain'
 
     echo '=== Project-Specific Endpoint Tests ==='
     # MUST test ALL endpoints from IDEA.md - both API and frontend
     # Test FULL CRUD if project has CRUD operations
     #
     # Example for jokes API (API routes with .txt extension):
-    #   curl -f http://localhost:80/api/{api_version}/jokes/random || echo 'FAILED: API JSON'
-    #   curl -f http://localhost:80/api/{api_version}/jokes/random.txt || echo 'FAILED: API .txt'
-    #   curl -f -H 'Accept: text/plain' http://localhost:80/api/{api_version}/jokes/random || echo 'FAILED: API Accept text'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/jokes/random || echo 'FAILED: API JSON'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/jokes/random.txt || echo 'FAILED: API .txt'
+    #   curl -q -LSsf -H 'Accept: text/plain' http://localhost:80/api/{api_version}/jokes/random || echo 'FAILED: API Accept text'
     #
     # Example for jokes frontend (smart detection, no .txt - test with text for simplicity):
-    #   JOKE=\$(curl -s http://localhost:80/jokes/random)  # CLI auto-detects text
+    #   JOKE=\$(curl -q -LSsf http://localhost:80/jokes/random)  # CLI auto-detects text
     #   if echo "\$JOKE" | grep -q "Why"; then echo '✓ Frontend text works'; else echo 'FAILED: Frontend text'; fi
     #   # Optional: verify HTML is served to browsers
-    #   curl -f -s -I -H 'Accept: text/html' http://localhost:80/jokes/random | grep -q 'text/html' || echo 'FAILED: Frontend HTML'
+    #   curl -q -LSsfI -H 'Accept: text/html' http://localhost:80/jokes/random | grep -q 'text/html' || echo 'FAILED: Frontend HTML'
     #
     # Example for user CRUD (full test suite):
     #   # API - Current user
-    #   curl -f http://localhost:80/api/{api_version}/users || echo 'FAILED: GET current user API'
-    #   curl -f -X PATCH -H 'Content-Type: application/json' -d '{\"email\":\"new@test.com\"}' http://localhost:80/api/{api_version}/users || echo 'FAILED: UPDATE current user API'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/users || echo 'FAILED: GET current user API'
+    #   curl -q -LSsf -X PATCH -H 'Content-Type: application/json' -d '{\"email\":\"new@test.com\"}' http://localhost:80/api/{api_version}/users || echo 'FAILED: UPDATE current user API'
     #   # API - Public profile (by username)
-    #   curl -f http://localhost:80/api/{api_version}/users/testuser || echo 'FAILED: READ public profile API JSON'
-    #   curl -f http://localhost:80/api/{api_version}/users/testuser.txt || echo 'FAILED: READ public profile API .txt'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/users/testuser || echo 'FAILED: READ public profile API JSON'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/users/testuser.txt || echo 'FAILED: READ public profile API .txt'
     #   # API - Admin routes (by ID)
-    #   curl -f http://localhost:80/api/{api_version}/{admin_path}/users || echo 'FAILED: LIST users admin API'
-    #   curl -f http://localhost:80/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: READ user admin API'
-    #   curl -f -X DELETE http://localhost:80/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: DELETE user admin API'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/{admin_path}/users || echo 'FAILED: LIST users admin API'
+    #   curl -q -LSsf http://localhost:80/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: READ user admin API'
+    #   curl -q -LSsf -X DELETE http://localhost:80/api/{api_version}/{admin_path}/users/1 || echo 'FAILED: DELETE user admin API'
     #   # Frontend (smart detection - test with text for simplicity)
-    #   USERS=\$(curl -s http://localhost:80/users)  # CLI auto-detects text (current user)
-    #   USER=\$(curl -s http://localhost:80/testuser)  # CLI auto-detects text (public profile)
+    #   USERS=\$(curl -q -LSsf http://localhost:80/users)  # CLI auto-detects text (current user)
+    #   USER=\$(curl -q -LSsf http://localhost:80/testuser)  # CLI auto-detects text (public profile)
     #
     # Test ALL project-specific endpoints defined in IDEA.md
 
     echo '=== Admin Setup & API Token Creation ==='
     # Get setup token from journal
-    SETUP_TOKEN=\$(journalctl -u ${PROJECTNAME} --no-pager 2>/dev/null | grep -oP 'Setup Token.*:\\s*\\K[a-f0-9]+' | head -1 || echo '')
+    SETUP_TOKEN=\$(journalctl -u $CASPASTE --no-pager 2>/dev/null | grep -oP 'Setup Token.*:\\s*\\K[a-f0-9]+' | head -1 || echo '')
 
     if [ -n \"\$SETUP_TOKEN\" ]; then
         echo \"Setup token found: \${SETUP_TOKEN:0:8}...\"
 
         # Create admin account
-        curl -sf -X POST \\
+        curl -q -LSsf -X POST \\
             -H \"X-Setup-Token: \$SETUP_TOKEN\" \\
             -H \"Content-Type: application/json\" \\
             -d '{\"username\":\"testadmin\",\"password\":\"TestPass123!\"}' \\
             http://localhost:80/api/{api_version}/{admin_path}/setup || echo 'Admin setup failed (may already exist)'
 
         # Login and get session
-        SESSION=\$(curl -sf -X POST \\
+        SESSION=\$(curl -q -LSsf -X POST \\
             -H \"Content-Type: application/json\" \\
             -d '{\"username\":\"testadmin\",\"password\":\"TestPass123!\"}' \\
             http://localhost:80/api/{api_version}/{admin_path}/login | grep -oP '\"session_token\":\\s*\"\\K[^\"]+' || echo '')
@@ -37352,7 +38994,7 @@ incus exec "$CONTAINER_NAME" -- bash -c "
             echo '✓ Admin login successful'
 
             # Generate API token for CLI/Agent testing
-            API_TOKEN=\$(curl -sf -X POST \\
+            API_TOKEN=\$(curl -q -LSsf -X POST \\
                 -H \"Authorization: Bearer \$SESSION\" \\
                 http://localhost:80/api/{api_version}/{admin_path}/profile/token | grep -oP '\"token\":\\s*\"\\K[^\"]+' || echo '')
 
@@ -37370,7 +39012,7 @@ incus exec "$CONTAINER_NAME" -- bash -c "
 
     echo '=== Binary Rename Tests ==='
     # Test that binaries show ACTUAL name in --help/--version (not hardcoded)
-    cp /usr/local/bin/${PROJECTNAME} /tmp/renamed-server
+    cp /usr/local/bin/$CASPASTE /tmp/renamed-server
     chmod +x /tmp/renamed-server
     if /tmp/renamed-server --help 2>&1 | grep -q 'renamed-server'; then
         echo '✓ Server binary rename works (--help shows actual name)'
@@ -37379,12 +39021,12 @@ incus exec "$CONTAINER_NAME" -- bash -c "
     fi
 
     echo '=== Client Tests (if exists) ==='
-    if [ -f /usr/local/bin/${PROJECTNAME}-cli ]; then
-        ${PROJECTNAME}-cli --version || echo 'FAILED: CLI --version'
-        ${PROJECTNAME}-cli --help || echo 'FAILED: CLI --help'
+    if [ -f /usr/local/bin/$CASPASTE-cli ]; then
+        $CASPASTE-cli --version || echo 'FAILED: CLI --version'
+        $CASPASTE-cli --help || echo 'FAILED: CLI --help'
 
         # Test binary rename
-        cp /usr/local/bin/${PROJECTNAME}-cli /tmp/renamed-cli
+        cp /usr/local/bin/$CASPASTE-cli /tmp/renamed-cli
         chmod +x /tmp/renamed-cli
         if /tmp/renamed-cli --help 2>&1 | grep -q 'renamed-cli'; then
             echo '✓ CLI binary rename works'
@@ -37396,23 +39038,23 @@ incus exec "$CONTAINER_NAME" -- bash -c "
         echo '--- CLI Full Functionality Tests ---'
         if [ -n \"\${API_TOKEN:-}\" ]; then
             # Test with API token
-            ${PROJECTNAME}-cli --server http://localhost:80 --token \"\$API_TOKEN\" status || echo 'CLI status failed'
+            $CASPASTE-cli --server http://localhost:80 --token \"\$API_TOKEN\" status || echo 'CLI status failed'
             # Project-specific CLI commands go here (IDEA.md)
         else
             # Test without token (anonymous if allowed)
-            ${PROJECTNAME}-cli --server http://localhost:80 status || echo 'CLI status (no token) failed or not applicable'
+            $CASPASTE-cli --server http://localhost:80 status || echo 'CLI status (no token) failed or not applicable'
         fi
     else
         echo 'client not installed - skipping'
     fi
 
     echo '=== Agent Tests (if exists) ==='
-    if [ -f /usr/local/bin/${PROJECTNAME}-agent ]; then
-        ${PROJECTNAME}-agent --version || echo 'FAILED: Agent --version'
-        ${PROJECTNAME}-agent --help || echo 'FAILED: Agent --help'
+    if [ -f /usr/local/bin/$CASPASTE-agent ]; then
+        $CASPASTE-agent --version || echo 'FAILED: Agent --version'
+        $CASPASTE-agent --help || echo 'FAILED: Agent --help'
 
         # Test binary rename
-        cp /usr/local/bin/${PROJECTNAME}-agent /tmp/renamed-agent
+        cp /usr/local/bin/$CASPASTE-agent /tmp/renamed-agent
         chmod +x /tmp/renamed-agent
         if /tmp/renamed-agent --help 2>&1 | grep -q 'renamed-agent'; then
             echo '✓ Agent binary rename works'
@@ -37424,7 +39066,7 @@ incus exec "$CONTAINER_NAME" -- bash -c "
         echo '--- Agent Full Functionality Tests ---'
         if [ -n \"\${API_TOKEN:-}\" ]; then
             # Test agent registration/status with API token
-            ${PROJECTNAME}-agent --server http://localhost:80 --token \"\$API_TOKEN\" status || echo 'Agent status failed'
+            $CASPASTE-agent --server http://localhost:80 --token \"\$API_TOKEN\" status || echo 'Agent status failed'
             # Project-specific agent commands go here (IDEA.md)
         else
             echo 'Agent tests skipped (no API token)'
@@ -37434,7 +39076,7 @@ incus exec "$CONTAINER_NAME" -- bash -c "
     fi
 
     echo '=== Service Stop Test ==='
-    systemctl stop ${PROJECTNAME}
+    systemctl stop $CASPASTE
 
     echo '=== All tests passed ==='
 "
@@ -37500,14 +39142,14 @@ See PART 33: "Shell Completions (Built-in)" for full implementation details.
 
 ```bash
 # Generate and install completions (prints to stdout, user redirects)
-{projectname} --shell completions bash > /etc/bash_completion.d/{projectname}
-{projectname}-cli --shell completions bash > /etc/bash_completion.d/{projectname}-cli
-{projectname}-agent --shell completions bash > /etc/bash_completion.d/{projectname}-agent
+caspaste --shell completions bash > /etc/bash_completion.d/caspaste
+caspaste-cli --shell completions bash > /etc/bash_completion.d/caspaste-cli
+caspaste-agent --shell completions bash > /etc/bash_completion.d/caspaste-agent
 
 # Or use eval in shell rc file
-eval "$({projectname} --shell init)"
-eval "$({projectname}-cli --shell init)"
-eval "$({projectname}-agent --shell init)"
+eval "$(caspaste --shell init)"
+eval "$(caspaste-cli --shell init)"
+eval "$(caspaste-agent --shell init)"
 ```
 
 | Advantage | Description |
@@ -37533,13 +39175,14 @@ set -euo pipefail
 echo '=== Admin Authentication Tests ==='
 
 # Start server normally (authentication required)
-/app/${PROJECTNAME} --port 64580 &
+/app/$CASPASTE --port 64580 &
 SERVER_PID=$!
 sleep 3
 
 # 1. Test that unauthenticated access is REJECTED
 echo "Testing unauthenticated access is blocked..."
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:64580/{admin_path})
+# Note: Use -q -LSs (no -f) when capturing HTTP status codes, since -f exits on 4xx/5xx
+HTTP_CODE=$(curl -q -LSs -o /dev/null -w "%{http_code}" http://localhost:64580/{admin_path})
 if [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "401" ]; then
     echo "✓ Unauthenticated access properly rejected"
 else
@@ -37549,7 +39192,7 @@ else
 fi
 
 # 2. Get setup token from server logs (using proper temp dir structure)
-SETUP_TOKEN=$(grep -oP 'Setup Token.*:\s*\K[a-f0-9]+' "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}/server.log" | head -1)
+SETUP_TOKEN=$(grep -oP 'Setup Token.*:\s*\K[a-f0-9]+' "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE/server.log" | head -1)
 
 if [ -z "$SETUP_TOKEN" ]; then
     echo "✗ FAILED: No setup token found in logs"
@@ -37561,7 +39204,7 @@ echo "✓ Setup token found: ${SETUP_TOKEN:0:8}..."
 
 # 3. Test admin routes WITH authentication (setup token)
 echo "Testing admin access with setup token..."
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+HTTP_CODE=$(curl -q -LSs -o /dev/null -w "%{http_code}" \
     -H "X-Setup-Token: $SETUP_TOKEN" \
     http://localhost:64580/{admin_path})
 
@@ -37575,7 +39218,7 @@ fi
 
 # 4. Complete setup wizard (create admin account)
 echo "Creating admin account via API..."
-curl -s -X POST \
+curl -q -LSsf -X POST \
     -H "X-Setup-Token: $SETUP_TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"username":"testadmin","password":"TestPass123!"}' \
@@ -37583,7 +39226,7 @@ curl -s -X POST \
 
 # 5. Test login with created admin
 echo "Testing admin login..."
-SESSION=$(curl -s -X POST \
+SESSION=$(curl -q -LSsf -X POST \
     -H "Content-Type: application/json" \
     -d '{"username":"testadmin","password":"TestPass123!"}' \
     http://localhost:64580/api/{api_version}/{admin_path}/login | jq -r '.session_token')
@@ -37598,14 +39241,15 @@ echo "✓ Admin login successful"
 
 # 6. Test admin routes with valid session
 echo "Testing admin routes with session..."
-curl -s -H "Authorization: Bearer $SESSION" \
+curl -q -LSsf -H "Authorization: Bearer $SESSION" \
     http://localhost:64580/api/{api_version}/{admin_path}/users > /dev/null
 
 echo "✓ Admin routes work with authentication"
 
 # 7. Test that invalid credentials are rejected
 echo "Testing invalid credentials are rejected..."
-INVALID=$(curl -s -X POST \
+# Use -q -LSs (no -f) when checking for expected 4xx response
+INVALID=$(curl -q -LSs -X POST \
     -H "Content-Type: application/json" \
     -d '{"username":"testadmin","password":"wrongpassword"}' \
     -w "%{http_code}" \
@@ -37692,7 +39336,7 @@ func AdminAuthMiddleware(next http.Handler) http.Handler {
 # Set project path to YOUR actual project location (examples shown below)
 # Use git top-level if in a git repo: PROJECT_PATH="$(git rev-parse --show-toplevel)"
 # Or use absolute path to your project directory
-PROJECT_PATH="/root/Projects/github/apimgr/{projectname}"  # Example 1
+PROJECT_PATH="/root/Projects/github/apimgr/caspaste"  # Example 1
 # PROJECT_PATH="~/Documents/myproject"                     # Example 2
 # PROJECT_PATH="~/myproject"                               # Example 3
 # PROJECT_PATH="/workspace/dev/myproject"                  # Example 4
@@ -37711,7 +39355,7 @@ GO_DOCKER="docker run --rm \
   -e CGO_ENABLED=0"
 
 # Build (outputs to binaries/ which can be mounted into test containers)
-$GO_DOCKER golang:alpine go build -o /build/binaries/{projectname} ./src
+$GO_DOCKER golang:alpine go build -o /build/binaries/caspaste ./src
 
 # Run tests
 $GO_DOCKER golang:alpine go test ./...
@@ -37756,20 +39400,20 @@ docker run --rm \
   -v $GOCACHE:/root/.cache/go-build \
   -v $GODIR:/go \
   -w /build -e CGO_ENABLED=0 \
-  golang:alpine go build -o /build/binaries/{projectname} ./src
+  golang:alpine go build -o /build/binaries/caspaste ./src
 
 # Test in Docker (quick) - install tools first
 docker run --rm -v $(pwd)/binaries:/app alpine:latest sh -c "
   apk add --no-cache curl bash file jq >/dev/null
-  /app/{projectname} --help
+  /app/caspaste --help
 "
 
 # Test in Incus (full OS with systemd) - PREFERRED
 # Use latest Debian stable (currently 12/bookworm)
-incus launch images:debian/12 test-{projectname}
-incus file push binaries/{projectname} test-{projectname}/usr/local/bin/
-incus exec test-{projectname} -- {projectname} --help
-incus delete test-{projectname} --force
+incus launch images:debian/12 test-caspaste
+incus file push binaries/caspaste test-caspaste/usr/local/bin/
+incus exec test-caspaste -- caspaste --help
+incus delete test-caspaste --force
 ```
 
 ### Testing with Config/Data
@@ -37781,8 +39425,8 @@ GOCACHE="${HOME}/.local/share/go/build"
 mkdir -p "$GODIR" "$GOCACHE"
 
 # Create prefixed temp dir for test data
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 mkdir -p $TEST_DIR/{config,data,logs}
 
 # Build to binaries/ (with caching)
@@ -37791,20 +39435,20 @@ docker run --rm \
   -v $GOCACHE:/root/.cache/go-build \
   -v $GODIR:/go \
   -w /build -e CGO_ENABLED=0 \
-  golang:alpine go build -o /build/binaries/{projectname} ./src
+  golang:alpine go build -o /build/binaries/caspaste ./src
 
 # Quick test in Docker (install tools first)
 docker run --rm -v $(pwd)/binaries:/app alpine:latest sh -c "
   apk add --no-cache curl bash file jq >/dev/null
-  /app/{projectname} --help
-  /app/{projectname} --version
+  /app/caspaste --help
+  /app/caspaste --version
 "
 
 # Full test with config/data in Docker
 docker run --rm \
   -v $(pwd)/binaries:/app \
   -v $TEST_DIR:/test \
-  alpine:latest /app/{projectname} \
+  alpine:latest /app/caspaste \
     --config /test/config \
     --data /test/data \
     --log /test/logs
@@ -37819,29 +39463,29 @@ rm -rf $TEST_DIR
 
 ```bash
 # Create prefixed temp dir
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+TEST_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 mkdir -p $TEST_DIR/{config,data,logs}
 
 # Build
 docker run --rm -v $(pwd):/build -w /build -e CGO_ENABLED=0 \
-  golang:alpine go build -o /build/binaries/{projectname} ./src
+  golang:alpine go build -o /build/binaries/caspaste ./src
 
 # Launch Incus container (use latest Debian stable)
-incus launch images:debian/12 test-{projectname}
+incus launch images:debian/12 test-caspaste
 
 # Push binary and test data
-incus file push binaries/{projectname} test-{projectname}/usr/local/bin/
-incus exec test-{projectname} -- mkdir -p /etc/{projectorg}/{projectname} /var/lib/{projectorg}/{projectname}
+incus file push binaries/caspaste test-caspaste/usr/local/bin/
+incus exec test-caspaste -- mkdir -p /etc/casjay-forks/caspaste /var/lib/casjay-forks/caspaste
 
 # Test
-incus exec test-{projectname} -- {projectname} --help
-incus exec test-{projectname} -- {projectname} --version
-incus exec test-{projectname} -- {projectname} --service --install
-incus exec test-{projectname} -- systemctl status {projectname}
+incus exec test-caspaste -- caspaste --help
+incus exec test-caspaste -- caspaste --version
+incus exec test-caspaste -- caspaste --service --install
+incus exec test-caspaste -- systemctl status caspaste
 
 # Cleanup
-incus delete test-{projectname} --force
+incus delete test-caspaste --force
 rm -rf $TEST_DIR
 ```
 
@@ -37886,11 +39530,11 @@ rm -rf $TEST_DIR
 
 **Kill Process Flow:**
 ```
-1. pgrep -la {projectname}           # List matching processes
+1. pgrep -la caspaste           # List matching processes
 2. Verify the PID is correct          # CHECK before killing
 3. kill {pid}                         # Graceful termination (SIGTERM)
 4. sleep 5                            # Wait for graceful shutdown
-5. pgrep -la {projectname}           # Check if still running
+5. pgrep -la caspaste           # Check if still running
 6. kill -9 {pid}                      # Force kill ONLY if still running
 ```
 
@@ -37898,23 +39542,23 @@ rm -rf $TEST_DIR
 
 | Rule | Description |
 |------|-------------|
-| **ONLY this project** | Only stop/remove containers named `{projectname}` |
+| **ONLY this project** | Only stop/remove containers named `caspaste` |
 | **NEVER other containers** | Even if they look related or unused |
-| **NEVER images not ours** | Only remove `{projectorg}/{projectname}:*` images |
+| **NEVER images not ours** | Only remove `casjay-forks/caspaste:*` images |
 | **NEVER base images** | Never remove `golang`, `alpine`, `ubuntu`, etc. |
 | **NEVER volumes** | Unless explicitly part of this project |
 
 **Docker Cleanup Flow:**
 ```
-1. docker ps -a --filter name={projectname}     # List ONLY this project's containers
-2. Verify output shows ONLY {projectname}       # CHECK before removing
-3. docker stop {projectname}                    # Stop gracefully
-4. docker rm {projectname}                      # Remove container
+1. docker ps -a --filter name=caspaste     # List ONLY this project's containers
+2. Verify output shows ONLY caspaste       # CHECK before removing
+3. docker stop caspaste                    # Stop gracefully
+4. docker rm caspaste                      # Remove container
 
 # For images:
-1. docker images {projectorg}/{projectname}     # List ONLY this project's images
+1. docker images casjay-forks/caspaste     # List ONLY this project's images
 2. Verify output shows ONLY our images          # CHECK before removing
-3. docker rmi {projectorg}/{projectname}:tag    # Remove SPECIFIC tag
+3. docker rmi casjay-forks/caspaste:tag    # Remove SPECIFIC tag
 ```
 
 ### Allowed Commands (Project-Scoped ONLY)
@@ -37922,10 +39566,10 @@ rm -rf $TEST_DIR
 | Command | Description |
 |---------|-------------|
 | `kill {specific-pid}` | Kill exact PID only (after verification) |
-| `pkill -x {projectname}` | Exact binary name match only |
-| `docker stop {projectname}` | Stop specific container by name |
-| `docker rm {projectname}` | Remove specific container by name |
-| `docker rmi {projectorg}/{projectname}:tag` | Remove specific image:tag |
+| `pkill -x caspaste` | Exact binary name match only |
+| `docker stop caspaste` | Stop specific container by name |
+| `docker rm caspaste` | Remove specific container by name |
+| `docker rmi casjay-forks/caspaste:tag` | Remove specific image:tag |
 | `rm -rf $BUILD_DIR` | Remove temp build dir (from mktemp) |
 | `rm -rf $TEST_DIR` | Remove temp test dir (from mktemp) |
 
@@ -37948,10 +39592,10 @@ rm -rf $TEST_DIR
 | Temp build dir | `rm -rf $BUILD_DIR` (saved from mktemp) |
 | Temp test dir | `rm -rf $TEST_DIR` (saved from mktemp) |
 | All mktemp dirs | Cleaned automatically on reboot |
-| Project binaries | `rm -rf binaries/{projectname}*` |
-| Project releases | `rm -rf releases/{projectname}*` |
+| Project binaries | `rm -rf binaries/caspaste*` |
+| Project releases | `rm -rf releases/caspaste*` |
 
-**Note:** Always use `mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX"` and save the path to a variable for cleanup. Temp dirs are auto-cleaned on reboot.
+**Note:** Always use `mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX"` and save the path to a variable for cleanup. Temp dirs are auto-cleaned on reboot.
 
 ### NEVER Delete Without Confirmation
 
@@ -37995,8 +39639,21 @@ Documentation uses MkDocs Material theme with dark/light/auto switching.
 | Theme | MkDocs Material (follows PART 16 theme rules) |
 | Theme files | `docs/stylesheets/dark.css`, `docs/stylesheets/light.css` |
 | Hosting | ReadTheDocs |
-| URL format | `https://{projectorg}-{projectname}.readthedocs.io` |
 | Source directory | `docs/` (ONLY ReadTheDocs files) |
+
+**ReadTheDocs URL Formats (use whichever matches your RTD project):**
+
+| Format | URL Pattern | RTD Project Name |
+|--------|-------------|------------------|
+| **Org-Project** | `https://casjay-forks-caspaste.readthedocs.io` | `casjay-forks-caspaste` |
+| **Project Only** | `https://caspaste.readthedocs.io` | `caspaste` |
+| **Custom Domain** | `https://{custom_rtd_address}` | Configured in RTD settings |
+
+**How to determine which format:**
+1. Check your ReadTheDocs project dashboard for the actual URL
+2. Organization accounts typically use `casjay-forks-caspaste`
+3. Standalone projects may use just `caspaste`
+4. Custom domains require RTD paid plan or manual DNS setup
 
 ## Required Files
 
@@ -38025,12 +39682,16 @@ Documentation uses MkDocs Material theme with dark/light/auto switching.
 ## mkdocs.yml Template 
 
 ```yaml
-site_name: {PROJECTNAME}
-site_url: https://{projectorg}-{projectname}.readthedocs.io
+site_name: CASPASTE
+# site_url: Use whichever RTD URL format matches your project:
+#   https://casjay-forks-caspaste.readthedocs.io  (org-project)
+#   https://caspaste.readthedocs.io               (project only)
+#   https://{custom_rtd_address}                       (custom domain)
+site_url: https://{RTD_URL}
 site_description: "{Project description}"
-site_author: {projectorg}
+site_author: casjay-forks
 
-repo_name: {projectorg}/{projectname}
+repo_name: casjay-forks/caspaste
 repo_url: {PLATFORM_REPO_URL}
 edit_uri: edit/main/docs/  # Adjust path format for GitLab/Gitea if needed
 
@@ -38109,8 +39770,8 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: {projectorg}
-      repo: {projectname}
+      user: casjay-forks
+      repo: caspaste
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -38455,7 +40116,7 @@ pymdown-extensions>=10.0
 ### docs/index.md
 
 ```markdown
-# {PROJECTNAME}
+# CASPASTE
 
 {Brief project description}
 
@@ -38463,10 +40124,10 @@ pymdown-extensions>=10.0
 
 ```bash
 # Docker
-docker run -p 64580:80 {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
+docker run -p 64580:80 {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
 
 # Binary
-./{projectname}-linux-amd64 --config server.yml
+./caspaste-linux-amd64 --config server.yml
 ```
 
 ## Features
@@ -38486,7 +40147,7 @@ docker run -p 64580:80 {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:
 ## Links
 
 - [Repository]({PLATFORM_REPO_URL})
-- [Live Demo](https://{projectname}.{projectorg}.us) (if applicable)
+- [Live Demo](https://caspaste.casjay-forks.us) (if applicable)
 - [API Documentation](/openapi) (Swagger UI)
 - [GraphQL Playground](/graphql)
 
@@ -38504,10 +40165,10 @@ MIT - See [LICENSE.md]({PLATFORM_REPO_URL}/blob/main/LICENSE.md)
 
 ```bash
 docker run -d \
-  --name {projectname} \
+  --name caspaste \
   -p 64580:80 \
-  -v {projectname}-data:/data \
-  {PLATFORM_CONTAINER_REGISTRY}/{projectorg}/{projectname}:latest
+  -v caspaste-data:/data \
+  {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
 ```
 
 ## Binary
@@ -38516,17 +40177,17 @@ Download from [releases]({PLATFORM_REPO_URL}/releases):
 
 ```bash
 # Linux AMD64
-wget {PLATFORM_RELEASE_URL}/{projectname}-linux-amd64
-chmod +x {projectname}-linux-amd64
-./{projectname}-linux-amd64
+wget {PLATFORM_RELEASE_URL}/caspaste-linux-amd64
+chmod +x caspaste-linux-amd64
+./caspaste-linux-amd64
 ```
 
 ## Systemd Service
 
 ```bash
-sudo ./{projectname} --service install
-sudo systemctl start {projectname}
-sudo systemctl enable {projectname}
+sudo ./caspaste --service install
+sudo systemctl start caspaste
+sudo systemctl enable caspaste
 ```
 
 ## Configuration
@@ -38541,7 +40202,7 @@ See [Configuration](configuration.md) for all options.
 
 ## Config File
 
-Default location: `/etc/{projectorg}/{projectname}/server.yml`
+Default location: `/etc/casjay-forks/caspaste/server.yml`
 
 ```yaml
 server:
@@ -38560,8 +40221,8 @@ database:
 All settings can be overridden via environment:
 
 ```bash
-{PROJECTNAME}_SERVER_PORT=8080
-{PROJECTNAME}_DATABASE_TYPE=postgres
+CASPASTE_SERVER_PORT=8080
+CASPASTE_DATABASE_TYPE=postgres
 ```
 
 ## Admin Panel
@@ -38640,14 +40301,14 @@ Programmatic access via `/api/{api_version}/{admin_path}/` with bearer token aut
 
 ```bash
 git clone {PLATFORM_REPO_URL}
-cd {projectname}
+cd caspaste
 make build
 ```
 
 ## Run Locally
 
 ```bash
-./binaries/{projectname} --config server.yml --debug
+./binaries/caspaste --config server.yml --debug
 ```
 
 ## Testing
@@ -39487,13 +41148,13 @@ This prevents conflicts with any existing Tor installation on the system.
 
 | Server Started As | Server Runs As | Tor Runs As |
 |-------------------|----------------|-------------|
-| `root` | `{projectname}` (after drop) | `{projectname}` |
-| `{projectname}` | `{projectname}` | `{projectname}` |
+| `root` | `caspaste` (after drop) | `caspaste` |
+| `caspaste` | `caspaste` | `caspaste` |
 | Regular user | Regular user | Regular user |
 
 **Process:**
 1. Server starts (possibly as root for port binding)
-2. Server drops privileges to `{projectname}` user (if started as root)
+2. Server drops privileges to `caspaste` user (if started as root)
 3. Server starts Tor process **as the current (dropped) user**
 4. Tor inherits user context from server process
 
@@ -40288,11 +41949,11 @@ No impact on binary size - Tor is external. Application binary remains small and
 
 | Environment | {config_dir} | {data_dir} | {log_dir} |
 |-------------|--------------|------------|-----------|
-| Docker | `/config/{projectname}/` | `/data/{projectname}/` | `/data/log/{projectname}/` |
-| Linux root | `/etc/{projectorg}/{projectname}/` | `/var/lib/{projectorg}/{projectname}/` | `/var/log/{projectorg}/{projectname}/` |
-| Linux user | `~/.config/{projectorg}/{projectname}/` | `~/.local/share/{projectorg}/{projectname}/` | `~/.local/log/{projectorg}/{projectname}/` |
-| macOS | `~/Library/Application Support/{projectorg}/{projectname}/` | Same as config | `~/Library/Logs/{projectorg}/{projectname}/` |
-| Windows | `%AppData%\{projectorg}\{projectname}\` | Same as config | `%AppData%\{projectorg}\{projectname}\log\` |
+| Docker | `/config/caspaste/` | `/data/caspaste/` | `/data/log/caspaste/` |
+| Linux root | `/etc/casjay-forks/caspaste/` | `/var/lib/casjay-forks/caspaste/` | `/var/log/casjay-forks/caspaste/` |
+| Linux user | `~/.config/casjay-forks/caspaste/` | `~/.local/share/casjay-forks/caspaste/` | `~/.local/log/casjay-forks/caspaste/` |
+| macOS | `~/Library/Application Support/casjay-forks/caspaste/` | Same as config | `~/Library/Logs/casjay-forks/caspaste/` |
+| Windows | `%AppData%\casjay-forks\caspaste\` | Same as config | `%AppData%\casjay-forks\caspaste\log\` |
 
 **Tor directories are ALWAYS `{config_dir}/tor/`, `{data_dir}/tor/`, `{log_dir}/tor.log` - never hardcoded paths.**
 
@@ -40908,11 +42569,11 @@ When a project includes a client, it provides a terminal-based interface for int
 
 | Attribute | Value |
 |-----------|-------|
-| Default binary name | `{projectname}-cli` |
+| Default binary name | `caspaste-cli` |
 | Versioning | Same as main application |
 | Build | Part of same Makefile (`make build` produces both binaries) |
-| Config location (Unix) | `~/.config/{projectorg}/{projectname}/cli.yml` |
-| Config location (Windows) | `%APPDATA%\{projectorg}\{projectname}\cli.yml` |
+| Config location (Unix) | `~/.config/casjay-forks/caspaste/cli.yml` |
+| Config location (Windows) | `%APPDATA%\casjay-forks\caspaste\cli.yml` |
 
 ## Binary Naming Rules 
 
@@ -40920,18 +42581,18 @@ When a project includes a client, it provides a terminal-based interface for int
 
 | Rule | Display | Internal |
 |------|---------|----------|
-| Binary name | ACTUAL name (`filepath.Base(os.Args[0])`) | Hardcoded `{projectname}` |
+| Binary name | ACTUAL name (`filepath.Base(os.Args[0])`) | Hardcoded `caspaste` |
 | `--help` output | Shows actual binary name | - |
 | `--version` output | Shows actual binary name | - |
-| User-Agent | - | `{projectname}-cli/{version}` (hardcoded) |
-| Config paths | - | `/etc/{projectorg}/{projectname}/` (hardcoded) |
+| User-Agent | - | `caspaste-cli/{version}` (hardcoded) |
+| Config paths | - | `/etc/casjay-forks/caspaste/` (hardcoded) |
 
 ```go
 // Display: use actual binary name
 binaryName := filepath.Base(os.Args[0])
 
 // Internal: hardcoded project name (compiled via -ldflags)
-const projectName = "{projectname}"
+const projectName = "caspaste"
 userAgent := fmt.Sprintf("%s-cli/%s", projectName, version)
 ```
 
@@ -40947,9 +42608,9 @@ userAgent := fmt.Sprintf("%s-cli/%s", projectName, version)
 **Token sources (priority order):**
 1. `--token` flag (explicit)
 2. `--token-file` flag (file path)
-3. Environment variable: `{PROJECTNAME}_TOKEN`
+3. Environment variable: `CASPASTE_TOKEN`
 4. Config file: `cli.yml` → `token: xxx`
-5. Token file: `{config_dir}/token` (Unix: `~/.config/{projectorg}/{projectname}/token`, Windows: `%APPDATA%\{projectorg}\{projectname}\token`)
+5. Token file: `{config_dir}/token` (Unix: `~/.config/casjay-forks/caspaste/token`, Windows: `%APPDATA%\casjay-forks\caspaste\token`)
 
 **Token format:** See PART 11 "API Token Security" for token format and validation.
 
@@ -40983,14 +42644,14 @@ func getToken(flags *Flags) (string, error) {
 **Usage:**
 ```bash
 # Explicit token
-{projectname}-cli --token "usr_abc123..." list
+caspaste-cli --token "usr_abc123..." list
 
 # From environment
-export {PROJECTNAME}_TOKEN="usr_abc123..."
-{projectname}-cli list
+export CASPASTE_TOKEN="usr_abc123..."
+caspaste-cli list
 
 # Store token (interactive login)
-{projectname}-cli login
+caspaste-cli login
 # Saves to {config_dir}/token (see platform-specific paths above)
 ```
 
@@ -41095,17 +42756,17 @@ func ValidateAccess(ctx context.Context, token *Token, target string, action str
 
 ```bash
 # Default: use token owner's personal context (no --user flag)
-{projectname}-cli list                    # GET /api/{api_version}/users/{resource} (current user)
+caspaste-cli list                    # GET /api/{api_version}/users/{resource} (current user)
 
 # Explicit user context (view another user's public resources)
-{projectname}-cli --user @alice list      # GET /api/{api_version}/users/alice/{resource}
+caspaste-cli --user @alice list      # GET /api/{api_version}/users/alice/{resource}
 
 # Org context (user must have org access)
-{projectname}-cli --user +acme-corp list  # GET /api/{api_version}/orgs/acme-corp/{resource}
+caspaste-cli --user +acme-corp list  # GET /api/{api_version}/orgs/acme-corp/{resource}
 
 # Auto-detect: CLI determines if name is user or org
-{projectname}-cli --user alice list       # GET /api/{api_version}/users/alice/{resource} (if user)
-{projectname}-cli --user acme-corp list   # GET /api/{api_version}/orgs/acme-corp/{resource} (if org)
+caspaste-cli --user alice list       # GET /api/{api_version}/users/alice/{resource} (if user)
+caspaste-cli --user acme-corp list   # GET /api/{api_version}/orgs/acme-corp/{resource} (if org)
 ```
 
 **Note:** `{resource}` is the project-specific resource type (e.g., `repos`, `pastes`, `links`). See IDEA.md for your project's resources.
@@ -41123,7 +42784,7 @@ func ValidateAccess(ctx context.Context, token *Token, target string, action str
 
 ```bash
 # CLI translates --user to URL-scoped route
-{projectname}-cli --user acme-corp list
+caspaste-cli --user acme-corp list
 
 # Becomes:
 GET /api/{api_version}/orgs/acme-corp/{resource}
@@ -41168,23 +42829,23 @@ CLI receives --user flag
 
 ```bash
 # Token: alice (no org access)
-{projectname}-cli list                    # Uses alice's context (only option)
-{projectname}-cli --user alice list       # Same (redundant but valid)
-{projectname}-cli --user acme-corp list   # ERROR: no access to acme-corp
+caspaste-cli list                    # Uses alice's context (only option)
+caspaste-cli --user alice list       # Same (redundant but valid)
+caspaste-cli --user acme-corp list   # ERROR: no access to acme-corp
 
 # Token: scoped to acme-corp only (org-specific token)
-{projectname}-cli list                    # Uses acme-corp context (only option)
-{projectname}-cli --user acme-corp list   # Same (redundant but valid)
-{projectname}-cli --user @me list         # ERROR: token not scoped to user
+caspaste-cli list                    # Uses acme-corp context (only option)
+caspaste-cli --user acme-corp list   # Same (redundant but valid)
+caspaste-cli --user @me list         # ERROR: token not scoped to user
 
 # Token: alice + acme-corp (user has one org)
-{projectname}-cli list                    # Uses alice's context (default = user)
-{projectname}-cli --user acme-corp list   # Uses acme-corp context
+caspaste-cli list                    # Uses alice's context (default = user)
+caspaste-cli --user acme-corp list   # Uses acme-corp context
 
 # Token: alice + acme-corp + dev-team (user has multiple orgs)
-{projectname}-cli list                    # Uses alice's context (default = user)
-{projectname}-cli --user acme-corp list   # Uses acme-corp context
-{projectname}-cli --user dev-team list    # Uses dev-team context
+caspaste-cli list                    # Uses alice's context (default = user)
+caspaste-cli --user acme-corp list   # Uses acme-corp context
+caspaste-cli --user dev-team list    # Uses dev-team context
 ```
 
 **Server-side scope detection:**
@@ -41268,11 +42929,11 @@ func SaveIfEmptyOrInvalid(current, flagValue string, validate func(string) bool)
 **Example:**
 ```bash
 # First run: no server configured
-{projectname}-cli --server https://api.example.com list
+caspaste-cli --server https://api.example.com list
 # → Saves to cli.yml (was empty)
 
 # Second run: server already configured
-{projectname}-cli --server https://staging.example.com list
+caspaste-cli --server https://staging.example.com list
 # → Uses staging for THIS command, but cli.yml still has api.example.com
 
 # To permanently change: edit cli.yml directly
@@ -41294,7 +42955,7 @@ func SaveIfEmptyOrInvalid(current, flagValue string, validate func(string) bool)
 
 ```bash
 # @me always means token owner
-{projectname}-cli --user @me list    # Always personal context
+caspaste-cli --user @me list    # Always personal context
 ```
 
 ## Modes
@@ -41350,25 +43011,25 @@ display:
 
 **Exit-immediately flags (NEVER launch TUI):**
 ```bash
-{projectname}-cli -h                    # Print help, exit
-{projectname}-cli --help                # Print help, exit
-{projectname}-cli -v                    # Print version, exit
-{projectname}-cli --version             # Print version, exit
+caspaste-cli -h                    # Print help, exit
+caspaste-cli --help                # Print help, exit
+caspaste-cli -v                    # Print version, exit
+caspaste-cli --version             # Print version, exit
 ```
 
 **Config flags (still launch TUI):**
 ```bash
-{projectname}-cli                                    # TUI mode
-{projectname}-cli --config dev                       # TUI mode (with dev.yml)
-{projectname}-cli --server https://example.com       # TUI mode (with server)
-{projectname}-cli --token abc123                     # TUI mode (with token)
+caspaste-cli                                    # TUI mode
+caspaste-cli --config dev                       # TUI mode (with dev.yml)
+caspaste-cli --server https://example.com       # TUI mode (with server)
+caspaste-cli --token abc123                     # TUI mode (with token)
 ```
 
 **Command/args (CLI mode):**
 ```bash
-{projectname}-cli list                               # CLI mode
-{projectname}-cli golang tutorials                   # CLI mode (search)
-{projectname}-cli notes.txt                          # CLI mode (paste file)
+caspaste-cli list                               # CLI mode
+caspaste-cli golang tutorials                   # CLI mode (search)
+caspaste-cli notes.txt                          # CLI mode (paste file)
 ```
 
 ```go
@@ -41474,7 +43135,7 @@ if env.IsAutoDetectDisplayModeGUI() {
 
 **Agent connection string example (provided by server admin panel):**
 ```
-{projectname}-agent --connect "https://api.example.com?token=agt_xxx&name=office-pc"
+caspaste-agent --connect "https://api.example.com?token=agt_xxx&name=office-pc"
 ```
 
 ### CLI: Full TUI/GUI App with Setup Wizard
@@ -41538,14 +43199,14 @@ Why CLI needs a setup wizard:
 ### CLI First-Run Flow
 
 ```
-User double-clicks {projectname}-cli:
+User double-clicks caspaste-cli:
 
 1. SETUP WIZARD (GUI or TUI based on environment)
    ┌─────────────────────────────────────────────────────────────┐
-   │  {PROJECTNAME} CLI Setup                                [X] │
+   │  CASPASTE CLI Setup                                [X] │
    ├─────────────────────────────────────────────────────────────┤
    │                                                             │
-   │  Connect to a {projectname} server:                         │
+   │  Connect to a caspaste server:                         │
    │                                                             │
    │  Server URL:                                                │
    │  [https://                                           ] [?]  │
@@ -41621,7 +43282,7 @@ func selectSetupMode() SetupMode {
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  {PROJECTNAME} Setup                                    [X] │
+│  CASPASTE Setup                                    [X] │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  Welcome! Let's configure your server.                      │
@@ -41642,7 +43303,7 @@ func selectSetupMode() SetupMode {
 
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
-║                      {PROJECTNAME} CLI SETUP                          ║
+║                      CASPASTE CLI SETUP                          ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
 ║   No server configured. Let's set one up!                            ║
@@ -41659,7 +43320,7 @@ func selectSetupMode() SetupMode {
 **CLI Setup Wizard Flow:**
 
 ```
-User double-clicks {projectname}-cli:
+User double-clicks caspaste-cli:
 
 1. Check for config file (cli.yml)
    ├─ Config exists with valid server URL?
@@ -41683,7 +43344,7 @@ User double-clicks {projectname}-cli:
 ```
 Agent is configured via server-provided connection string:
 
-{projectname}-agent --connect "https://api.example.com?token=agt_xxx&name=office-pc"
+caspaste-agent --connect "https://api.example.com?token=agt_xxx&name=office-pc"
 
 First run without connection string:
 - Show error: "No connection configured. Use --connect flag with server-provided URL."
@@ -41811,11 +43472,11 @@ import (
 )
 
 func launchGTKGui(config *Config) error {
-    app := gtk.NewApplication("{projectorg}.{projectname}.cli", gio.ApplicationFlagsNone)
+    app := gtk.NewApplication("casjay-forks.caspaste.cli", gio.ApplicationFlagsNone)
 
     app.ConnectActivate(func() {
         win := gtk.NewApplicationWindow(app)
-        win.SetTitle("{PROJECTNAME} CLI")
+        win.SetTitle("CASPASTE CLI")
         win.SetDefaultSize(800, 600)
 
         // Build UI from config
@@ -41865,7 +43526,7 @@ import "C"
 import "unsafe"
 
 func launchCocoaGui(config *Config) error {
-    title := C.CString("{PROJECTNAME} CLI")
+    title := C.CString("CASPASTE CLI")
     defer C.free(unsafe.Pointer(title))
 
     C.launchCocoaApp(title, 800, 600)
@@ -41884,7 +43545,7 @@ func launchCocoaGui(config *Config) error {
 //         styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
 //                    NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable)
 //         backing:NSBackingStoreBuffered defer:NO];
-//     [self.window setTitle:@"{PROJECTNAME} CLI"];
+//     [self.window setTitle:@"CASPASTE CLI"];
 //     [self.window center];
 //     [self.window makeKeyAndOrderFront:nil];
 // }
@@ -41926,8 +43587,8 @@ const (
 )
 
 func launchWin32Gui(config *Config) error {
-    className := windows.StringToUTF16Ptr("{projectname}_cli_window")
-    windowName := windows.StringToUTF16Ptr("{PROJECTNAME} CLI")
+    className := windows.StringToUTF16Ptr("caspaste_cli_window")
+    windowName := windows.StringToUTF16Ptr("CASPASTE CLI")
 
     // Register window class
     var wc WNDCLASSEXW
@@ -42213,7 +43874,7 @@ func calculateGUILayout(width, height int, dpi float64) Layout {
 // src/client/tui/layout.go
 package tui
 
-import "{projectorg}/{projectname}/common/terminal"
+import "casjay-forks/caspaste/common/terminal"
 
 // LayoutConfig provides TUI-specific layout settings based on SizeMode
 type LayoutConfig struct {
@@ -42500,10 +44161,10 @@ When command arguments are provided:
 
 ```bash
 # Standard CLI output (your project)
-{projectname}-cli create --file notes.txt --expire 24h
-{projectname}-cli get abc123 --output json
-{projectname}-cli list --limit 10
-{projectname}-cli search --query "keyword"
+caspaste-cli create --file notes.txt --expire 24h
+caspaste-cli get abc123 --output json
+caspaste-cli list --limit 10
+caspaste-cli search --query "keyword"
 ```
 
 ### TUI Mode (Automatic)
@@ -42512,7 +44173,7 @@ When launched with no arguments in an interactive terminal:
 
 ```bash
 # Launch TUI (no arguments needed)
-{projectname}-cli              # Opens TUI automatically
+caspaste-cli              # Opens TUI automatically
 
 # TUI provides:
 # - Interactive menus
@@ -42543,23 +44204,23 @@ The client uses the same user directory structure as the server in user mode. Th
 
 | Directory | Path | Purpose |
 |-----------|------|---------|
-| Config | `~/.config/{projectorg}/{projectname}/` | Configuration files |
-| Config File | `~/.config/{projectorg}/{projectname}/cli.yml` | CLI configuration |
-| Data | `~/.local/share/{projectorg}/{projectname}/` | Persistent data |
-| Cache | `~/.cache/{projectorg}/{projectname}/` | Temporary/cached data |
-| Logs | `~/.local/log/{projectorg}/{projectname}/` | Log files |
-| Log File | `~/.local/log/{projectorg}/{projectname}/cli.log` | CLI log output |
+| Config | `~/.config/casjay-forks/caspaste/` | Configuration files |
+| Config File | `~/.config/casjay-forks/caspaste/cli.yml` | CLI configuration |
+| Data | `~/.local/share/casjay-forks/caspaste/` | Persistent data |
+| Cache | `~/.cache/casjay-forks/caspaste/` | Temporary/cached data |
+| Logs | `~/.local/log/casjay-forks/caspaste/` | Log files |
+| Log File | `~/.local/log/casjay-forks/caspaste/cli.log` | CLI log output |
 
 #### Windows
 
 | Directory | Path | Purpose |
 |-----------|------|---------|
-| Config | `%APPDATA%\{projectorg}\{projectname}\` | Configuration files |
-| Config File | `%APPDATA%\{projectorg}\{projectname}\cli.yml` | CLI configuration |
-| Data | `%LOCALAPPDATA%\{projectorg}\{projectname}\data\` | Persistent data |
-| Cache | `%LOCALAPPDATA%\{projectorg}\{projectname}\cache\` | Temporary/cached data |
-| Logs | `%LOCALAPPDATA%\{projectorg}\{projectname}\log\` | Log files |
-| Log File | `%LOCALAPPDATA%\{projectorg}\{projectname}\log\cli.log` | CLI log output |
+| Config | `%APPDATA%\casjay-forks\caspaste\` | Configuration files |
+| Config File | `%APPDATA%\casjay-forks\caspaste\cli.yml` | CLI configuration |
+| Data | `%LOCALAPPDATA%\casjay-forks\caspaste\data\` | Persistent data |
+| Cache | `%LOCALAPPDATA%\casjay-forks\caspaste\cache\` | Temporary/cached data |
+| Logs | `%LOCALAPPDATA%\casjay-forks\caspaste\log\` | Log files |
+| Log File | `%LOCALAPPDATA%\casjay-forks\caspaste\log\cli.log` | CLI log output |
 
 #### Directory Usage
 
@@ -42571,9 +44232,9 @@ The client uses the same user directory structure as the server in user mode. Th
 | Logs | `cli.log`, debug logs | Optional |
 
 **NEVER use OS system directories:**
-- `/etc/{projectorg}/{projectname}/` (Linux system config)
-- `/var/lib/{projectorg}/{projectname}/` (Linux system data)
-- `/var/log/{projectorg}/{projectname}/` (Linux system logs)
+- `/etc/casjay-forks/caspaste/` (Linux system config)
+- `/var/lib/casjay-forks/caspaste/` (Linux system data)
+- `/var/log/casjay-forks/caspaste/` (Linux system logs)
 - `C:\ProgramData\` (Windows system data)
 - Any directory requiring elevated privileges
 
@@ -42585,10 +44246,10 @@ On every startup, the CLI MUST:
 
 1. **Ensure directories exist** (create if missing):
    ```
-   ├─ {config_dir}/           (~/.config/{projectorg}/{projectname}/)
-   ├─ {data_dir}/             (~/.local/share/{projectorg}/{projectname}/)
-   ├─ {cache_dir}/            (~/.cache/{projectorg}/{projectname}/)
-   └─ {log_dir}/              (~/.local/log/{projectorg}/{projectname}/)
+   ├─ {config_dir}/           (~/.config/casjay-forks/caspaste/)
+   ├─ {data_dir}/             (~/.local/share/casjay-forks/caspaste/)
+   ├─ {cache_dir}/            (~/.cache/casjay-forks/caspaste/)
+   └─ {log_dir}/              (~/.local/log/casjay-forks/caspaste/)
    ```
 
 2. **Set correct permissions** (user-only access):
@@ -42697,8 +44358,8 @@ import (
 )
 
 const (
-	projectOrg  = "{projectorg}"
-	projectName = "{projectname}"
+	projectOrg  = "casjay-forks"
+	projectName = "caspaste"
 )
 
 // ConfigDir returns the CLI config directory
@@ -42825,9 +44486,9 @@ func resolveYamlExtension(path string) string {
 **Example usage:**
 ```bash
 # Use different configs for different environments
-{projectname}-cli --config dev list              # Uses ~/.config/.../dev.yml
-{projectname}-cli --config staging list          # Uses ~/.config/.../staging.yml
-{projectname}-cli --config ~/work/prod.yml list  # Uses absolute path
+caspaste-cli --config dev list              # Uses ~/.config/.../dev.yml
+caspaste-cli --config staging list          # Uses ~/.config/.../staging.yml
+caspaste-cli --config ~/work/prod.yml list  # Uses absolute path
 
 # Config profiles allow different servers/tokens without flags
 # dev.yml:   server: https://dev.example.com, token: dev-token
@@ -42839,7 +44500,7 @@ func resolveYamlExtension(path string) string {
 **EVERYTHING must be configurable via cli.yml. Sane defaults match server where applicable.**
 
 ```yaml
-# ~/.config/{projectorg}/{projectname}/cli.yml
+# ~/.config/casjay-forks/caspaste/cli.yml
 # client configuration - ALL options with defaults
 
 # Server connection
@@ -42904,18 +44565,18 @@ defaults:
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | CLI flag | `--format json` |
-| 2 | Environment variable | `{PROJECTNAME}_FORMAT=json` |
+| 2 | Environment variable | `CASPASTE_FORMAT=json` |
 | 3 | Config file | `output.format: json` |
 | 4 | Compiled default | `table` |
 
 **Environment variable mapping:**
 ```bash
-# Pattern: {PROJECTNAME}_{SECTION}_{KEY} or {PROJECTNAME}_{KEY}
-{PROJECTNAME}_SERVER_PRIMARY="https://example.com"
-{PROJECTNAME}_SERVER_TIMEOUT=60
-{PROJECTNAME}_TOKEN="usr_abc123..."
-{PROJECTNAME}_OUTPUT_FORMAT="json"
-{PROJECTNAME}_DEBUG=true
+# Pattern: CASPASTE_{SECTION}_{KEY} or CASPASTE_{KEY}
+CASPASTE_SERVER_PRIMARY="https://example.com"
+CASPASTE_SERVER_TIMEOUT=60
+CASPASTE_TOKEN="usr_abc123..."
+CASPASTE_OUTPUT_FORMAT="json"
+CASPASTE_DEBUG=true
 ```
 
 ### CLI Cluster Failover 
@@ -42994,23 +44655,23 @@ func saveIfEmpty(current, newValue string, validate func(string) bool) (string, 
 **Error when no server configured (projects without official site):**
 
 ```bash
-$ {projectname}-cli list
+$ caspaste-cli list
 Error: no server configured
 
 To configure a server, run:
-  {projectname}-cli --server https://your-server.example.com list
+  caspaste-cli --server https://your-server.example.com list
 
 This will save the server address for future commands.
-Or edit ~/.config/{projectorg}/{projectname}/cli.yml directly.
+Or edit ~/.config/casjay-forks/caspaste/cli.yml directly.
 ```
 
 **Projects with official site show default in help:**
 
 ```bash
-$ {projectname}-cli --help
+$ caspaste-cli --help
 ...
 Flags:
-      --server string    Server address (default: https://{projectname}.example.com)
+      --server string    Server address (default: https://caspaste.example.com)
 ...
 ```
 
@@ -43021,7 +44682,7 @@ Flags:
 - CLI/Agent: Default `--server` URL (so users don't need to specify)
 
 **What official site does NOT affect:**
-- Docker labels (use `{projectorg}`, `{projectname}`, `{fqdn}`)
+- Docker labels (use `casjay-forks`, `caspaste`, `{fqdn}`)
 - Documentation structure or content
 - Build artifacts or binary metadata
 - Any runtime behavior (just a compiled default)
@@ -43069,11 +44730,11 @@ See PART 5: Boolean Handling for the complete implementation.
 
 **Usage in flags:**
 ```bash
-{projectname}-cli --public                    # Boolean flag (true)
-{projectname}-cli --public=yes                # Explicit truthy
-{projectname}-cli --public=no                 # Explicit falsey
-{projectname}-cli --expire=0                  # Falsey = no expiration
-{projectname}-cli --expire=disabled           # Falsey = no expiration
+caspaste-cli --public                    # Boolean flag (true)
+caspaste-cli --public=yes                # Explicit truthy
+caspaste-cli --public=no                 # Explicit falsey
+caspaste-cli --expire=0                  # Falsey = no expiration
+caspaste-cli --expire=disabled           # Falsey = no expiration
 ```
 
 **Config file (cli.yml):**
@@ -43118,29 +44779,29 @@ server:
 **Search/Query CLI (minimal flags):**
 ```bash
 # Args ARE the search - no flags needed for basic use
-{projectname}-cli golang tutorials           # Search
-{projectname}-cli --limit 10 golang          # With limit
-{projectname}-cli --output json golang       # JSON output
+caspaste-cli golang tutorials           # Search
+caspaste-cli --limit 10 golang          # With limit
+caspaste-cli --output json golang       # JSON output
 ```
 
 **Pastebin/Content CLI:**
 ```bash
 # Smart detection handles input, flags for metadata
-{projectname}-cli notes.txt                          # File (detected), uses defaults
-{projectname}-cli notes.txt --public yes             # Public paste
-{projectname}-cli notes.txt --public no              # Private (requires auth)
-{projectname}-cli notes.txt --public unlisted        # Unlisted (default)
-{projectname}-cli notes.txt --expire 24h             # Expiration
-{projectname}-cli notes.txt --syntax python          # Syntax highlight
-{projectname}-cli notes.txt --author "John"          # Author name
+caspaste-cli notes.txt                          # File (detected), uses defaults
+caspaste-cli notes.txt --public yes             # Public paste
+caspaste-cli notes.txt --public no              # Private (requires auth)
+caspaste-cli notes.txt --public unlisted        # Unlisted (default)
+caspaste-cli notes.txt --expire 24h             # Expiration
+caspaste-cli notes.txt --syntax python          # Syntax highlight
+caspaste-cli notes.txt --author "John"          # Author name
 ```
 
 **API/Data CLI:**
 ```bash
 # Resource-specific flags
-{projectname}-cli get abc123                         # Get by ID
-{projectname}-cli list --limit 20 --offset 0         # Pagination
-{projectname}-cli delete abc123 --force              # Dangerous ops need confirm
+caspaste-cli get abc123                         # Get by ID
+caspaste-cli list --limit 20 --offset 0         # Pagination
+caspaste-cli delete abc123 --force              # Dangerous ops need confirm
 ```
 
 ### Flag Defaults from Config 
@@ -43159,7 +44820,7 @@ defaults:
 
 **Precedence (highest to lowest):**
 1. Command-line flag (`--public yes`)
-2. Environment variable (`{PROJECTNAME}_PUBLIC=yes`)
+2. Environment variable (`CASPASTE_PUBLIC=yes`)
 3. Config file (`defaults.public: yes`)
 4. Hardcoded default
 
@@ -43187,12 +44848,12 @@ defaults:
 **`--shell init` is just a convenience wrapper:**
 ```bash
 # These are equivalent:
-eval "$({projectname} --shell init)"
-eval "$({projectname} --shell init bash)"      # if $SHELL=/bin/bash
+eval "$(caspaste --shell init)"
+eval "$(caspaste --shell init bash)"      # if $SHELL=/bin/bash
 
 # init outputs the eval command, completions outputs the script:
-{projectname} --shell init        # → source <({projectname} --shell completions bash)
-{projectname} --shell completions # → (actual completion script)
+caspaste --shell init        # → source <(caspaste --shell completions bash)
+caspaste --shell completions # → (actual completion script)
 ```
 
 **Supported shells:**
@@ -43216,28 +44877,28 @@ eval "$({projectname} --shell init bash)"      # if $SHELL=/bin/bash
 **Usage examples:**
 ```bash
 # Explicit shell specification
-{projectname} --shell completions bash > ~/.local/share/bash-completion/completions/{projectname}
-{projectname}-cli --shell completions zsh > ~/.zsh/completions/_{projectname}-cli
-{projectname}-agent --shell completions fish > ~/.config/fish/completions/{projectname}-agent.fish
-{projectname} --shell completions powershell > ~/Documents/PowerShell/completions/{projectname}.ps1
+caspaste --shell completions bash > ~/.local/share/bash-completion/completions/caspaste
+caspaste-cli --shell completions zsh > ~/.zsh/completions/_caspaste-cli
+caspaste-agent --shell completions fish > ~/.config/fish/completions/caspaste-agent.fish
+caspaste --shell completions powershell > ~/Documents/PowerShell/completions/caspaste.ps1
 
 # Auto-detect shell (omit SHELL argument)
-{projectname} --shell completions > ~/completions/{projectname}
-{projectname}-cli --shell init                    # auto-detect, print init
-eval "$({projectname} --shell init)"              # auto-detect in eval
+caspaste --shell completions > ~/completions/caspaste
+caspaste-cli --shell init                    # auto-detect, print init
+eval "$(caspaste --shell init)"              # auto-detect in eval
 
 # Specific shell init
-eval "$({projectname}-cli --shell init bash)"
-eval "$({projectname}-agent --shell init zsh)"
-{projectname} --shell init fish | source
+eval "$(caspaste-cli --shell init bash)"
+eval "$(caspaste-agent --shell init zsh)"
+caspaste --shell init fish | source
 ```
 
 **Add to shell rc file:**
 ```bash
 # ~/.bashrc, ~/.zshrc, ~/.config/fish/config.fish, etc.
-eval "$({projectname} --shell init)"        # server (auto-detect)
-eval "$({projectname}-cli --shell init)"    # client (auto-detect)
-eval "$({projectname}-agent --shell init)"  # agent (auto-detect)
+eval "$(caspaste --shell init)"        # server (auto-detect)
+eval "$(caspaste-cli --shell init)"    # client (auto-detect)
+eval "$(caspaste-agent --shell init)"  # agent (auto-detect)
 ```
 
 **Why built-in (not separate files):**
@@ -43323,12 +44984,12 @@ func printInit(shell, binaryName string) {
 ### --help Output
 
 ```bash
-$ {projectname}-cli --help
-{projectname}-cli {projectversion} - CLI for {projectname}
+$ caspaste-cli --help
+caspaste-cli {projectversion} - CLI for caspaste
 
 Usage:
-  {projectname}-cli [args] [flags]
-  {projectname}-cli                    # TUI mode (no args)
+  caspaste-cli [args] [flags]
+  caspaste-cli                    # TUI mode (no args)
 
 Flags:
   -h, --help                        Show help
@@ -43354,13 +45015,13 @@ Administration (requires admin token):
 Shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
 
 Run without arguments for interactive TUI mode.
-Run '{projectname}-cli <command> --help' for detailed help on any command.
+Run 'caspaste-cli <command> --help' for detailed help on any command.
 ```
 
 **If user renames binary:**
 ```bash
 $ mypaste --help
-mypaste {projectversion} - client for {projectname} API   # Shows actual binary name
+mypaste {projectversion} - client for caspaste API   # Shows actual binary name
 
 Usage:
   mypaste [command] [flags]                     # Shows actual binary name
@@ -43372,8 +45033,8 @@ Usage:
 **MUST match server `--version` format. Shows ACTUAL binary name:**
 
 ```bash
-$ {projectname}-cli --version
-{projectname}-cli {projectversion} ({COMMIT_SHA}) built {BUILD_DATE}
+$ caspaste-cli --version
+caspaste-cli {projectversion} ({COMMIT_SHA}) built {BUILD_DATE}
 
 # If renamed:
 $ mypaste --version
@@ -43414,11 +45075,11 @@ Example commands (project-dependent):
 **Token Storage:**
 - Stored in `cli.yml` under `server.token`
 - `--token` flag saves to cli.yml only if not already set (same as `--server`)
-- Environment variable: `{PROJECTNAME}_CLI_TOKEN` (does NOT save to config)
+- Environment variable: `CASPASTE_CLI_TOKEN` (does NOT save to config)
 
 **Priority (highest to lowest):**
 1. `--token` flag (saves only if config empty/invalid)
-2. `{PROJECTNAME}_CLI_TOKEN` environment variable
+2. `CASPASTE_CLI_TOKEN` environment variable
 3. `server.token` in cli.yml
 
 ## HTTP Client Identity 
@@ -43444,16 +45105,16 @@ Example commands (project-dependent):
 ### User-Agent Format
 
 ```
-{projectname}-cli/{version}
+caspaste-cli/{version}
 ```
 
 **Examples (User-Agent uses compiled project name, not binary name):**
 
 | Binary Name | User-Agent Header |
 |-------------|-------------------|
-| `{projectname}-cli` | `{projectname}-cli/1.2.3` |
-| `mypaste` (renamed by user) | `{projectname}-cli/1.2.3` |
-| `pb` (renamed by user) | `{projectname}-cli/1.2.3` |
+| `caspaste-cli` | `caspaste-cli/1.2.3` |
+| `mypaste` (renamed by user) | `caspaste-cli/1.2.3` |
+| `pb` (renamed by user) | `caspaste-cli/1.2.3` |
 
 ### Implementation
 
@@ -43481,7 +45142,7 @@ func GetBinaryName() string {
 **Build command (CI/CD injects version from git tag):**
 ```bash
 # VERSION comes from git tag (see PART 26/28 for version handling)
-go build -ldflags "-X main.ProjectName={projectname} -X main.Version=${VERSION}" -o {projectname}-cli ./src/client
+go build -ldflags "-X main.ProjectName=caspaste -X main.Version=${VERSION}" -o caspaste-cli ./src/client
 ```
 
 ### Server-Side Client Detection
@@ -43627,7 +45288,7 @@ package api
 
 import (
     "net/http"
-    "github.com/{projectorg}/{projectname}/common/urlutil"
+    "github.com/casjay-forks/caspaste/common/urlutil"
 )
 
 type APIClient struct {
@@ -43702,7 +45363,7 @@ func (c *APIClient) doAPIRequest(method, apiURL string, body io.Reader) (*APIRes
 ### JSON
 
 ```bash
-$ {projectname}-cli get abc123 --output json
+$ caspaste-cli get abc123 --output json
 {
   "id": "abc123",
   "content": "Hello world example code snippet",
@@ -43714,7 +45375,7 @@ $ {projectname}-cli get abc123 --output json
 ### Table
 
 ```bash
-$ {projectname}-cli list --output table
+$ caspaste-cli list --output table
 ┌──────────┬─────────────────────────────────────────────┬──────────┬─────────────┐
 │ ID       │ Content                                     │ Language │ Expires     │
 ├──────────┼─────────────────────────────────────────────┼──────────┼─────────────┤
@@ -43727,7 +45388,7 @@ $ {projectname}-cli list --output table
 ### Plain
 
 ```bash
-$ {projectname}-cli get abc123 --output plain
+$ caspaste-cli get abc123 --output plain
 Hello world example code snippet
 ```
 
@@ -43742,18 +45403,18 @@ Each project defines its own commands based on its API.
 **Search/Query Services:**
 ```bash
 # Bare args = search term (no --query flag needed)
-{projectname}-cli golang tutorials        # Search for "golang tutorials"
-{projectname}-cli "exact phrase"          # Quoted = exact match
-{projectname}-cli --limit 5 golang        # Flags before search term OK
+caspaste-cli golang tutorials        # Search for "golang tutorials"
+caspaste-cli "exact phrase"          # Quoted = exact match
+caspaste-cli --limit 5 golang        # Flags before search term OK
 ```
 
 **Content/Paste Services:**
 ```bash
 # Detection order: stdin → file → directory → text
-echo "hello" | {projectname}-cli          # stdin detected → paste stdin
-{projectname}-cli notes.txt               # File exists → paste file content
-{projectname}-cli /path/to/dir            # Directory → error or list
-{projectname}-cli "some text here"        # Not file → paste as text
+echo "hello" | caspaste-cli          # stdin detected → paste stdin
+caspaste-cli notes.txt               # File exists → paste file content
+caspaste-cli /path/to/dir            # Directory → error or list
+caspaste-cli "some text here"        # Not file → paste as text
 ```
 
 **Detection Logic:**
@@ -43797,8 +45458,8 @@ func detectInput(args []string) (content string, source string) {
 
 **Explicit flags still work (override detection):**
 ```bash
-{projectname}-cli --file notes.txt        # Force file mode
-{projectname}-cli --text "notes.txt"      # Force text mode (not file)
+caspaste-cli --file notes.txt        # Force file mode
+caspaste-cli --text "notes.txt"      # Force text mode (not file)
 ```
 
 ## Build Integration
@@ -43810,15 +45471,15 @@ func detectInput(args []string) (content string, source string) {
 ```bash
 # Quick dev build (server + CLI + agent if exist)
 make dev
-# Output: ${TMPDIR}/${PROJECTORG}/${PROJECTNAME}-XXXXXX/{projectname}, {projectname}-cli, {projectname}-agent
+# Output: ${TMPDIR}/$CASJAY-FORKS/$CASPASTE-XXXXXX/caspaste, caspaste-cli, caspaste-agent
 
 # Production test build
 make local
-# Output: binaries/{projectname}, binaries/{projectname}-cli (with version)
+# Output: binaries/caspaste, binaries/caspaste-cli (with version)
 
 # Full release (all 8 platforms)
 make build
-# Output: binaries/{projectname}-{os}-{arch}, binaries/{projectname}-cli-{os}-{arch}
+# Output: binaries/caspaste-{os}-{arch}, binaries/caspaste-cli-{os}-{arch}
 ```
 
 ### CI/CD (Direct go build - NOT Makefile)
@@ -43826,13 +45487,13 @@ make build
 ```bash
 # CI/CD uses actions/setup-go@v5, NOT Docker containers
 # See PART 28: CI/CD WORKFLOWS for complete examples
-go build -ldflags "${LDFLAGS}" -o ${PROJECTNAME}-cli ./src/client
+go build -ldflags "${LDFLAGS}" -o $CASPASTE-cli ./src/client
 ```
 
 ### Directory Structure
 
 ```
-{projectname}/
+caspaste/
 ├── src/                    # Server application
 │   ├── main.go
 │   ├── config/
@@ -43908,7 +45569,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 client uses `common/terminal` from PART 7:
 ```go
 // CLI uses common/terminal package (defined in PART 7)
-import "{projectorg}/{projectname}/common/terminal"
+import "casjay-forks/caspaste/common/terminal"
 
 func (m SizeMode) MaxTableColumns() int {
     switch m {
@@ -44183,19 +45844,19 @@ stty rows 10 cols 40
 
 ```bash
 # Connection error
-$ {projectname}-cli list
-Error: cannot connect to server at https://{projectname}.example.com
+$ caspaste-cli list
+Error: cannot connect to server at https://caspaste.example.com
   Check your network connection and server address.
   Use --server to specify a different server.
 
 # Auth error
-$ {projectname}-cli admin users --token invalid
+$ caspaste-cli admin users --token invalid
 Error: authentication failed
   Your API token is invalid or expired.
   Update server.token in cli.yml or use --token flag.
 
 # Not found
-$ {projectname}-cli get abc123
+$ caspaste-cli get abc123
 Error: resource not found: abc123
 ```
 
@@ -44204,10 +45865,10 @@ Error: resource not found: abc123
 When server is reachable, `--version` can show extended info:
 
 ```bash
-$ {projectname}-cli --version
-{projectname}-cli {projectversion} ({COMMIT_SHA}) built {BUILD_DATE}
+$ caspaste-cli --version
+caspaste-cli {projectversion} ({COMMIT_SHA}) built {BUILD_DATE}
 
-Server: https://{projectname}.example.com
+Server: https://caspaste.example.com
 Server Version: {projectversion} (compatible)
 
 Build Info:
@@ -44549,7 +46210,7 @@ Answer these questions for your specific project:
 
 | Attribute | Value |
 |-----------|-------|
-| Binary naming | `{projectname}-agent-{os}-{arch}` |
+| Binary naming | `caspaste-agent-{os}-{arch}` |
 | Examples | `monitor-agent-linux-amd64`, `monitor-agent-windows-arm64` |
 | Versioning | Same as server and client |
 | Build | Part of same Makefile (`make build` builds all if `src/agent/` exists) |
@@ -44673,12 +46334,12 @@ register                      # Interactive registration with server
 ### Agent --help Output
 
 ```bash
-$ {projectname}-agent --help
-{projectname}-agent {projectversion} - Agent for {projectname}
+$ caspaste-agent --help
+caspaste-agent {projectversion} - Agent for caspaste
 
 Usage:
-  {projectname}-agent [flags]
-  {projectname}-agent [command]
+  caspaste-agent [flags]
+  caspaste-agent [command]
 
 Commands:
   status                        Show agent status
@@ -44715,10 +46376,10 @@ Shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
 
 ```bash
 # Default: run agent (foreground)
-{projectname}-agent
+caspaste-agent
 
 # Status: show current agent status
-{projectname}-agent status
+caspaste-agent status
   Agent: monitor-agent v1.0.0
   Hostname: web-server-01
   Server: https://monitor.example.com
@@ -44727,14 +46388,14 @@ Shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
   Next Report: 2025-01-15 10:31:00
 
 # Test: verify server connection
-{projectname}-agent test
+caspaste-agent test
   Testing connection to https://monitor.example.com...
   ✅ Connection successful
   ✅ Authentication valid
   ✅ Agent registered
 
 # Connect: one-liner from server panel (preferred)
-{projectname}-agent --server https://monitor.example.com --token adm_agt_abc123def456...
+caspaste-agent --server https://monitor.example.com --token adm_agt_abc123def456...
   Connecting to https://monitor.example.com...
   ✅ Connection successful
   ✅ Token validated
@@ -44747,11 +46408,11 @@ Shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
   Agent is now sending data to server for admin scope.
 
 # Service management
-{projectname}-agent --service install   # Install as system service
-{projectname}-agent --service start     # Start service
-{projectname}-agent --service stop      # Stop service
-{projectname}-agent --service status    # Show service status
-{projectname}-agent --service uninstall # Remove service
+caspaste-agent --service install   # Install as system service
+caspaste-agent --service start     # Start service
+caspaste-agent --service stop      # Stop service
+caspaste-agent --service status    # Show service status
+caspaste-agent --service uninstall # Remove service
 ```
 
 ### Agent Setup Process 
@@ -44769,7 +46430,7 @@ Shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
 │                                                             │
 │  2. On Target Machine (one command)                            │
 │     └─→ Paste and run the one-liner:                        │
-│         {projectname}-agent --server {url} --token {token}  │
+│         caspaste-agent --server {url} --token {token}  │
 │     └─→ Agent connects, registers, saves config             │
 │     └─→ Server shows notification: "{name} has connected"   │
 │                                                             │
@@ -44866,8 +46527,8 @@ func GenerateAgentToken(scope AgentScope) string {
 **File: `{config_dir}/agent.yml`** (same directory as server.yml)
 
 ```yaml
-# /etc/{projectorg}/{projectname}/agent.yml (root)
-# ~/.config/{projectorg}/{projectname}/agent.yml (user)
+# /etc/casjay-forks/caspaste/agent.yml (root)
+# ~/.config/casjay-forks/caspaste/agent.yml (user)
 # Agent configuration - ALL options with defaults
 
 # Server connection
@@ -44924,18 +46585,18 @@ mode: ""                           # production, development (empty = auto-detec
 | Priority | Source | Example |
 |----------|--------|---------|
 | 1 | CLI flag | `--server https://...` |
-| 2 | Environment variable | `{PROJECTNAME}_AGENT_SERVER=https://...` |
+| 2 | Environment variable | `CASPASTE_AGENT_SERVER=https://...` |
 | 3 | Config file | `server.primary: https://...` |
 | 4 | Compiled default | (none for server, must be configured) |
 
 **Environment variable mapping:**
 ```bash
-# Pattern: {PROJECTNAME}_AGENT_{KEY} or {PROJECTNAME}_{KEY}
-{PROJECTNAME}_AGENT_SERVER_PRIMARY="https://example.com"
-{PROJECTNAME}_AGENT_TOKEN="adm_agt_abc123..."
-{PROJECTNAME}_AGENT_HOSTNAME="web-server-01"
-{PROJECTNAME}_AGENT_COLLECTION_INTERVAL=30
-{PROJECTNAME}_DEBUG=true
+# Pattern: CASPASTE_AGENT_{KEY} or CASPASTE_{KEY}
+CASPASTE_AGENT_SERVER_PRIMARY="https://example.com"
+CASPASTE_AGENT_TOKEN="adm_agt_abc123..."
+CASPASTE_AGENT_HOSTNAME="web-server-01"
+CASPASTE_AGENT_COLLECTION_INTERVAL=30
+CASPASTE_DEBUG=true
 ```
 
 ### Agent Cluster Failover 
@@ -45010,10 +46671,10 @@ mode: ""                           # production, development (empty = auto-detec
 | **Execution context** | User context | System context |
 | **Runs as** | Current user | root/Administrator |
 | **Config base path** | `~/` (user home) | `/` (system root) |
-| **Config directory** | `~/.config/{projectorg}/{projectname}/` | `/etc/{projectorg}/{projectname}/` |
-| **Data directory** | `~/.local/share/{projectorg}/{projectname}/` | `/var/lib/{projectorg}/{projectname}/` |
-| **Log directory** | `~/.local/log/{projectorg}/{projectname}/` | `/var/log/{projectorg}/{projectname}/` |
-| **Cache directory** | `~/.cache/{projectorg}/{projectname}/` | `/var/cache/{projectorg}/{projectname}/` |
+| **Config directory** | `~/.config/casjay-forks/caspaste/` | `/etc/casjay-forks/caspaste/` |
+| **Data directory** | `~/.local/share/casjay-forks/caspaste/` | `/var/lib/casjay-forks/caspaste/` |
+| **Log directory** | `~/.local/log/casjay-forks/caspaste/` | `/var/log/casjay-forks/caspaste/` |
+| **Cache directory** | `~/.cache/casjay-forks/caspaste/` | `/var/cache/casjay-forks/caspaste/` |
 | **Privilege level** | Normal user | Elevated (root/admin) |
 | **System access** | User files only | Full system access |
 
@@ -45028,24 +46689,24 @@ mode: ""                           # production, development (empty = auto-detec
 
 ```bash
 # Client (user context - runs as "alice")
-~/.config/{projectorg}/{projectname}/cli.yml        # Alice's config
-~/.local/share/{projectorg}/{projectname}/          # Alice's data
-~/.local/log/{projectorg}/{projectname}/cli.log     # Alice's logs
+~/.config/casjay-forks/caspaste/cli.yml        # Alice's config
+~/.local/share/casjay-forks/caspaste/          # Alice's data
+~/.local/log/casjay-forks/caspaste/cli.log     # Alice's logs
 
 # Agent (system context - runs as root)
-/etc/{projectorg}/{projectname}/agent.yml           # System config
-/var/lib/{projectorg}/{projectname}/                # System data
-/var/log/{projectorg}/{projectname}/agent.log       # System logs
+/etc/casjay-forks/caspaste/agent.yml           # System config
+/var/lib/casjay-forks/caspaste/                # System data
+/var/log/casjay-forks/caspaste/agent.log       # System logs
 ```
 
 **Platform-Specific Paths:**
 
 | Platform | Client Config | Agent Config |
 |----------|-------------------|--------------|
-| **Linux** | `~/.config/{projectorg}/{projectname}/` | `/etc/{projectorg}/{projectname}/` |
-| **macOS** | `~/Library/Application Support/{projectorg}/{projectname}/` | `/Library/Application Support/{projectorg}/{projectname}/` |
-| **Windows** | `%APPDATA%\{projectorg}\{projectname}\` | `%PROGRAMDATA%\{projectorg}\{projectname}\` |
-| **FreeBSD** | `~/.config/{projectorg}/{projectname}/` | `/usr/local/etc/{projectorg}/{projectname}/` |
+| **Linux** | `~/.config/casjay-forks/caspaste/` | `/etc/casjay-forks/caspaste/` |
+| **macOS** | `~/Library/Application Support/casjay-forks/caspaste/` | `/Library/Application Support/casjay-forks/caspaste/` |
+| **Windows** | `%APPDATA%\casjay-forks\caspaste\` | `%PROGRAMDATA%\casjay-forks\caspaste\` |
+| **FreeBSD** | `~/.config/casjay-forks/caspaste/` | `/usr/local/etc/casjay-forks/caspaste/` |
 
 ### Purpose Matching 
 
@@ -45060,7 +46721,7 @@ All three binaries are built for the SAME project and work together as a system:
 │                                                                            │
 │  ┌─────────────────────┐                                                   │
 │  │       SERVER        │  Central server - serves API, WebUI, manages data│
-│  │    {projectname}    │  Runs as service/daemon                           │
+│  │    caspaste    │  Runs as service/daemon                           │
 │  └──────────┬──────────┘                                                   │
 │             │                                                              │
 │             │ API                                                          │
@@ -45069,11 +46730,11 @@ All three binaries are built for the SAME project and work together as a system:
 │       │           │                                                        │
 │       ▼           ▼                                                        │
 │  ┌─────────────────────┐     ┌─────────────────────────┐                   │
-│  │ {projectname} CLIENT │     │         AGENT           │                   │
-│  │  {projectname}-cli  │     │  {projectname}-agent    │                   │
+│  │ caspaste CLIENT │     │         AGENT           │                   │
+│  │  caspaste-cli  │     │  caspaste-agent    │                   │
 │  └─────────────────────┘     └─────────────────────────┘                   │
 │                                                                            │
-│  {projectname} CLIENT:                AGENT:                                   │
+│  caspaste CLIENT:                AGENT:                                   │
 │  • Full remote admin              • Purpose-specific daemon                │
 │  • TUI/CLI/GUI modes              • Headless, no admin                     │
 │  • User context (~/)              • System context (/)                     │
@@ -45173,11 +46834,11 @@ SERVER STARTUP                          AGENT STARTUP
 
 **Admin flags (Client only):**
 ```bash
-{projectname}-cli --admin users list          # List all users
-{projectname}-cli --admin users create ...    # Create user
-{projectname}-cli --admin server status       # Server status
-{projectname}-cli --admin server config       # View/edit config
-{projectname}-cli --admin backup create       # Create backup
+caspaste-cli --admin users list          # List all users
+caspaste-cli --admin users create ...    # Create user
+caspaste-cli --admin server status       # Server status
+caspaste-cli --admin server config       # View/edit config
+caspaste-cli --admin backup create       # Create backup
 ```
 
 ### Agent = Purpose-Specific Worker 
@@ -45279,18 +46940,18 @@ src/
 
 ```
 binaries/
-├── {projectname}                         # Local server binary - for testing
-├── {projectname}-cli                     # Local CLI binary (if src/client/ exists)
-├── {projectname}-agent                   # Local agent binary (if src/agent/ exists)
-├── {projectname}-linux-amd64             # Server
-├── {projectname}-linux-arm64
-├── {projectname}-cli-linux-amd64         # CLI (if src/client/ exists)
-├── {projectname}-cli-linux-arm64
-├── {projectname}-agent-linux-amd64       # Agent (if src/agent/ exists)
-├── {projectname}-agent-linux-arm64
-├── {projectname}-agent-windows-amd64.exe
-├── {projectname}-agent-darwin-amd64
-└── {projectname}-agent-darwin-arm64
+├── caspaste                         # Local server binary - for testing
+├── caspaste-cli                     # Local CLI binary (if src/client/ exists)
+├── caspaste-agent                   # Local agent binary (if src/agent/ exists)
+├── caspaste-linux-amd64             # Server
+├── caspaste-linux-arm64
+├── caspaste-cli-linux-amd64         # CLI (if src/client/ exists)
+├── caspaste-cli-linux-arm64
+├── caspaste-agent-linux-amd64       # Agent (if src/agent/ exists)
+├── caspaste-agent-linux-arm64
+├── caspaste-agent-windows-amd64.exe
+├── caspaste-agent-darwin-amd64
+└── caspaste-agent-darwin-arm64
 ```
 
 **See PART 26 (Makefile) for full build details.**
@@ -45734,7 +47395,7 @@ var UsernameBlocklist = []string{
     "webmaster", "hostmaster", "abuse", "spam", "junk", "trash",
 
     // Project-specific (dynamic)
-    "{projectname}", "{projectorg}",
+    "caspaste", "casjay-forks",
 }
 ```
 
@@ -46345,11 +48006,11 @@ The Server Admin (administrator with access to the server/binary) has ONE recove
 
 | Scenario | Recovery Method |
 |----------|-----------------|
-| Admin forgot password | `{projectname} --maintenance setup` |
-| Admin lost API token | `{projectname} --maintenance setup` |
-| Admin lost recovery keys | `{projectname} --maintenance setup` |
-| Admin lost 2FA + no recovery keys | `{projectname} --maintenance setup` |
-| Admin lost everything | `{projectname} --maintenance setup` |
+| Admin forgot password | `caspaste --maintenance setup` |
+| Admin lost API token | `caspaste --maintenance setup` |
+| Admin lost recovery keys | `caspaste --maintenance setup` |
+| Admin lost 2FA + no recovery keys | `caspaste --maintenance setup` |
+| Admin lost everything | `caspaste --maintenance setup` |
 
 **This requires:**
 - Console/SSH access to the server to run the binary
@@ -47386,7 +49047,7 @@ Both CLI and agent binaries automatically call `/api/autodiscover` when connecti
 
 ```bash
 # Manual check (for debugging)
-curl https://api.example.com/api/autodiscover
+curl -q -LSsf https://api.example.com/api/autodiscover
 ```
 
 **Note:** This endpoint is NOT versioned (`/api/autodiscover` not `/api/{api_version}/autodiscover`) because clients need it BEFORE they know the API version.
@@ -50634,7 +52295,7 @@ IDEA.md must follow this structure:
 ## IDEA.md Template
 
 ```markdown
-# {projectname}
+# caspaste
 
 ## Project Description
 
@@ -50957,7 +52618,7 @@ A weather aggregation API that fetches data from external providers, caches it, 
 | `go build` locally | `make dev` or `make local` or `make build` |
 | `go test` locally | `make test` (includes coverage enforcement) |
 | `go mod tidy` locally | Handled by `make build/local/dev` automatically |
-| `./binaries/{projectname}` locally | Run binary inside Docker/Incus container |
+| `./binaries/caspaste` locally | Run binary inside Docker/Incus container |
 | Go installed locally | Use Makefile targets (they use Docker internally) |
 
 **GODIR (Go Module Cache):**
@@ -50971,14 +52632,14 @@ GOCACHE := $(HOME)/.local/share/go/build  # Local machine path for build cache
 | NEVER | ALWAYS |
 |-------|--------|
 | `docker compose up` in project dir | Use temp directory workflow |
-| Runtime data in project directory | `/tmp/{projectorg}/{projectname}-XXXXXX/` |
-| `mktemp -d` (bare) | `mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX"` |
-| `/tmp/myfile` | `/tmp/{projectorg}/{projectname}-XXXXXX/myfile` |
+| Runtime data in project directory | `/tmp/casjay-forks/caspaste-XXXXXX/` |
+| `mktemp -d` (bare) | `mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX"` |
+| `/tmp/myfile` | `/tmp/casjay-forks/caspaste-XXXXXX/myfile` |
 
 ```bash
 # Temp dir workflow
-mkdir -p "${TMPDIR:-/tmp}/${PROJECTORG}"
-TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/${PROJECTORG}/${PROJECTNAME}-XXXXXX")
+mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/$CASJAY-FORKS/$CASPASTE-XXXXXX")
 mkdir -p "$TEMP_DIR/rootfs/config" "$TEMP_DIR/rootfs/data"
 cp docker/docker-compose.test.yml "$TEMP_DIR/docker-compose.yml"
 cd "$TEMP_DIR" && docker compose up -d
@@ -51026,7 +52687,7 @@ make docker # Build Docker image
 |------|------------------|------------|
 | Config | `/tmp/{org}/{proj}-XXX/rootfs/config/` | `/etc/{org}/{proj}/` (Linux) |
 | Data | `/tmp/{org}/{proj}-XXX/rootfs/data/` | `/var/lib/{org}/{proj}/` (Linux) |
-| Binary | `binaries/{projectname}` | `/usr/local/bin/{projectname}` |
+| Binary | `binaries/caspaste` | `/usr/local/bin/caspaste` |
 
 ---
 
@@ -51063,12 +52724,12 @@ make docker # Build Docker image
 - [ ] BSD paths: Same as Linux
 - [ ] Docker paths: `/config/`, `/data/`
 - [ ] Root vs user path detection works
-- [ ] All path functions use `{projectorg}/{projectname}` structure
+- [ ] All path functions use `casjay-forks/caspaste` structure
 
 **PART 5: Configuration**
 - [ ] Config file: `server.yml` (not .yaml, not .json)
 - [ ] Hierarchy: CLI flags > env vars > file > defaults
-- [ ] Environment prefix: `{PROJECTNAME}_`
+- [ ] Environment prefix: `CASPASTE_`
 - [ ] Boolean values: true/false, yes/no, 1/0, on/off all work
 - [ ] All config values have sane defaults
 - [ ] Unknown config keys are ERRORS, not ignored
@@ -51267,8 +52928,8 @@ make docker # Build Docker image
 - [ ] Backup includes: database, config, uploads
 - [ ] Restore is atomic (all or nothing)
 - [ ] **Backup verification after creation** (checksum, decrypt, extract, DB integrity)
-- [ ] **Daily incremental** `{projectname}-daily.tar.gz[.enc]` always valid
-- [ ] **Hourly incremental** `{projectname}-hourly.tar.gz[.enc]` (if enabled)
+- [ ] **Daily incremental** `caspaste-daily.tar.gz[.enc]` always valid
+- [ ] **Hourly incremental** `caspaste-hourly.tar.gz[.enc]` (if enabled)
 - [ ] **Cluster mode**: each node maintains own valid backups (max_backups per node)
 
 ### Phase 8: Maintenance (PARTS 23-26)
@@ -51406,12 +53067,12 @@ make docker # Build Docker image
 **PART 33: Client & Agent**
 
 *Client (REQUIRED for all projects):*
-- [ ] Binary: `{projectname}-cli`
+- [ ] Binary: `caspaste-cli`
 - [ ] `src/client/` directory exists
 - [ ] Same version as server
 - [ ] CLI mode (standard commands)
 - [ ] TUI mode (interactive)
-- [ ] Config: `~/.config/{projectorg}/{projectname}/cli.yml`
+- [ ] Config: `~/.config/casjay-forks/caspaste/cli.yml`
 - [ ] Theme matching server (dark default)
 - [ ] Shell completions (bash, zsh, fish, powershell)
 - [ ] All server API operations accessible via CLI
@@ -51422,12 +53083,12 @@ make docker # Build Docker image
   - [ ] Automatic failover to next node if primary fails
 
 *Agent (only for monitoring/remote management projects):*
-- [ ] Binary: `{projectname}-agent`
+- [ ] Binary: `caspaste-agent`
 - [ ] `src/agent/` directory exists
 - [ ] Runs directly on system, NOT in container
 - [ ] Same version as server
 - [ ] Systemd/launchd/Windows service support
-- [ ] Config: `/etc/{projectorg}/{projectname}/agent.yml`
+- [ ] Config: `/etc/casjay-forks/caspaste/agent.yml`
 - [ ] Connects to central server
 - [ ] Same flags as server EXCEPT no `--port`/`--address` (agents don't serve HTTP)
 - [ ] Communication pattern documented:
@@ -51639,7 +53300,7 @@ make docker # Build Docker image
 ### Client Type Detection & Response 
 
 **Three Types of CLI Tools:**
-- [ ] **Our Client** (`{projectname}-cli`) - INTERACTIVE, receives JSON, renders own TUI/GUI
+- [ ] **Our Client** (`caspaste-cli`) - INTERACTIVE, receives JSON, renders own TUI/GUI
 - [ ] **Text Browsers** (lynx, w3m, links, elinks) - INTERACTIVE, receive no-JS HTML via `renderNoJSHTML()`, NO JavaScript
 - [ ] **HTTP Tools** (curl, wget, httpie) - NON-INTERACTIVE, receive formatted text via `HTML2TextConverter()`
 
@@ -52044,7 +53705,7 @@ Before starting integration:
 ## Example TODO.AI.md for Integration
 
 ```markdown
-# Integration Tasks for {projectname}
+# Integration Tasks for caspaste
 
 ## Critical (P0) - Do First
 
@@ -52121,15 +53782,15 @@ When bootstrapping a new project from this specification:
 ### Phase 1: Project Initialization
 
 1. **Confirm project details:**
-   - Project name: `{projectname}`
-   - Organization: `{projectorg}`
+   - Project name: `caspaste`
+   - Organization: `casjay-forks`
    - Description: What does this project do?
    - Primary purpose: What problem does it solve?
 
 2. **Create directory structure:**
    ```bash
-   mkdir -p {projectname}
-   cd {projectname}
+   mkdir -p caspaste
+   cd caspaste
 
    # Create all required directories
    mkdir -p src/{config,server,swagger,graphql,mode,paths,ssl,scheduler,service,admin}
@@ -52192,7 +53853,7 @@ When bootstrapping a new project from this specification:
 
 1. **Initialize Go module:**
    ```bash
-   go mod init github.com/{projectorg}/{projectname}
+   go mod init github.com/casjay-forks/caspaste
    ```
 
 2. **Create src/main.go** - Minimal entry point

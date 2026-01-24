@@ -30,8 +30,9 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - MUST write `.git/COMMIT_MESS` file (AI cannot git commit)
 
 ### Recent Changes (This Session)
-- **Updated:** AI.md replaced with new template from TEMPLATE.md
-- **Updated:** AI.md PART 3 filled in with project info (caspaste, casjay-forks)
+- **REFRESHED:** AI.md re-copied from ~/Projects/github/apimgr/TEMPLATE.md (fresh template)
+- **Updated:** Placeholders replaced ({projectname}→caspaste, {projectorg}→casjay-forks)
+- **Updated:** AI.md PART 3 filled in with project description and features
 - **Created:** Jenkinsfile per AI.md PART 28 requirement
 - **Verified:** .claude/rules/ has all 14 required files
 - **Verified:** tests/ has run_tests.sh, docker.sh, incus.sh
