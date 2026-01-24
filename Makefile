@@ -8,8 +8,8 @@ GH ?= gh
 NAME := caspaste
 CLI_NAME := caspaste-cli
 ORGANIZATION := casjay-forks
-MAIN_GO := ./src/cmd/caspaste
-CLI_MAIN_GO := ./src/cmd/caspaste-cli
+MAIN_GO := ./src/server
+CLI_MAIN_GO := ./src/client
 
 # Version management
 VERSION_FILE := release.txt
@@ -33,9 +33,13 @@ RELEASE_DIR := ./releases
 GODIR ?= $(HOME)/.local/share/go
 GOCACHEDIR ?= $(HOME)/.local/share/go/build
 
+# Build info per AI.md PART 26
+COMMIT_ID := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 # Build flags
-LDFLAGS := -w -s -X "main.Version=$(APP_VERSION)"
-STATIC_FLAGS := -tags netgo -ldflags '$(LDFLAGS) -extldflags "-static"'
+LDFLAGS := -w -s -X main.Version=$(APP_VERSION) -X main.CommitID=$(COMMIT_ID) -X main.BuildDate=$(BUILD_DATE) -extldflags -static
+STATIC_FLAGS := -tags netgo -ldflags "$(LDFLAGS)"
 
 # Docker build environment
 DOCKER_IMAGE := golang:alpine
@@ -53,7 +57,7 @@ DOCKER_RUN_LOCAL = docker run --platform linux/$$(uname -m | sed 's/x86_64/amd64
 # For cross-platform builds
 DOCKER_RUN = docker run $(DOCKER_OPTS) $(DOCKER_IMAGE)
 
-# Platforms: os_arch
+# Platforms: os_arch (8 platforms per AI.md PART 26)
 PLATFORMS := \
     linux_amd64 \
     linux_arm64 \
@@ -62,11 +66,9 @@ PLATFORMS := \
     windows_amd64 \
     windows_arm64 \
     freebsd_amd64 \
-    freebsd_arm64 \
-    openbsd_amd64 \
-    openbsd_arm64
+    freebsd_arm64
 
-.PHONY: build release docker test local help clean
+.PHONY: build release docker test local dev help clean
 
 # Default target
 help:
@@ -74,17 +76,39 @@ help:
 	@echo "====================================="
 	@echo ""
 	@echo "Targets:"
+	@echo "  make dev     - Quick build to temp dir (no version info, debugging)"
+	@echo "  make local   - Build for current OS/arch only (fast, with version)"
 	@echo "  make build   - Build all binaries for all OS/arch (./binaries/)"
+	@echo "  make test    - Run all tests"
 	@echo "  make release - Build production binaries and create GitHub release"
 	@echo "  make docker  - Build and push Docker images to ghcr.io"
-	@echo "  make test    - Run all tests"
-	@echo "  make local   - Build for current OS/arch only (fast)"
 	@echo "  make clean   - Remove build artifacts"
 	@echo ""
 	@echo "Version: $(APP_VERSION)"
 	@echo "Go cache: $(GODIR)"
 	@echo "Note: All Go builds run inside Docker (golang:alpine)"
 	@echo ""
+
+# Quick dev build to temp directory (no version info)
+# Per AI.md PART 28: make dev for quick debugging
+TEMP_DIR := /tmp/$(ORGANIZATION)/$(NAME)-dev
+dev:
+	@mkdir -p $(TEMP_DIR) $(GODIR)/build $(GODIR)/pkg/mod
+	@echo "Building $(NAME) (dev) to $(TEMP_DIR)..."
+	@docker run --rm \
+		-v "$(CURDIR)":/build \
+		-v "$(GODIR)":/go \
+		-v "$(TEMP_DIR)":/out \
+		-w /build \
+		-e CGO_ENABLED=0 \
+		-e GOCACHE=/go/build \
+		-e GOMODCACHE=/go/pkg/mod \
+		--platform linux/$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
+		$(DOCKER_IMAGE) sh -c '\
+			go mod tidy && \
+			go build -trimpath -tags netgo -ldflags "-w -s" -o /out/$(NAME) $(MAIN_GO) && \
+			go build -trimpath -tags netgo -ldflags "-w -s" -o /out/$(CLI_NAME) $(CLI_MAIN_GO)'
+	@echo "Built: $(TEMP_DIR)/$(NAME) $(TEMP_DIR)/$(CLI_NAME)"
 
 # Build for runtime machine's architecture
 local:
@@ -160,7 +184,7 @@ release:
 	@$(GH) release create v$(APP_VERSION) --title "$(NAME) v$(APP_VERSION)" --generate-notes $(RELEASE_DIR)/*
 	@echo "Released v$(APP_VERSION)"
 
-# Build and push Docker images
+# Build and push Docker images (per AI.md PART 27)
 docker:
 	@if [ ! -f $(VERSION_FILE) ]; then echo "$(APP_VERSION)" > $(VERSION_FILE); fi
 	@COMMIT_ID=$$(git rev-parse --short HEAD); \
@@ -168,10 +192,11 @@ docker:
 	REPO="ghcr.io/$(ORGANIZATION)/$(NAME)"; \
 	echo "Building Docker images v$(APP_VERSION)..."; \
 	docker buildx build \
+		-f docker/Dockerfile \
 		--platform linux/amd64,linux/arm64 \
 		--build-arg VERSION=$(APP_VERSION) \
-		--build-arg BUILD_DATE=$$BUILD_DATE \
-		--build-arg VCS_REF=$$COMMIT_ID \
+		--build-arg BUILD_DATE="$$BUILD_DATE" \
+		--build-arg COMMIT_ID=$$COMMIT_ID \
 		--tag $$REPO:$(APP_VERSION) \
 		--tag $$REPO:$$COMMIT_ID \
 		--tag $$REPO:latest \

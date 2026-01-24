@@ -50,29 +50,28 @@ VERSION=2.0.0 make build   # Build with specific version
 ```
 caspaste/
 ├── src/
-│   ├── cmd/
-│   │   ├── caspaste/           # Main server entry point
-│   │   └── caspaste-cli/       # CLI client
-│   └── internal/               # Internal packages (16 packages)
-│       ├── apiv1/              # REST API v1 handlers
-│       ├── web/                # Web UI handlers and templates
-│       │   └── data/           # Embedded assets (templates, JS, CSS, themes)
-│       ├── storage/            # Database abstraction layer
-│       ├── config/             # Configuration management
-│       ├── cli/                # CLI argument parsing
-│       ├── logger/             # Structured logging
-│       ├── validation/         # Input validation
-│       ├── caspasswd/          # Authentication (Argon2id)
-│       ├── netshare/           # Rate limiting and networking
-│       ├── service/            # Cross-platform service management
-│       ├── privilege/          # UID/GID management
-│       ├── template/           # Template utilities
-│       ├── raw/                # Raw paste serving
-│       ├── portutil/           # Port availability checking
-│       └── lineend/            # Line ending conversion
+│   ├── server/                 # Main server entry point
+│   ├── client/                 # CLI client entry point
+│   ├── apiv1/                  # REST API v1 handlers
+│   ├── web/                    # Web UI handlers and templates
+│   │   └── data/               # Embedded assets (templates, JS, CSS, themes)
+│   ├── storage/                # Database abstraction layer
+│   ├── config/                 # Configuration management
+│   ├── cli/                    # CLI argument parsing
+│   ├── logger/                 # Structured logging
+│   ├── validation/             # Input validation
+│   ├── caspasswd/              # Authentication (Argon2id)
+│   ├── netshare/               # Rate limiting and networking
+│   ├── service/                # Cross-platform service management
+│   ├── privilege/              # UID/GID management
+│   ├── template/               # Template utilities
+│   ├── raw/                    # Raw paste serving
+│   ├── portutil/               # Port availability checking
+│   └── lineend/                # Line ending conversion
+├── docker/
+│   ├── Dockerfile              # Multi-stage Docker build
+│   └── docker-compose*.yml     # Compose files
 ├── Makefile                    # Build automation
-├── Dockerfile                  # Multi-stage Docker build
-├── docker-compose.yml          # Local development
 ├── go.mod / go.sum             # Go module dependencies
 └── README.md                   # User documentation
 ```
@@ -152,8 +151,8 @@ import (
 
     "github.com/alecthomas/chroma/v2/lexers"
 
-    "github.com/casjay-forks/caspaste/src/internal/config"
-    "github.com/casjay-forks/caspaste/src/internal/storage"
+    "github.com/casjay-forks/caspaste/src/config"
+    "github.com/casjay-forks/caspaste/src/storage"
 )
 ```
 
@@ -203,8 +202,8 @@ make test    # Runs: go test -v -cover ./...
 ### Test Files
 
 Located alongside source files with `_test.go` suffix:
-- `src/internal/cli/duration_test.go`
-- `src/internal/lineend/lineend_test.go`
+- `src/cli/duration_test.go`
+- `src/lineend/lineend_test.go`
 
 ### Writing Tests
 
@@ -239,7 +238,7 @@ func TestFunctionName(t *testing.T) {
 
 ### Config File
 
-YAML configuration at `caspaste.yml`:
+YAML configuration at `server.yml`:
 
 ```yaml
 server:
@@ -287,7 +286,7 @@ Always validate user input:
 
 ## Web UI Assets
 
-### Templates (src/internal/web/data/)
+### Templates (src/web/data/)
 
 - `main.tmpl` - Main page
 - `paste.tmpl` - Paste view
@@ -304,14 +303,14 @@ Always validate user input:
 
 ### Themes
 
-12+ syntax highlighting themes in `data/theme/`:
+12+ syntax highlighting themes in `src/web/data/theme/`:
 - dracula, nord, gruvbox-dark, tokyo-night
 - catppuccin-mocha, one-dark, github-light
 - nord-light, gruvbox-light, catppuccin-latte, solarized-light
 
 ### Localization
 
-4 languages in `data/locale/`:
+4 languages in `src/web/data/locale/`:
 - English (en)
 - German (de)
 - Bengali (bn_IN)
@@ -321,26 +320,26 @@ Always validate user input:
 
 ### Adding a New API Endpoint
 
-1. Add handler in `src/internal/apiv1/`
-2. Register route in `src/internal/apiv1/apiv1.go`
+1. Add handler in `src/apiv1/`
+2. Register route in `src/apiv1/apiv1.go`
 3. Add rate limiting if needed
 4. Update API documentation
 
 ### Adding a New Theme
 
-1. Create theme file in `src/internal/web/data/theme/`
-2. Add to themes list in `src/internal/web/themes.go`
+1. Create theme file in `src/web/data/theme/`
+2. Add to themes list in `src/web/themes.go`
 
 ### Adding a New Locale
 
-1. Create locale file in `src/internal/web/data/locale/`
+1. Create locale file in `src/web/data/locale/`
 2. Follow existing locale file structure
-3. Add to locales list in `src/internal/web/locale.go`
+3. Add to locales list in `src/web/locale.go`
 
 ### Modifying Database Schema
 
-1. Update model in `src/internal/storage/`
-2. Add migration logic in `src/internal/storage/migrate.go`
+1. Update model in `src/storage/`
+2. Add migration logic in `src/storage/migrate.go`
 3. Test with all three database backends
 
 ## Deployment
@@ -391,8 +390,8 @@ caspaste --maintenance restore
 ### Logs
 
 Default log locations:
-- Linux (root): `/var/log/caspaste/`
-- Linux (user): `~/.local/log/caspaste/`
+- Linux (root): `/var/log/casjay-forks/caspaste/`
+- Linux (user): `~/.local/log/casjay-forks/caspaste/`
 - macOS: `~/Library/Logs/CasPaste/`
 - Windows: `%LOCALAPPDATA%\CasPaste\Logs\`
 

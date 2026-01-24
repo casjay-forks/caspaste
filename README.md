@@ -108,7 +108,7 @@ sudo mv caspaste-linux-amd64 /usr/local/bin/caspaste
 caspaste
 
 # Or specify directories
-caspaste --port 8080 --data /var/lib/caspaste --config /etc/caspaste
+caspaste --port 8080 --data /var/lib/casjay-forks/caspaste --config /etc/casjay-forks/caspaste
 ```
 
 ### Service Management
@@ -277,7 +277,7 @@ On first run, settings are resolved in this order:
 2. **Environment variables** (`CASPASTE_*` prefix)
 3. **Platform-specific defaults** (lowest priority)
 
-After initialization, the resolved values are saved to `caspaste.yml` and used for all future runs.
+After initialization, the resolved values are saved to `server.yml` and used for all future runs.
 
 ### Platform-Specific Directories
 
@@ -285,12 +285,12 @@ Directories are automatically determined based on the runtime platform and privi
 
 | Directory | Linux (root) | Linux (user) | macOS (user) | Windows |
 |-----------|--------------|--------------|--------------|---------|
-| **Config** | `/etc/caspaste` | `~/.config/caspaste` | `~/Library/Application Support/CasPaste/Config` | `%LOCALAPPDATA%\CasPaste\Config` |
-| **Data** | `/var/lib/caspaste` | `~/.local/share/caspaste` | `~/Library/Application Support/CasPaste` | `%LOCALAPPDATA%\CasPaste\Data` |
-| **Database** | `/var/lib/caspaste/db` | `~/.local/share/caspaste/db` | `~/Library/Application Support/CasPaste/db` | `%LOCALAPPDATA%\CasPaste\Data\db` |
-| **Logs** | `/var/log/caspaste` | `~/.local/log/caspaste` | `~/Library/Logs/CasPaste` | `%LOCALAPPDATA%\CasPaste\Logs` |
-| **Backup** | `/var/backups/caspaste` | `~/.local/share/caspaste/backups` | `~/Library/Application Support/CasPaste/Backups` | `%APPDATA%\CasPaste\Backups` |
-| **Cache** | `/var/cache/caspaste` | `~/.cache/caspaste` | `~/Library/Caches/CasPaste` | `%LOCALAPPDATA%\CasPaste\Cache` |
+| **Config** | `/etc/casjay-forks/caspaste` | `~/.config/casjay-forks/caspaste` | `~/Library/Application Support/CasPaste/Config` | `%LOCALAPPDATA%\CasPaste\Config` |
+| **Data** | `/var/lib/casjay-forks/caspaste` | `~/.local/share/casjay-forks/caspaste` | `~/Library/Application Support/CasPaste` | `%LOCALAPPDATA%\CasPaste\Data` |
+| **Database** | `/var/lib/casjay-forks/caspaste/db` | `~/.local/share/casjay-forks/caspaste/db` | `~/Library/Application Support/CasPaste/db` | `%LOCALAPPDATA%\CasPaste\Data\db` |
+| **Logs** | `/var/log/casjay-forks/caspaste` | `~/.local/log/casjay-forks/caspaste` | `~/Library/Logs/CasPaste` | `%LOCALAPPDATA%\CasPaste\Logs` |
+| **Backup** | `/var/backups/casjay-forks/caspaste` | `~/.local/share/casjay-forks/caspaste/backups` | `~/Library/Application Support/CasPaste/Backups` | `%APPDATA%\CasPaste\Backups` |
+| **Cache** | `/var/cache/casjay-forks/caspaste` | `~/.cache/casjay-forks/caspaste` | `~/Library/Caches/CasPaste` | `%LOCALAPPDATA%\CasPaste\Cache` |
 
 ### Auto-Generated Values
 
@@ -301,7 +301,7 @@ On first run, CasPaste automatically generates and persists:
 | **Port** | Finds first available port in range 64000-65535 |
 | **UID/GID** | Finds first available UID/GID in range 200-900 (Unix only) |
 | **Directories** | Creates platform-specific directories |
-| **Config file** | Generates `caspaste.yml` with all resolved values |
+| **Config file** | Generates `server.yml` with all resolved values |
 
 ### Config File Structure
 
@@ -351,11 +351,11 @@ web:
       name: Security Team
 
 directories:
-  data: /var/lib/caspaste         # Auto-set based on platform
-  config: /etc/caspaste           # Auto-set based on platform
-  db: /var/lib/caspaste/db        # Auto-set based on platform
-  cache: /var/cache/caspaste      # Auto-set based on platform
-  logs: /var/log/caspaste         # Auto-set based on platform
+  data: /var/lib/casjay-forks/caspaste         # Auto-set based on platform
+  config: /etc/casjay-forks/caspaste           # Auto-set based on platform
+  db: /var/lib/casjay-forks/caspaste/db        # Auto-set based on platform
+  cache: /var/cache/casjay-forks/caspaste      # Auto-set based on platform
+  logs: /var/log/casjay-forks/caspaste         # Auto-set based on platform
 
 logging:
   level: info                     # info, warn, error

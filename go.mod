@@ -5,6 +5,7 @@ go 1.23
 require (
 	github.com/alecthomas/chroma/v2 v2.4.0
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.7
 	golang.org/x/crypto v0.18.0
 	golang.org/x/net v0.20.0
@@ -15,7 +16,6 @@ require (
 require (
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
