@@ -12,6 +12,7 @@
 {{define "article"}}
 <h3>{{call .Translate `settings.Title`}}</h3>
 <form action="/settings" method="post">
+	<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 	<fieldset>
 		<legend>Preferences</legend>
 		<div class="form-group">

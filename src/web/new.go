@@ -29,6 +29,9 @@ type createTmpl struct {
 	AuthorURLDefault   string
 
 	Translate func(string, ...interface{}) template.HTML
+
+	// CSRF token for form protection per AI.md PART 11
+	CSRFToken string
 }
 
 func (data *Data) handleNewPaste(rw http.ResponseWriter, req *http.Request) error {
@@ -72,6 +75,7 @@ func (data *Data) handleNewPaste(rw http.ResponseWriter, req *http.Request) erro
 		AuthorEmailDefault: getCookie(req, "authorEmail"),
 		AuthorURLDefault:   getCookie(req, "authorURL"),
 		Translate:          data.Locales.findLocale(req).translate,
+		CSRFToken:          GetCSRFToken(req, 32),
 	}
 
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")

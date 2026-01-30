@@ -7,8 +7,13 @@
 package storage
 
 import (
+	"context"
 	"fmt"
+	"time"
 )
+
+// Migration timeout - longer for batch operations
+const migrationTimeout = 5 * time.Minute
 
 // MigrateDatabase migrates all data from source database to destination database
 func MigrateDatabase(sourceDriver, sourceSource, destDriver, destSource string) error {
@@ -41,9 +46,13 @@ func MigrateDatabase(sourceDriver, sourceSource, destDriver, destSource string) 
 		return fmt.Errorf("failed to initialize destination schema: %w", err)
 	}
 
+	// Migration timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), migrationTimeout)
+	defer cancel()
+
 	// Query all pastes from source
 	fmt.Println("Reading pastes from source database...")
-	rows, err := sourceDB.pool.Query(`
+	rows, err := sourceDB.pool.QueryContext(ctx, `
 		SELECT id, title, body, syntax, create_time, delete_time, one_use,
 		       author, author_email, author_url,
 		       COALESCE(is_file, 0), COALESCE(file_name, ''), COALESCE(mime_type, ''),
@@ -72,8 +81,9 @@ func MigrateDatabase(sourceDriver, sourceSource, destDriver, destSource string) 
 			return fmt.Errorf("failed to scan paste: %w", err)
 		}
 
-		// Insert into destination database
-		_, err = destDB.pool.Exec(`
+		// Insert into destination database with timeout
+		insertCtx, insertCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		_, err = destDB.pool.ExecContext(insertCtx, `
 			INSERT INTO pastes (id, title, body, syntax, create_time, delete_time, one_use,
 			                    author, author_email, author_url,
 			                    is_file, file_name, mime_type, is_editable, is_private, is_url, original_url)
@@ -83,6 +93,7 @@ func MigrateDatabase(sourceDriver, sourceSource, destDriver, destSource string) 
 			paste.Author, paste.AuthorEmail, paste.AuthorURL,
 			paste.IsFile, paste.FileName, paste.MimeType,
 			paste.IsEditable, paste.IsPrivate, paste.IsURL, paste.OriginalURL)
+		insertCancel()
 
 		if err != nil {
 			return fmt.Errorf("failed to insert paste %s: %w", paste.ID, err)

@@ -32,6 +32,9 @@ type settingsTmpl struct {
 	Language  string
 	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
+
+	// CSRF token for form protection per AI.md PART 11
+	CSRFToken string
 }
 
 // Pattern: /settings
@@ -82,6 +85,7 @@ func (data *Data) handleSettings(rw http.ResponseWriter, req *http.Request) erro
 			Language:         getCookie(req, "lang"),
 			Theme:            themeLookup,
 			Translate:        data.Locales.findLocale(req).translate,
+			CSRFToken:        GetCSRFToken(req, 32),
 		}
 
 		if dataTmpl.ThemeCode == "" {

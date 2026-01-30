@@ -7,15 +7,28 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"time"
 )
 
+// Default query timeouts per AI.md PART 10
+const (
+	// Simple queries (SELECT single row, INSERT, UPDATE, DELETE)
+	defaultQueryTimeout = 5 * time.Second
+	// List queries (SELECT multiple rows)
+	defaultListTimeout = 10 * time.Second
+	// Batch operations (DELETE expired, migrations)
+	defaultBatchTimeout = 30 * time.Second
+)
+
 type Paste struct {
-	ID         string `json:"id"` // Ignored when creating
+	// Ignored when creating
+	ID         string `json:"id"`
 	Title      string `json:"title"`
 	Body       string `json:"body"`
-	CreateTime int64  `json:"createTime"` // Ignored when creating
+	// Ignored when creating
+	CreateTime int64  `json:"createTime"`
 	DeleteTime int64  `json:"deleteTime"`
 	OneUse     bool   `json:"oneUse"`
 	Syntax     string `json:"syntax"`
@@ -25,13 +38,20 @@ type Paste struct {
 	AuthorURL   string `json:"authorURL"`
 
 	// MicroBin-inspired features
-	IsFile      bool   `json:"isFile"`      // True if this is a file upload
-	FileName    string `json:"fileName"`    // Original filename for file uploads
-	MimeType    string `json:"mimeType"`    // MIME type for file uploads
-	IsEditable  bool   `json:"isEditable"`  // Allow paste editing
-	IsPrivate   bool   `json:"isPrivate"`   // Private paste (not listed publicly)
-	IsURL       bool   `json:"isURL"`       // True if this is a URL shortener entry
-	OriginalURL string `json:"originalURL"` // Original URL for shortener
+	// True if this is a file upload
+	IsFile bool `json:"isFile"`
+	// Original filename for file uploads
+	FileName string `json:"fileName"`
+	// MIME type for file uploads
+	MimeType string `json:"mimeType"`
+	// Allow paste editing
+	IsEditable bool `json:"isEditable"`
+	// Private paste (not listed publicly)
+	IsPrivate bool `json:"isPrivate"`
+	// True if this is a URL shortener entry
+	IsURL bool `json:"isURL"`
+	// Original URL for shortener
+	OriginalURL string `json:"originalURL"`
 }
 
 func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
@@ -51,8 +71,12 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 		paste.DeleteTime = 0
 	}
 
+	// Query timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	defer cancel()
+
 	// Add to primary database
-	_, err = db.pool.Exec(
+	_, err = db.pool.ExecContext(ctx,
 		`INSERT INTO pastes (id, title, body, syntax, create_time, delete_time, one_use, author, author_email, author_url, is_file, file_name, mime_type, is_editable, is_private, is_url, original_url)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 		paste.ID, paste.Title, paste.Body, paste.Syntax, paste.CreateTime, paste.DeleteTime, paste.OneUse,
@@ -65,7 +89,10 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 
 	// Also add to SQLite backup/cache if available
 	if db.backupPool != nil {
-		_, backupErr := db.backupPool.Exec(
+		// Backup uses separate context
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer backupCancel()
+		_, backupErr := db.backupPool.ExecContext(backupCtx,
 			`INSERT OR REPLACE INTO pastes (id, title, body, syntax, create_time, delete_time, one_use, author, author_email, author_url, is_file, file_name, mime_type, is_editable, is_private, is_url, original_url)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			paste.ID, paste.Title, paste.Body, paste.Syntax, paste.CreateTime, paste.DeleteTime, paste.OneUse,
@@ -83,8 +110,12 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 }
 
 func (db DB) PasteUpdate(paste Paste) error {
+	// Query timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	defer cancel()
+
 	// Update in primary database
-	result, err := db.pool.Exec(
+	result, err := db.pool.ExecContext(ctx,
 		`UPDATE pastes SET title = $2, body = $3, syntax = $4, delete_time = $5, one_use = $6,
 		author = $7, author_email = $8, author_url = $9,
 		is_file = $10, file_name = $11, mime_type = $12, is_editable = $13, is_private = $14, is_url = $15, original_url = $16
@@ -109,7 +140,9 @@ func (db DB) PasteUpdate(paste Paste) error {
 
 	// Also update in SQLite backup/cache if available
 	if db.backupPool != nil {
-		_, backupErr := db.backupPool.Exec(
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer backupCancel()
+		_, backupErr := db.backupPool.ExecContext(backupCtx,
 			`UPDATE pastes SET title = ?, body = ?, syntax = ?, delete_time = ?, one_use = ?,
 			author = ?, author_email = ?, author_url = ?,
 			is_file = ?, file_name = ?, mime_type = ?, is_editable = ?, is_private = ?, is_url = ?, original_url = ?
@@ -128,8 +161,12 @@ func (db DB) PasteUpdate(paste Paste) error {
 }
 
 func (db DB) PasteDelete(id string) error {
+	// Query timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	defer cancel()
+
 	// Delete from primary database
-	result, err := db.pool.Exec(
+	result, err := db.pool.ExecContext(ctx,
 		`DELETE FROM pastes WHERE id = $1`,
 		id,
 	)
@@ -149,7 +186,9 @@ func (db DB) PasteDelete(id string) error {
 
 	// Also delete from SQLite backup/cache if available
 	if db.backupPool != nil {
-		_, backupErr := db.backupPool.Exec(`DELETE FROM pastes WHERE id = ?`, id)
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer backupCancel()
+		_, backupErr := db.backupPool.ExecContext(backupCtx, `DELETE FROM pastes WHERE id = ?`, id)
 		if backupErr != nil {
 			_ = backupErr
 		}
@@ -161,8 +200,12 @@ func (db DB) PasteDelete(id string) error {
 func (db DB) PasteGet(id string) (Paste, error) {
 	var paste Paste
 
+	// Query timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	defer cancel()
+
 	// Make query
-	row := db.pool.QueryRow(
+	row := db.pool.QueryRowContext(ctx,
 		`SELECT id, title, body, syntax, create_time, delete_time, one_use, author, author_email, author_url,
 		is_file, file_name, mime_type, is_editable, is_private, is_url, original_url
 		FROM pastes WHERE id = $1`,
@@ -183,8 +226,10 @@ func (db DB) PasteGet(id string) (Paste, error) {
 
 	// Check paste expiration
 	if paste.DeleteTime < time.Now().Unix() && paste.DeleteTime > 0 {
-		// Delete expired paste
-		_, err = db.pool.Exec(
+		// Delete expired paste with timeout
+		delCtx, delCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer delCancel()
+		_, err = db.pool.ExecContext(delCtx,
 			`DELETE FROM pastes WHERE id = $1`,
 			paste.ID,
 		)
@@ -200,8 +245,12 @@ func (db DB) PasteGet(id string) (Paste, error) {
 }
 
 func (db DB) PasteDeleteExpired() (int64, error) {
+	// Batch timeout per AI.md PART 10 (longer for batch operations)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultBatchTimeout)
+	defer cancel()
+
 	// Delete from primary database
-	result, err := db.pool.Exec(
+	result, err := db.pool.ExecContext(ctx,
 		`DELETE FROM pastes WHERE (delete_time < $1) AND (delete_time > 0)`,
 		time.Now().Unix(),
 	)
@@ -217,7 +266,9 @@ func (db DB) PasteDeleteExpired() (int64, error) {
 
 	// Also delete from SQLite backup/cache if available
 	if db.backupPool != nil {
-		_, backupErr := db.backupPool.Exec(
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultBatchTimeout)
+		defer backupCancel()
+		_, backupErr := db.backupPool.ExecContext(backupCtx,
 			`DELETE FROM pastes WHERE (delete_time < ?) AND (delete_time > 0)`,
 			time.Now().Unix(),
 		)
@@ -245,8 +296,12 @@ func (db DB) PasteList(limit int, offset int) ([]PasteListItem, error) {
 		offset = 0
 	}
 
+	// List timeout per AI.md PART 10 (longer for list queries)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultListTimeout)
+	defer cancel()
+
 	// Query pastes (exclude expired, one-use, and private pastes)
-	rows, err := db.pool.Query(
+	rows, err := db.pool.QueryContext(ctx,
 		`SELECT id, title, syntax, create_time, delete_time
 		FROM pastes
 		WHERE (delete_time > $1 OR delete_time = 0)

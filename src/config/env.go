@@ -137,16 +137,19 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("LISTEN"); val != "" {
 		cfg.Server.Listen = val
 	}
-	if val := getEnv("BIND"); val != "" { // Backward compatibility
+	// Backward compatibility
+	if val := getEnv("BIND"); val != "" {
 		cfg.Server.Listen = val
 	}
+	// Now string format: "8080" or "8080,64453"
 	if val := getEnv("PORT"); val != "" {
-		cfg.Server.Port = val // Now string format: "8080" or "8080,64453"
+		cfg.Server.Port = val
 	}
 	if val := getEnv("SERVER_TITLE"); val != "" {
 		cfg.Server.Title = val
 	}
-	if val := getEnv("TITLE"); val != "" { // Alternative
+	// Alternative
+	if val := getEnv("TITLE"); val != "" {
 		cfg.Server.Title = val
 	}
 
@@ -160,7 +163,8 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("ADMIN_EMAIL"); val != "" {
 		cfg.Server.Administrator.Email = val
 	}
-	if val := getEnv("ADMIN_MAIL"); val != "" { // Alternative
+	// Alternative
+	if val := getEnv("ADMIN_MAIL"); val != "" {
 		cfg.Server.Administrator.Email = val
 	}
 	if val := getEnv("SERVER_ADMINISTRATOR_EMAIL"); val != "" {
@@ -185,7 +189,8 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("SITE_ROBOTS_DENY"); val != "" {
 		cfg.Web.SEO.Robots.Deny = val
 	}
-	if val := getEnv("ROBOTS_DISALLOW"); val != "" { // Legacy compatibility
+	// Legacy compatibility
+	if val := getEnv("ROBOTS_DISALLOW"); val != "" {
 		if validation.IsTruthy(val) {
 			cfg.Web.SEO.Robots.Deny = "/"
 		}
@@ -224,7 +229,8 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("PASSWORD_FILE"); val != "" {
 		cfg.Security.PasswordFile = val
 	}
-	if val := getEnv("CASPASSWD_FILE"); val != "" { // Alternative name
+	// Alternative name
+	if val := getEnv("CASPASSWD_FILE"); val != "" {
 		cfg.Security.PasswordFile = val
 	}
 
@@ -291,19 +297,22 @@ func ApplyEnvironmentOverrides(cfg *YAMLConfig) {
 	if val := getEnv("CONTENT_ABOUT"); val != "" {
 		cfg.Web.Content.About = val
 	}
-	if val := getEnv("SERVER_ABOUT"); val != "" { // Legacy
+	// Legacy
+	if val := getEnv("SERVER_ABOUT"); val != "" {
 		cfg.Web.Content.About = val
 	}
 	if val := getEnv("CONTENT_RULES"); val != "" {
 		cfg.Web.Content.Rules = val
 	}
-	if val := getEnv("SERVER_RULES"); val != "" { // Legacy
+	// Legacy
+	if val := getEnv("SERVER_RULES"); val != "" {
 		cfg.Web.Content.Rules = val
 	}
 	if val := getEnv("CONTENT_TERMS"); val != "" {
 		cfg.Web.Content.Terms = val
 	}
-	if val := getEnv("SERVER_TERMS"); val != "" { // Legacy
+	// Legacy
+	if val := getEnv("SERVER_TERMS"); val != "" {
 		cfg.Web.Content.Terms = val
 	}
 	if val := getEnv("CONTENT_SECURITY"); val != "" {

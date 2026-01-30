@@ -17,6 +17,7 @@
 		<button class="button-cancel" type="submit" tabindex="1">{{ call .Translate `pasteContinue.Cancel` }}</button>
 	</form>
 	<form action="/{{.ID}}" method="post">
+		<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 		<input type="hidden" name="oneUseContinue" value="true">
 		<button class="button-green" type="submit" tabindex="2">{{ call .Translate `pasteContinue.Continue` }}</button>
 	</form>

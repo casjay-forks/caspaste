@@ -100,7 +100,8 @@ func getDefaultDbPath() string {
 			return home + "/Library/Application Support/CasPaste/db/caspaste.db"
 		}
 		return "/var/lib/casjay-forks/caspaste/db/caspaste.db"
-	default: // Linux, BSD, etc.
+	// Linux, BSD, etc.
+	default:
 		if isRunningAsRoot() {
 			return "/var/lib/casjay-forks/caspaste/db/caspaste.db"
 		}

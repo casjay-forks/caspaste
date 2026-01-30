@@ -44,6 +44,8 @@ type loginTmpl struct {
 	Translate func(string, ...interface{}) template.HTML
 	Error     bool
 	Redirect  string
+	// CSRF token for form protection per AI.md PART 11
+	CSRFToken string
 }
 
 // generateSessionToken creates a signed session token
@@ -163,6 +165,7 @@ func (data *Data) handleLoginPage(rw http.ResponseWriter, req *http.Request) err
 		Translate: data.Locales.findLocale(req).translate,
 		Error:     false,
 		Redirect:  redirect,
+		CSRFToken: GetCSRFToken(req, 32),
 	}
 
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -213,6 +216,7 @@ func (data *Data) handleLoginError(rw http.ResponseWriter, req *http.Request, re
 		Translate: data.Locales.findLocale(req).translate,
 		Error:     true,
 		Redirect:  redirect,
+		CSRFToken: GetCSRFToken(req, 32),
 	}
 
 	rw.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -51,7 +51,8 @@ type Config struct {
 	Favicon string
 
 	// Authentication
-	Public        bool   // true = open/public (no auth), false = auth required
+	// true = open/public (no auth), false = auth required
+	Public        bool
 	CasPasswdFile string
 
 	// Trusted proxy configuration (for X-Forwarded-* headers)

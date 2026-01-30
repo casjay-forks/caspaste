@@ -40,7 +40,8 @@ type Data struct {
 	AdminName string
 	AdminMail string
 
-	Public        bool   // true = open/public, false = auth required
+	// true = open/public, false = auth required
+	Public        bool
 	CasPasswdFile string
 	BruteForce    *caspasswd.BruteForceProtection
 
@@ -86,8 +87,8 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Server", config.Software+"/"+data.Version)
 
 	switch req.URL.Path {
-	// Health check
-	case "/api/healthz":
+	// Health check per AI.md PART 13
+	case "/api/v1/healthz":
 		err = data.handleHealthz(rw, req)
 	// API v1 endpoints
 	case "/api/v1/new":

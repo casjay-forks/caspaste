@@ -19,10 +19,14 @@ import (
 )
 
 type LogFormat struct {
-	Access string // apache, nginx, text, json
-	Error  string // text, json
-	Server string // text, json
-	Debug  string // text, json
+	// Access log format: apache, nginx, text, json
+	Access string
+	// Error log format: text, json
+	Error string
+	// Server log format: text, json
+	Server string
+	// Debug log format: text, json
+	Debug string
 }
 
 type LogLevel int
@@ -54,7 +58,8 @@ type Logger struct {
 func New(timeFormat string) Logger {
 	return Logger{
 		TimeFormat: timeFormat,
-		Level:      LogLevelInfo, // Default to info level
+		// Default to info level
+		Level: LogLevelInfo,
 		Format: LogFormat{
 			Access: "apache",
 			Error:  "text",

@@ -26,10 +26,13 @@ import (
 	"time"
 
 	"github.com/casjay-forks/caspaste/src/apiv1"
+	"github.com/casjay-forks/caspaste/src/audit"
 	"github.com/casjay-forks/caspaste/src/caspasswd"
 	"github.com/casjay-forks/caspaste/src/cli"
+	"github.com/casjay-forks/caspaste/src/completions"
 	"github.com/casjay-forks/caspaste/src/config"
 	"github.com/casjay-forks/caspaste/src/logger"
+	"github.com/casjay-forks/caspaste/src/metrics"
 	"github.com/casjay-forks/caspaste/src/netshare"
 	"github.com/casjay-forks/caspaste/src/portutil"
 	"github.com/casjay-forks/caspaste/src/privilege"
@@ -37,6 +40,7 @@ import (
 	"github.com/casjay-forks/caspaste/src/service"
 	"github.com/casjay-forks/caspaste/src/storage"
 	"github.com/casjay-forks/caspaste/src/template"
+	"github.com/casjay-forks/caspaste/src/updater"
 	"github.com/casjay-forks/caspaste/src/validation"
 	"github.com/casjay-forks/caspaste/src/web"
 )
@@ -214,7 +218,8 @@ func getDefaultDataDir() string {
 			return home + "/Library/Application Support/CasPaste"
 		}
 		return "/var/lib/casjay-forks/caspaste"
-	default: // Linux, BSD, etc.
+	// Linux, BSD, etc.
+	default:
 		if isRunningAsRoot() {
 			return "/var/lib/casjay-forks/caspaste"
 		}
@@ -245,7 +250,8 @@ func getDefaultConfigDir() string {
 			return home + "/Library/Application Support/CasPaste/Config"
 		}
 		return "/etc/casjay-forks/caspaste"
-	default: // Linux, BSD, etc.
+	// Linux, BSD, etc.
+	default:
 		if isRunningAsRoot() {
 			return "/etc/casjay-forks/caspaste"
 		}
@@ -253,6 +259,45 @@ func getDefaultConfigDir() string {
 			return home + "/.config/casjay-forks/caspaste"
 		}
 		return "/etc/casjay-forks/caspaste"
+	}
+}
+
+// getPIDFilePath returns the platform-specific PID file path per AI.md PART 8
+// Default: /var/run/casjay-forks/caspaste.pid (root) or ~/.local/share/casjay-forks/caspaste/caspaste.pid (user)
+func getPIDFilePath(dataDir string) string {
+	switch runtime.GOOS {
+	case "windows":
+		// Windows doesn't have standard PID file location, use data dir
+		if dataDir != "" {
+			return filepath.Join(dataDir, "caspaste.pid")
+		}
+		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
+			return localAppData + "\\CasPaste\\caspaste.pid"
+		}
+		return "C:\\ProgramData\\CasPaste\\caspaste.pid"
+	case "darwin":
+		if isRunningAsRoot() {
+			return "/var/run/caspaste.pid"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/Library/Application Support/CasPaste/caspaste.pid"
+		}
+		if dataDir != "" {
+			return filepath.Join(dataDir, "caspaste.pid")
+		}
+		return "/tmp/caspaste.pid"
+	// Linux, BSD, etc.
+	default:
+		if isRunningAsRoot() {
+			return "/var/run/casjay-forks/caspaste.pid"
+		}
+		if home := os.Getenv("HOME"); home != "" {
+			return home + "/.local/share/casjay-forks/caspaste/caspaste.pid"
+		}
+		if dataDir != "" {
+			return filepath.Join(dataDir, "caspaste.pid")
+		}
+		return "/tmp/caspaste.pid"
 	}
 }
 
@@ -337,7 +382,8 @@ func formatDatabaseDisplay(driver, source string) string {
 			// tcp(host:port)/dbname → host:port
 			if strings.HasPrefix(hostPart, "tcp(") {
 				if idx := strings.Index(hostPart, ")"); idx > 0 {
-					host := hostPart[4:idx] // Extract content between tcp( and )
+					// Extract content between tcp( and )
+					host := hostPart[4:idx]
 					return fmt.Sprintf("%s (%s)", driver, host)
 				}
 			}
@@ -411,6 +457,117 @@ func printStartupBanner(version, fqdn, title, configFile, database string, httpP
 
 	fmt.Println("╚════════════════════════════════════════════════════════════╝")
 	fmt.Println()
+}
+
+// hasArg checks if a specific argument is present in os.Args
+func hasArg(arg string) bool {
+	for _, a := range os.Args[1:] {
+		if a == arg {
+			return true
+		}
+	}
+	return false
+}
+
+// handleUpdateCommand processes --update flag commands per AI.md PART 23
+func handleUpdateCommand(command, currentVersion string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	// Parse command
+	parts := strings.Fields(command)
+	if len(parts) == 0 {
+		// Default to "yes" (perform update)
+		parts = []string{"yes"}
+	}
+
+	cmd := strings.ToLower(parts[0])
+
+	// Handle --help
+	if cmd == "--help" || cmd == "-help" || cmd == "help" {
+		updater.PrintHelp("caspaste")
+		os.Exit(0)
+	}
+
+	// Configuration for updates
+	cfg := updater.Config{
+		CurrentVersion: currentVersion,
+		Branch:         "stable", // Default branch
+		GithubOwner:    "casjay-forks",
+		GithubRepo:     "caspaste",
+		BinaryName:     "caspaste",
+	}
+
+	switch cmd {
+	case "check":
+		// Check for updates without installing
+		result, err := updater.CheckForUpdate(ctx, cfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error checking for updates: %v\n", err)
+			os.Exit(1)
+		}
+		if result == nil || result.Release == nil {
+			fmt.Printf("CasPaste v%s is up to date\n", currentVersion)
+			os.Exit(0)
+		}
+		fmt.Printf("Update available: %s -> %s\n", currentVersion, result.Release.TagName)
+		fmt.Printf("Run 'caspaste --update yes' to install\n")
+		os.Exit(0)
+
+	case "yes", "":
+		// Perform update
+		result, err := updater.CheckForUpdate(ctx, cfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error checking for updates: %v\n", err)
+			os.Exit(1)
+		}
+		if result == nil || result.Release == nil {
+			fmt.Printf("CasPaste v%s is already up to date\n", currentVersion)
+			os.Exit(0)
+		}
+
+		fmt.Printf("Updating CasPaste %s -> %s...\n", currentVersion, result.Release.TagName)
+		if err := updater.DoUpdate(ctx, cfg, result.Release); err != nil {
+			fmt.Fprintf(os.Stderr, "Update failed: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Update successful!")
+		fmt.Println("Restarting...")
+
+		// Try to restart service, fallback to self restart
+		if err := updater.RestartService("caspaste"); err != nil {
+			if err := updater.RestartSelf(); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: restart failed: %v\n", err)
+				fmt.Println("Please restart the service manually.")
+			}
+		}
+		os.Exit(0)
+
+	case "branch":
+		// Switch update branch
+		if len(parts) < 2 {
+			fmt.Fprintln(os.Stderr, "Error: branch name required")
+			fmt.Fprintln(os.Stderr, "Usage: caspaste --update branch {stable|beta|daily}")
+			os.Exit(1)
+		}
+		branch := strings.ToLower(parts[1])
+		switch branch {
+		case "stable", "beta", "daily":
+			fmt.Printf("Update branch set to: %s\n", branch)
+			fmt.Println("Note: Branch preference is not persisted (use config file for persistence)")
+			os.Exit(0)
+		default:
+			fmt.Fprintf(os.Stderr, "Error: invalid branch '%s'\n", branch)
+			fmt.Fprintln(os.Stderr, "Valid branches: stable, beta, daily")
+			os.Exit(1)
+		}
+
+	default:
+		fmt.Fprintf(os.Stderr, "Error: unknown update command '%s'\n", cmd)
+		fmt.Fprintln(os.Stderr, "Usage: caspaste --update {check|yes|branch <name>|--help}")
+		os.Exit(1)
+	}
 }
 
 // handleServiceCommand processes --service flag commands
@@ -941,6 +1098,13 @@ func checkStatus(dbDriver, dbSource string, address string) {
 }
 
 func main() {
+	// Handle --shell completions/init commands first (per AI.md PART 8/33)
+	// This must run before other flag parsing since --shell takes subcommands
+	if len(os.Args) >= 2 && os.Args[1] == "--shell" {
+		completions.Handle(os.Args[1:])
+		return
+	}
+
 	var err error
 
 	// Set timezone from TZ environment variable (default: America/New_York)
@@ -1008,6 +1172,12 @@ func main() {
 	flagCacheDir := c.AddStringVar("cache", "", "Cache directory. Examples: /var/cache/caspaste, ~/.cache/caspaste", nil)
 	flagLogsDir := c.AddStringVar("logs", "", "Logs directory (alias for --log). Examples: /var/log/casjay-forks/caspaste, ~/.local/log/casjay-forks/caspaste", nil)
 
+	// Additional flags per AI.md PART 8
+	flagBackupDir := c.AddStringVar("backup", "", "Backup directory. Default: /mnt/Backups/casjay-forks/caspaste or ~/.local/share/Backups/casjay-forks/caspaste", nil)
+	flagPidFile := c.AddStringVar("pid", "", "PID file path. Default: /var/run/casjay-forks/caspaste.pid or ~/.local/share/casjay-forks/caspaste/caspaste.pid", nil)
+	flagMode := c.AddStringVar("mode", "", "Application mode: production or development (default: production)", nil)
+	flagUpdate := c.AddStringVar("update", "", "Update management: check, yes, branch {stable|beta|daily}, --help", nil)
+
 	c.Parse()
 
 	// Handle --help first
@@ -1022,15 +1192,26 @@ func main() {
 		fmt.Println("\nServer Configuration:")
 		fmt.Println("  --address ADDR      Listen address (default: :80)")
 		fmt.Println("  --port PORT         Listen port (alternative to --address)")
+		fmt.Println("  --mode MODE         Application mode: production or development (default: production)")
 		fmt.Println("\nDirectories:")
 		fmt.Println("  --data DIR          Data directory")
 		fmt.Println("  --config DIR        Configuration directory")
 		fmt.Println("  --log DIR           Log directory")
 		fmt.Println("  --cache DIR         Cache directory")
+		fmt.Println("  --backup DIR        Backup directory")
+		fmt.Println("  --pid FILE          PID file path")
 		fmt.Println("\nCommands:")
 		fmt.Println("  --status            Check server health")
 		fmt.Println("  --service CMD       Service management (start|stop|restart|reload|install|uninstall|disable)")
 		fmt.Println("  --maintenance CMD   Maintenance operations (backup|restore|mode)")
+		fmt.Println("  --update [CMD]      Check/perform updates (--update --help for details)")
+		fmt.Println("\nShell Completions:")
+		fmt.Println("  --shell completions [SHELL]   Print shell completion script")
+		fmt.Println("  --shell init [SHELL]          Print shell init command for eval")
+		fmt.Println("  --shell --help                Show shell integration help")
+		fmt.Println("")
+		fmt.Println("  Supported: bash, zsh, fish, sh, dash, ksh, powershell, pwsh")
+		fmt.Println("  Example: eval \"$(caspaste --shell init)\"")
 		fmt.Println("\nFor more information: https://github.com/casjay-forks/caspaste")
 		os.Exit(0)
 	}
@@ -1040,6 +1221,21 @@ func main() {
 		fmt.Printf("CasPaste v%s\n", Version)
 		fmt.Printf("Built with Go %s on %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
+	}
+
+	// Handle --mode flag per AI.md PART 8
+	// mode=development enables debug features, mode=production is default
+	if *flagMode != "" {
+		switch strings.ToLower(*flagMode) {
+		case "development", "dev":
+			// Development mode enables debug features
+			*flagDebug = true
+		case "production", "prod":
+			// Production mode is default (debug disabled unless explicitly set)
+		default:
+			fmt.Fprintf(os.Stderr, "Error: invalid mode '%s'. Use 'production' or 'development'\n", *flagMode)
+			os.Exit(1)
+		}
 	}
 
 	// Setup log directory (needed early for daemon mode)
@@ -1077,8 +1273,14 @@ func main() {
 			os.Exit(1)
 		}
 		
-		// Write PID file
-		pidFile := filepath.Join(*flagDataDir, "caspaste.pid")
+		// Write PID file per AI.md PART 8
+		// Priority: --pid flag > platform defaults
+		pidFile := *flagPidFile
+		if pidFile == "" {
+			pidFile = getPIDFilePath(*flagDataDir)
+		}
+		// Ensure PID file directory exists
+		os.MkdirAll(filepath.Dir(pidFile), 0755)
 		if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d\n", cmd.Process.Pid)), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to write PID file: %v\n", err)
 		}
@@ -1363,9 +1565,12 @@ func main() {
 		}
 	}
 
-	// Determine backup directory
+	// Determine backup directory per AI.md PART 8
+	// Priority: --backup flag > env var > config > platform defaults
 	var backupDir string
-	if isFirstRun {
+	if *flagBackupDir != "" {
+		backupDir = *flagBackupDir
+	} else if isFirstRun {
 		backupDir = os.Getenv("CASPASTE_BACKUP_DIR")
 	}
 	if backupDir == "" && dataDir != "" {
@@ -1633,6 +1838,12 @@ func main() {
 		return
 	}
 
+	// Handle --update command per AI.md PART 23
+	if *flagUpdate != "" || hasArg("--update") {
+		handleUpdateCommand(*flagUpdate, Version)
+		return
+	}
+
 	// Note: Database migration moved to AFTER database initialization (after InitDB)
 	// This ensures destination database exists before attempting migration
 
@@ -1780,6 +1991,47 @@ func main() {
 		}
 	}
 	// Note: Do NOT defer close - these files must stay open for the entire application lifetime
+
+	// Initialize audit logging per AI.md PART 11
+	auditLogFile := yamlCfg.Logging.Audit.File
+	if auditLogFile == "" {
+		auditLogFile = "audit.log"
+	}
+	if yamlCfg.Logging.Audit.Enabled {
+		auditCfg := audit.Config{
+			Enabled:          true,
+			Directory:        logsDir,
+			Filename:         auditLogFile,
+			MaskEmails:       yamlCfg.Logging.Audit.MaskEmails,
+			IncludeUserAgent: yamlCfg.Logging.Audit.IncludeUserAgent,
+		}
+		if err := audit.Init(auditCfg); err != nil {
+			exitOnError(fmt.Errorf("failed to initialize audit logging: %w", err))
+		}
+	}
+
+	// Initialize Prometheus metrics per AI.md PART 21
+	metricsCfg := metrics.Config{
+		Enabled:         yamlCfg.Server.Metrics.Enabled,
+		Endpoint:        yamlCfg.Server.Metrics.Endpoint,
+		IncludeSystem:   yamlCfg.Server.Metrics.IncludeSystem,
+		IncludeRuntime:  yamlCfg.Server.Metrics.IncludeRuntime,
+		Token:           yamlCfg.Server.Metrics.Token,
+		DurationBuckets: yamlCfg.Server.Metrics.DurationBuckets,
+		SizeBuckets:     yamlCfg.Server.Metrics.SizeBuckets,
+	}
+	// Set defaults if not configured
+	if metricsCfg.Endpoint == "" {
+		metricsCfg.Endpoint = "/metrics"
+	}
+	if len(metricsCfg.DurationBuckets) == 0 {
+		metricsCfg.DurationBuckets = []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
+	}
+	if len(metricsCfg.SizeBuckets) == 0 {
+		metricsCfg.SizeBuckets = []float64{100, 1000, 10000, 100000, 1000000, 10000000}
+	}
+	// Initialize metrics with app info (Version, CommitID, BuildDate from -ldflags)
+	metrics.Init(metricsCfg, Version, CommitID, BuildDate)
 
 	// Apply defaults for logging stdout/stderr settings if config values are zero (not explicitly set)
 	// Default behavior: Server logs to stdout, Errors to stderr
@@ -1967,6 +2219,12 @@ func main() {
 		mux.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
 	}
 
+	// Register Prometheus metrics endpoint per AI.md PART 21
+	// INTERNAL ONLY - should be firewalled from public access
+	if metricsCfg.Enabled {
+		mux.Handle(metricsCfg.Endpoint, metrics.Handler(metricsCfg))
+	}
+
 	// Wrap with maintenance mode middleware
 	dataDirectory := *flagDataDir
 	if dataDirectory == "" {
@@ -1989,14 +2247,27 @@ func main() {
 		StrictTransportSecurity: yamlCfg.Security.Headers.StrictTransportSecurity,
 	}
 
-	// Apply middleware chain: PanicRecovery → RequestID → SecurityHeaders → CORS → Maintenance → App
+	// CSRF protection config per AI.md PART 11
+	csrfCfg := web.CSRFConfig{
+		Enabled:     yamlCfg.Security.CSRF.Enabled,
+		TokenLength: yamlCfg.Security.CSRF.TokenLength,
+		CookieName:  yamlCfg.Security.CSRF.CookieName,
+		HeaderName:  yamlCfg.Security.CSRF.HeaderName,
+		FieldName:   yamlCfg.Security.CSRF.FieldName,
+		Secure:      yamlCfg.Security.CSRF.Secure,
+	}
+
+	// Apply middleware chain: PanicRecovery → RequestID → Metrics → SecurityHeaders → CORS → CSRF → Maintenance → App
 	// Per AI.md PART 6: Panic recovery must catch all panics
-	// Per AI.md PART 11: Request ID middleware for tracing, security headers
+	// Per AI.md PART 11: Request ID middleware for tracing, security headers, CSRF protection
+	// Per AI.md PART 21: Metrics middleware for HTTP request tracking
 	handler := web.PanicRecoveryMiddleware(*flagDebug)(
 		web.RequestIDMiddleware(
-			web.SecurityHeadersMiddleware(securityHeadersCfg)(
-				web.CORSMiddleware(
-					web.MaintenanceMiddleware(dataDirectory, mux)))))
+			metrics.Middleware(metricsCfg)(
+				web.SecurityHeadersMiddleware(securityHeadersCfg)(
+					web.CORSMiddleware(
+						web.CSRFMiddleware(csrfCfg)(
+							web.MaintenanceMiddleware(dataDirectory, mux)))))))
 
 	// Run background job
 	go func(cleanJobPeriod time.Duration) {
@@ -2114,6 +2385,16 @@ func main() {
 	dbDisplay := formatDatabaseDisplay(yamlCfg.Database.Driver, yamlCfg.Database.Source)
 	printStartupBanner(Version, fqdn, yamlCfg.Server.Title, configFilePath, dbDisplay, httpPort, httpsPort, generatedUser, generatedPass)
 
+	// Track server start time for uptime calculation
+	serverStartTime := time.Now()
+
+	// Log server started event to audit log per AI.md PART 11
+	serverMode := "production"
+	if *flagDebug {
+		serverMode = "development"
+	}
+	audit.ServerStarted(Version, serverMode)
+
 	// Create HTTP server with timeouts
 	srv := &http.Server{
 		Handler:      handler, // Custom mux with middleware
@@ -2193,6 +2474,11 @@ func main() {
 
 	case sig := <-sigChan:
 		log.Info(fmt.Sprintf("Received signal %v, shutting down gracefully...", sig))
+
+		// Log server stopped event to audit log per AI.md PART 11
+		uptime := time.Since(serverStartTime)
+		audit.ServerStopped(fmt.Sprintf("signal: %v", sig), uptime)
+		audit.CloseGlobal()
 
 		// Create shutdown context with timeout
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

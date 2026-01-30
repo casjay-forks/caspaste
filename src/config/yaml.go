@@ -18,168 +18,297 @@ import (
 // All configuration is organized into logical top-level sections
 type YAMLConfig struct {
 	Server struct {
-		Public      bool   `yaml:"public"`      // Public instance (default: true = no auth, false = auth required)
-		FQDN        string `yaml:"fqdn"`        // Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
-		Listen      string `yaml:"listen"`      // Listen address (all, ::, 0.0.0.0, specific IP)
-		Port        string `yaml:"port"`        // Port number (empty=auto-detect available port)
-		Title       string `yaml:"title"`       // Server title
-		TagLine     string `yaml:"tagline"`     // Server tagline (short description)
-		Description string `yaml:"description"` // Server description (longer description for meta tags)
+		// Public instance (default: true = no auth, false = auth required)
+		Public bool `yaml:"public"`
+		// Public FQDN for building URLs (empty=auto-detect from headers/hostname, set to override)
+		FQDN string `yaml:"fqdn"`
+		// Listen address (all, ::, 0.0.0.0, specific IP)
+		Listen string `yaml:"listen"`
+		// Port number (empty=auto-detect available port)
+		Port string `yaml:"port"`
+		// Server title
+		Title string `yaml:"title"`
+		// Server tagline (short description)
+		TagLine string `yaml:"tagline"`
+		// Server description (longer description for meta tags)
+		Description string `yaml:"description"`
 
 		Proxy struct {
-			Allowed []string `yaml:"allowed"` // Additional trusted proxy IPs/CIDRs (appended to default private ranges)
+			// Additional trusted proxy IPs/CIDRs (appended to default private ranges)
+			Allowed []string `yaml:"allowed"`
 		} `yaml:"proxy"`
-		
+
 		Administrator struct {
-			Name  string `yaml:"name"`  // Admin name
-			Email string `yaml:"email"` // Admin email
-			From  string `yaml:"from"`  // Email from address
+			// Admin name
+			Name string `yaml:"name"`
+			// Admin email
+			Email string `yaml:"email"`
+			// Email from address
+			From string `yaml:"from"`
 		} `yaml:"administrator"`
-		
+
 		Timeouts struct {
-			Read  int `yaml:"read"`  // Read timeout in seconds (default: 15)
-			Write int `yaml:"write"` // Write timeout in seconds (default: 15)
-			Idle  int `yaml:"idle"`  // Idle timeout in seconds (default: 60)
+			// Read timeout in seconds (default: 15)
+			Read int `yaml:"read"`
+			// Write timeout in seconds (default: 15)
+			Write int `yaml:"write"`
+			// Idle timeout in seconds (default: 60)
+			Idle int `yaml:"idle"`
 		} `yaml:"timeouts"`
+
+		// Prometheus metrics per AI.md PART 21
+		Metrics struct {
+			// Enable Prometheus metrics endpoint (default: false)
+			Enabled bool `yaml:"enabled"`
+			// Endpoint path (default: /metrics)
+			Endpoint string `yaml:"endpoint"`
+			// Include system metrics (CPU, memory, disk)
+			IncludeSystem bool `yaml:"include_system"`
+			// Include Go runtime metrics
+			IncludeRuntime bool `yaml:"include_runtime"`
+			// Optional bearer token for authentication
+			Token string `yaml:"token"`
+			// Histogram buckets for request duration (seconds)
+			DurationBuckets []float64 `yaml:"duration_buckets"`
+			// Histogram buckets for request/response size (bytes)
+			SizeBuckets []float64 `yaml:"size_buckets"`
+		} `yaml:"metrics"`
 	} `yaml:"server"`
 
 	Database struct {
-		Driver        string `yaml:"driver"`         // sqlite, postgres, mysql
-		Source        string `yaml:"source"`         // Connection string
-		MaxOpenConns  int    `yaml:"max_open_conns"` // Max open connections
-		MaxIdleConns  int    `yaml:"max_idle_conns"` // Max idle connections
-		CleanupPeriod string `yaml:"cleanup_period"` // Cleanup interval (e.g. "1m", "5m")
+		// sqlite, postgres, mysql
+		Driver string `yaml:"driver"`
+		// Connection string
+		Source string `yaml:"source"`
+		// Max open connections
+		MaxOpenConns int `yaml:"max_open_conns"`
+		// Max idle connections
+		MaxIdleConns int `yaml:"max_idle_conns"`
+		// Cleanup interval (e.g. "1m", "5m")
+		CleanupPeriod string `yaml:"cleanup_period"`
 	} `yaml:"database"`
 
 	Security struct {
-		PasswordFile string `yaml:"password_file"` // Path to password file (auto-generated when server.public=false)
-		
+		// Path to password file (auto-generated when server.public=false)
+		PasswordFile string `yaml:"password_file"`
+
 		Headers struct {
-			XFrameOptions           string `yaml:"x_frame_options"`            // X-Frame-Options header
-			XContentTypeOptions     string `yaml:"x_content_type_options"`     // X-Content-Type-Options header
-			XSSProtection           string `yaml:"xss_protection"`             // X-XSS-Protection header (deprecated but kept per AI.md)
-			ContentSecurityPolicy   string `yaml:"content_security_policy"`    // Content-Security-Policy header
-			ReferrerPolicy          string `yaml:"referrer_policy"`            // Referrer-Policy header
-			PermissionsPolicy       string `yaml:"permissions_policy"`         // Permissions-Policy header
-			StrictTransportSecurity string `yaml:"strict_transport_security"`  // Strict-Transport-Security header
+			// X-Frame-Options header
+			XFrameOptions string `yaml:"x_frame_options"`
+			// X-Content-Type-Options header
+			XContentTypeOptions string `yaml:"x_content_type_options"`
+			// X-XSS-Protection header (deprecated but kept per AI.md)
+			XSSProtection string `yaml:"xss_protection"`
+			// Content-Security-Policy header
+			ContentSecurityPolicy string `yaml:"content_security_policy"`
+			// Referrer-Policy header
+			ReferrerPolicy string `yaml:"referrer_policy"`
+			// Permissions-Policy header
+			PermissionsPolicy string `yaml:"permissions_policy"`
+			// Strict-Transport-Security header
+			StrictTransportSecurity string `yaml:"strict_transport_security"`
 		} `yaml:"headers"`
-		
+
 		TLS struct {
-			MinVersion   string   `yaml:"min_version"`   // Minimum TLS version: 1.0, 1.1, 1.2, 1.3
-			CipherSuites []string `yaml:"cipher_suites"` // Allowed cipher suites
-			CertFile     string   `yaml:"cert_file"`     // TLS certificate file path (optional, auto-detected)
-			KeyFile      string   `yaml:"key_file"`      // TLS key file path (optional, auto-detected)
+			// Minimum TLS version: 1.0, 1.1, 1.2, 1.3
+			MinVersion string `yaml:"min_version"`
+			// Allowed cipher suites
+			CipherSuites []string `yaml:"cipher_suites"`
+			// TLS certificate file path (optional, auto-detected)
+			CertFile string `yaml:"cert_file"`
+			// TLS key file path (optional, auto-detected)
+			KeyFile string `yaml:"key_file"`
 		} `yaml:"tls"`
 		
 		Upload struct {
-			MaxFileSize int64    `yaml:"max_file_size"`      // Max upload size in bytes
-			AllowedMIME []string `yaml:"allowed_mime_types"` // Allowed MIME types
+			// Max upload size in bytes
+			MaxFileSize int64 `yaml:"max_file_size"`
+			// Allowed MIME types
+			AllowedMIME []string `yaml:"allowed_mime_types"`
 		} `yaml:"upload"`
-		
+
 		CORS struct {
-			Enabled        bool     `yaml:"enabled"`          // Enable CORS
-			AllowedOrigins []string `yaml:"allowed_origins"`  // Allowed origins (* for all)
-			AllowedMethods []string `yaml:"allowed_methods"`  // Allowed HTTP methods
-			AllowedHeaders []string `yaml:"allowed_headers"`  // Allowed headers
-			MaxAge         int      `yaml:"max_age"`          // Preflight cache duration in seconds
+			// Enable CORS
+			Enabled bool `yaml:"enabled"`
+			// Allowed origins (* for all)
+			AllowedOrigins []string `yaml:"allowed_origins"`
+			// Allowed HTTP methods
+			AllowedMethods []string `yaml:"allowed_methods"`
+			// Allowed headers
+			AllowedHeaders []string `yaml:"allowed_headers"`
+			// Preflight cache duration in seconds
+			MaxAge int `yaml:"max_age"`
 		} `yaml:"cors"`
+
+		// CSRF protection per AI.md PART 11
+		CSRF struct {
+			// Enable CSRF protection (default: true)
+			Enabled bool `yaml:"enabled"`
+			// Token length in bytes (default: 32)
+			TokenLength int `yaml:"token_length"`
+			// Cookie name for CSRF token
+			CookieName string `yaml:"cookie_name"`
+			// Header name for CSRF token
+			HeaderName string `yaml:"header_name"`
+			// Form field name for CSRF token
+			FieldName string `yaml:"field_name"`
+			// Secure cookie: auto, true, false
+			Secure string `yaml:"secure"`
+		} `yaml:"csrf"`
 	} `yaml:"security"`
 
 	Web struct {
 		UI struct {
-			DefaultLifetime string `yaml:"default_lifetime"` // Default paste lifetime
-			DefaultTheme    string `yaml:"default_theme"`    // Default theme (e.g. "dracula")
-			ThemesDir       string `yaml:"themes_dir"`       // Themes directory (default: {data_dir}/web/themes)
+			// Default paste lifetime
+			DefaultLifetime string `yaml:"default_lifetime"`
+			// Default theme (e.g. "dracula")
+			DefaultTheme string `yaml:"default_theme"`
+			// Themes directory (default: {data_dir}/web/themes)
+			ThemesDir string `yaml:"themes_dir"`
 		} `yaml:"ui"`
 
 		Content struct {
-			About    string `yaml:"about"`    // Path to custom about page (empty=auto-generated, relative to {data_dir}/web/docs)
-			Rules    string `yaml:"rules"`    // Path to custom rules page (empty=auto-generated)
-			Terms    string `yaml:"terms"`    // Path to custom terms page (empty=auto-generated)
-			Security string `yaml:"security"` // Path to custom security.txt (empty=auto-generated)
+			// Path to custom about page (empty=auto-generated, relative to {data_dir}/web/docs)
+			About string `yaml:"about"`
+			// Path to custom rules page (empty=auto-generated)
+			Rules string `yaml:"rules"`
+			// Path to custom terms page (empty=auto-generated)
+			Terms string `yaml:"terms"`
+			// Path to custom security.txt (empty=auto-generated)
+			Security string `yaml:"security"`
 		} `yaml:"content"`
 
 		Branding struct {
-			Logo    string `yaml:"logo"`    // Logo path or URL (e.g. "/static/logo.png" or "https://example.com/logo.png")
-			Favicon string `yaml:"favicon"` // Favicon path or URL (e.g. "/static/favicon.ico" or "https://example.com/favicon.ico")
+			// Logo path or URL (e.g. "/static/logo.png" or "https://example.com/logo.png")
+			Logo string `yaml:"logo"`
+			// Favicon path or URL (e.g. "/static/favicon.ico" or "https://example.com/favicon.ico")
+			Favicon string `yaml:"favicon"`
 		} `yaml:"branding"`
-		
+
 		Security struct {
 			Contact struct {
-				Email string `yaml:"email"` // Security contact email
-				Name  string `yaml:"name"`  // Security contact name
+				// Security contact email
+				Email string `yaml:"email"`
+				// Security contact name
+				Name string `yaml:"name"`
 			} `yaml:"contact"`
 		} `yaml:"security"`
-		
+
 		SEO struct {
 			Robots struct {
-				Allow  string `yaml:"allow"` // Paths to allow in robots.txt
-				Deny   string `yaml:"deny"`  // Paths to deny in robots.txt
+				// Paths to allow in robots.txt
+				Allow string `yaml:"allow"`
+				// Paths to deny in robots.txt
+				Deny string `yaml:"deny"`
 				Agents struct {
-					Deny []string `yaml:"deny"` // User agents to deny
+					// User agents to deny
+					Deny []string `yaml:"deny"`
 				} `yaml:"agents"`
 			} `yaml:"robots"`
 		} `yaml:"seo"`
 	} `yaml:"web"`
 
 	Limits struct {
-		TitleMaxLength    int    `yaml:"title_max_length"`   // Max title length
-		BodyMaxLength     int    `yaml:"body_max_length"`    // Max paste body length
-		MaxPasteLifetime  string `yaml:"max_paste_lifetime"` // Max paste lifetime (e.g. "30d", "never")
-		
+		// Max title length
+		TitleMaxLength int `yaml:"title_max_length"`
+		// Max paste body length
+		BodyMaxLength int `yaml:"body_max_length"`
+		// Max paste lifetime (e.g. "30d", "never")
+		MaxPasteLifetime string `yaml:"max_paste_lifetime"`
+
 		RateLimit struct {
 			GetPastes struct {
-				Per5Min  uint `yaml:"per_5min"`  // GET requests per 5 minutes
-				Per15Min uint `yaml:"per_15min"` // GET requests per 15 minutes
-				Per1Hour uint `yaml:"per_1hour"` // GET requests per 1 hour
+				// GET requests per 5 minutes
+				Per5Min uint `yaml:"per_5min"`
+				// GET requests per 15 minutes
+				Per15Min uint `yaml:"per_15min"`
+				// GET requests per 1 hour
+				Per1Hour uint `yaml:"per_1hour"`
 			} `yaml:"get_pastes"`
-			
+
 			NewPastes struct {
-				Per5Min  uint `yaml:"per_5min"`  // POST requests per 5 minutes
-				Per15Min uint `yaml:"per_15min"` // POST requests per 15 minutes
-				Per1Hour uint `yaml:"per_1hour"` // POST requests per 1 hour
+				// POST requests per 5 minutes
+				Per5Min uint `yaml:"per_5min"`
+				// POST requests per 15 minutes
+				Per15Min uint `yaml:"per_15min"`
+				// POST requests per 1 hour
+				Per1Hour uint `yaml:"per_1hour"`
 			} `yaml:"new_pastes"`
 		} `yaml:"rate_limit"`
 	} `yaml:"limits"`
 
 	Directories struct {
-		Data   string `yaml:"data"`   // Data directory
-		Config string `yaml:"config"` // Config directory
-		Db     string `yaml:"db"`     // Database directory
-		Cache  string `yaml:"cache"`  // Cache directory
-		Logs   string `yaml:"logs"`   // Logs directory
+		// Data directory
+		Data string `yaml:"data"`
+		// Config directory
+		Config string `yaml:"config"`
+		// Database directory
+		Db string `yaml:"db"`
+		// Cache directory
+		Cache string `yaml:"cache"`
+		// Logs directory
+		Logs string `yaml:"logs"`
 	} `yaml:"directories"`
 	
 	Logging struct {
-		Level string `yaml:"level"` // Log level: info, warn, error (default: info)
-		
+		// Log level: info, warn, error (default: info)
+		Level string `yaml:"level"`
+
 		Access struct {
-			Stdout bool   `yaml:"stdout"` // Enable access log to stdout (default: true)
-			Stderr bool   `yaml:"stderr"` // Enable access log to stderr (default: false)
-			Format string `yaml:"format"` // apache, nginx, text, json (default: apache)
-			File   string `yaml:"file"`   // Access log file (default: access.log)
+			// Enable access log to stdout (default: true)
+			Stdout bool `yaml:"stdout"`
+			// Enable access log to stderr (default: false)
+			Stderr bool `yaml:"stderr"`
+			// apache, nginx, text, json (default: apache)
+			Format string `yaml:"format"`
+			// Access log file (default: access.log)
+			File string `yaml:"file"`
 		} `yaml:"access"`
-		
+
 		Error struct {
-			Stdout bool   `yaml:"stdout"` // Enable error log to stdout (default: false)
-			Stderr bool   `yaml:"stderr"` // Enable error log to stderr (default: true)
-			Format string `yaml:"format"` // text, json (default: text)
-			File   string `yaml:"file"`   // Error log file (default: error.log)
+			// Enable error log to stdout (default: false)
+			Stdout bool `yaml:"stdout"`
+			// Enable error log to stderr (default: true)
+			Stderr bool `yaml:"stderr"`
+			// text, json (default: text)
+			Format string `yaml:"format"`
+			// Error log file (default: error.log)
+			File string `yaml:"file"`
 		} `yaml:"error"`
-		
+
 		Server struct {
-			Stdout bool   `yaml:"stdout"` // Enable server log to stdout (default: true)
-			Stderr bool   `yaml:"stderr"` // Enable server log to stderr (default: false)
-			Format string `yaml:"format"` // text, json (default: text)
-			File   string `yaml:"file"`   // Server log file (default: caspaste.log)
+			// Enable server log to stdout (default: true)
+			Stdout bool `yaml:"stdout"`
+			// Enable server log to stderr (default: false)
+			Stderr bool `yaml:"stderr"`
+			// text, json (default: text)
+			Format string `yaml:"format"`
+			// Server log file (default: caspaste.log)
+			File string `yaml:"file"`
 		} `yaml:"server"`
-		
+
 		Debug struct {
-			Stdout bool   `yaml:"stdout"` // Enable debug log to stdout (default: true)
-			Stderr bool   `yaml:"stderr"` // Enable debug log to stderr (default: false)
-			Format string `yaml:"format"` // text, json (default: text)
-			File   string `yaml:"file"`   // Debug log file (default: debug.log)
+			// Enable debug log to stdout (default: true)
+			Stdout bool `yaml:"stdout"`
+			// Enable debug log to stderr (default: false)
+			Stderr bool `yaml:"stderr"`
+			// text, json (default: text)
+			Format string `yaml:"format"`
+			// Debug log file (default: debug.log)
+			File string `yaml:"file"`
 		} `yaml:"debug"`
+
+		// Audit log per AI.md PART 11
+		Audit struct {
+			// Enable audit logging (default: true)
+			Enabled bool `yaml:"enabled"`
+			// Audit log file (default: audit.log)
+			File string `yaml:"file"`
+			// Mask email addresses in logs (default: true)
+			MaskEmails bool `yaml:"mask_emails"`
+			// Include User-Agent in logs (default: true)
+			IncludeUserAgent bool `yaml:"include_user_agent"`
+		} `yaml:"audit"`
 	} `yaml:"logging"`
 }
 
@@ -302,6 +431,15 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Server.Timeouts.Write = 15
 	defaultConfig.Server.Timeouts.Idle = 60
 
+	// Prometheus Metrics per AI.md PART 21 (INTERNAL ONLY - firewall /metrics)
+	defaultConfig.Server.Metrics.Enabled = false // Disabled by default, enable in production
+	defaultConfig.Server.Metrics.Endpoint = "/metrics"
+	defaultConfig.Server.Metrics.IncludeSystem = true
+	defaultConfig.Server.Metrics.IncludeRuntime = true
+	defaultConfig.Server.Metrics.Token = "" // Empty = no auth (use firewall instead)
+	defaultConfig.Server.Metrics.DurationBuckets = []float64{0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10}
+	defaultConfig.Server.Metrics.SizeBuckets = []float64{100, 1000, 10000, 100000, 1000000, 10000000}
+
 	// ============================================================================
 	// DATABASE CONFIGURATION
 	// ============================================================================
@@ -363,6 +501,14 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Security.CORS.AllowedMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
 	defaultConfig.Security.CORS.AllowedHeaders = []string{"Content-Type", "Authorization", "X-Requested-With"}
 	defaultConfig.Security.CORS.MaxAge = 86400 // 24 hours
+
+	// CSRF Protection per AI.md PART 11
+	defaultConfig.Security.CSRF.Enabled = true
+	defaultConfig.Security.CSRF.TokenLength = 32
+	defaultConfig.Security.CSRF.CookieName = "csrf_token"
+	defaultConfig.Security.CSRF.HeaderName = "X-CSRF-Token"
+	defaultConfig.Security.CSRF.FieldName = "csrf_token"
+	defaultConfig.Security.CSRF.Secure = "auto"
 
 	// ============================================================================
 	// WEB CONFIGURATION
@@ -459,6 +605,12 @@ func GenerateDefaultYAMLConfig(path string) error {
 	defaultConfig.Logging.Debug.Stderr = false
 	defaultConfig.Logging.Debug.Format = "text" // text, json
 	defaultConfig.Logging.Debug.File = "debug.log"
+
+	// Audit Log per AI.md PART 11 (security events in JSON Lines format)
+	defaultConfig.Logging.Audit.Enabled = true
+	defaultConfig.Logging.Audit.File = "audit.log"
+	defaultConfig.Logging.Audit.MaskEmails = true
+	defaultConfig.Logging.Audit.IncludeUserAgent = true
 
 	// Write to file
 	data, err := yaml.Marshal(defaultConfig)

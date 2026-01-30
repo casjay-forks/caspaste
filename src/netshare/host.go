@@ -120,15 +120,19 @@ func isPrivateIP(ip net.IP) bool {
 		return false
 	}
 
-	// IPv4 private ranges
+	// IPv4 private ranges:
+	// - 10.0.0.0/8
+	// - 172.16.0.0/12
+	// - 192.168.0.0/16
+	// - 127.0.0.0/8 (localhost)
 	privateIPv4Ranges := []struct {
 		min net.IP
 		max net.IP
 	}{
-		{net.ParseIP("10.0.0.0"), net.ParseIP("10.255.255.255")},         // 10.0.0.0/8
-		{net.ParseIP("172.16.0.0"), net.ParseIP("172.31.255.255")},       // 172.16.0.0/12
-		{net.ParseIP("192.168.0.0"), net.ParseIP("192.168.255.255")},     // 192.168.0.0/16
-		{net.ParseIP("127.0.0.0"), net.ParseIP("127.255.255.255")},       // 127.0.0.0/8 (localhost)
+		{net.ParseIP("10.0.0.0"), net.ParseIP("10.255.255.255")},
+		{net.ParseIP("172.16.0.0"), net.ParseIP("172.31.255.255")},
+		{net.ParseIP("192.168.0.0"), net.ParseIP("192.168.255.255")},
+		{net.ParseIP("127.0.0.0"), net.ParseIP("127.255.255.255")},
 	}
 
 	// Check IPv4

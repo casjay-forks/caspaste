@@ -96,7 +96,8 @@ type Data struct {
 	Logo    string
 	Favicon string
 
-	Public        bool   // true = open/public (no auth), false = auth required
+	// true = open/public (no auth), false = auth required
+	Public        bool
 	CasPasswdFile string
 
 	UiDefaultLifeTime string

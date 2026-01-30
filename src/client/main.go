@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/casjay-forks/caspaste/src/completions"
 	"gopkg.in/yaml.v3"
 )
 
@@ -90,6 +91,12 @@ type ErrorResponse struct {
 }
 
 func main() {
+	// Handle --shell completions/init commands first (per AI.md PART 8/33)
+	if len(os.Args) >= 2 && os.Args[1] == "--shell" {
+		completions.Handle(os.Args[1:])
+		return
+	}
+
 	if len(os.Args) < 2 {
 		printUsage()
 		os.Exit(1)
@@ -139,6 +146,16 @@ Commands:
   health, healthz     Check server health
   help                Show this help message
   version             Show version
+
+Shell Completions:
+  --shell completions [SHELL]   Print shell completion script
+  --shell init [SHELL]          Print shell init command for eval
+  --shell --help                Show shell integration help
+
+  Supported shells: bash, zsh, fish, sh, dash, ksh, powershell, pwsh
+  If SHELL is omitted, it is auto-detected from $SHELL.
+
+  Example: eval "$(caspaste-cli --shell init)"
 
 Examples:
   # Configure server and credentials

@@ -33,6 +33,15 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - **REFRESHED:** AI.md re-copied from ~/Projects/github/apimgr/TEMPLATE.md (fresh template)
 - **Updated:** Placeholders replaced ({projectname}→caspaste, {projectorg}→casjay-forks)
 - **Updated:** AI.md PART 3 filled in with project description and features
+- **Fixed:** /api/healthz → /api/v1/healthz per AI.md PART 13
+- **Fixed:** Inline comments moved above code per AI.md:
+  - src/apiv1/api.go: Public field comment
+  - src/config/config.go, env.go, yaml.go: All struct field comments (~50 in yaml.go)
+  - src/logger/logger.go: LogFormat struct, Level init comment
+  - src/netshare/netshare.go, host.go, paste.go, ratelimit.go: Struct fields and status codes
+  - src/server/caspaste.go: default: case statements, tcp() extraction comment
+  - src/storage/paste.go, storage.go: Paste struct fields, default: case
+  - src/web/error.go, web.go: errorTmpl struct, Public field
 - **Created:** Jenkinsfile per AI.md PART 28 requirement
 - **Verified:** .claude/rules/ has all 14 required files
 - **Verified:** tests/ has run_tests.sh, docker.sh, incus.sh
@@ -63,10 +72,10 @@ Structural compliance tasks previously completed. See compliance matrix below.
 
 **Mandatory PARTs (0-33):**
 - **PART 0-5 (Rules, Structure, Paths, Config):** ✅ Following patterns
-- **PART 6-8 (Modes, Binary, CLI):** ⚠️ Missing shell completions (Panic Recovery + pprof debug endpoints implemented)
+- **PART 6-8 (Modes, Binary, CLI):** ✅ Panic Recovery, pprof debug, shell completions, --pid/--backup/--mode flags
 - **PART 9 (Error/Caching):** ⚠️ Missing ETag, unified response format
-- **PART 10 (Database):** ⚠️ Missing query timeouts
-- **PART 11 (Security/Logging):** ⚠️ Missing audit.log, CSRF (Request ID + Security Headers implemented)
+- **PART 10 (Database):** ✅ Query timeouts implemented
+- **PART 11 (Security/Logging):** ✅ Request ID, Security Headers, CSRF, Audit logging all implemented
 - **PART 12 (Server Config):** ⚠️ No hot reload, no file watcher
 - **PART 13 (Health):** ✅ `/api/healthz` and `/healthz` exist
 - **PART 14 (API):** ⚠️ Routes use verbs/camelCase (documented gap)
@@ -76,9 +85,9 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - **PART 18 (Email):** ❌ Not implemented
 - **PART 19 (Scheduler):** ⚠️ Basic cleanup only, no task management
 - **PART 20 (GeoIP):** ❌ Not implemented
-- **PART 21 (Metrics):** ❌ No /metrics, no prometheus support
+- **PART 21 (Metrics):** ✅ /metrics endpoint with Prometheus support implemented
 - **PART 22 (Backup):** ✅ --maintenance backup/restore
-- **PART 23 (Update):** ❌ No --update command
+- **PART 23 (Update):** ✅ --update command with check/yes/branch support
 - **PART 24-25 (Privilege/Service):** ✅ --service, privilege drop
 - **PART 26 (Makefile):** ✅ All targets present
 - **PART 27 (Docker):** ✅ OCI labels, tini, healthcheck
@@ -87,7 +96,7 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - **PART 30 (ReadTheDocs):** ✅ docs/ has all files, mkdocs.yml, .readthedocs.yaml
 - **PART 31 (I18N):** ✅ 4 locales in src/web/data/locale/
 - **PART 32 (Tor):** ❌ Not implemented
-- **PART 33 (Client):** ⚠️ CLI exists, missing TUI/GUI mode
+- **PART 33 (Client):** ⚠️ CLI + shell completions implemented, missing TUI/GUI mode
 
 **Optional PARTs (34-36):** N/A - Not implemented, not required
 - PART 34 (Multi-User): Not implemented
@@ -108,10 +117,10 @@ Structural compliance tasks previously completed. See compliance matrix below.
 | 5 | Configuration | ✅ | server.yml, cli.yml |
 | 6 | Application Modes | ✅ | pprof debug endpoints + panic recovery |
 | 7 | Binary Requirements | ✅ | CGO_ENABLED=0, embedded assets |
-| 8 | Server Binary CLI | ⚠️ | Missing --shell, --pid, --backup, --mode flags |
+| 8 | Server Binary CLI | ✅ | Shell completions, --pid, --backup, --mode flags all implemented |
 | 9 | Error Handling & Caching | ⚠️ | Missing ETag support |
-| 10 | Database & Cluster | ⚠️ | Missing query timeouts |
-| 11 | Security & Logging | ⚠️ | Missing audit.log, CSRF, Request ID |
+| 10 | Database & Cluster | ✅ | Query timeouts implemented |
+| 11 | Security & Logging | ✅ | Request ID, CSRF, Security Headers, Audit logging implemented |
 | 12 | Server Configuration | ⚠️ | YAML config present, no hot reload, no file watcher |
 | 13 | Health & Versioning | ✅ | /healthz, /api/healthz |
 | 14 | API Structure | ⚠️ | Routes need refactoring (verbs in URLs, camelCase), missing OpenAPI/Swagger |
@@ -121,9 +130,9 @@ Structural compliance tasks previously completed. See compliance matrix below.
 | 18 | Email & Notifications | ❌ | Not implemented |
 | 19 | Scheduler | ⚠️ | Basic cleanup only |
 | 20 | GeoIP | ❌ | Not implemented |
-| 21 | Metrics | ❌ | Not implemented |
+| 21 | Metrics | ✅ | /metrics endpoint with Prometheus support |
 | 22 | Backup & Restore | ✅ | --maintenance backup/restore |
-| 23 | Update Command | ❌ | Not implemented |
+| 23 | Update Command | ✅ | --update check/yes/branch |
 | 24-25 | Privilege & Service | ✅ | --service, privilege drop |
 | 26 | Makefile | ✅ | All targets present |
 | 27 | Docker | ✅ | OCI labels, tini, healthcheck |
@@ -132,7 +141,7 @@ Structural compliance tasks previously completed. See compliance matrix below.
 | 30 | ReadTheDocs | ✅ | MkDocs Material |
 | 31 | I18N & A11Y | ✅ | 4 locales, WCAG compliant |
 | 32 | Tor Hidden Service | ❌ | Not implemented |
-| 33 | Client | ⚠️ | CLI exists, missing TUI/GUI mode, shell completions |
+| 33 | Client | ⚠️ | CLI + shell completions implemented, missing TUI/GUI mode |
 
 **Legend:** ✅ Implemented | ⚠️ Partial | ❌ Not Implemented
 
@@ -257,12 +266,14 @@ Structural compliance tasks previously completed. See compliance matrix below.
 ## Known Compliance Gaps (Existing Code)
 
 ### Inline Comments in Go Code
-Per AI.md, comments must be ABOVE code, never inline. The existing codebase has ~220 inline comments, primarily:
-- Struct field documentation (Go idiom)
-- End-of-line explanations
+Per AI.md, comments must be ABOVE code, never inline.
 
-**Status:** Documented, not fixed (would require significant refactoring of existing code)
-**Impact:** Low (code functions correctly, standard Go pattern)
+**Status:** ✅ FIXED - All major inline comments have been moved above code:
+- Struct field comments in config, logger, storage, netshare, web packages
+- Switch case inline comments (default: // comment → // comment\ndefault:)
+- Function call inline comments
+
+**Impact:** None (compliant with AI.md)
 
 ### Built-in Scheduler (PART 19)
 Per AI.md PART 19, ALL projects MUST have a built-in scheduler. The current project has a simple ticker-based cleanup but lacks the full scheduler system with:
@@ -306,15 +317,28 @@ Per AI.md PART 20, ALL projects MUST have built-in GeoIP support using sapics/ip
 **Status:** Not implemented (significant new feature work)
 **Impact:** Low (pastebin functions without GeoIP)
 
-### Prometheus Metrics (PART 21)
+### Prometheus Metrics (PART 21) - IMPLEMENTED
 Per AI.md PART 21, ALL projects MUST have built-in Prometheus-compatible metrics at `/metrics` including:
 - HTTP metrics (requests, duration, size, status codes)
 - Database metrics (queries, duration, connections)
 - Authentication metrics (attempts, sessions)
 - System metrics (CPU, memory, disk, goroutines)
 
-**Status:** Not implemented (significant new feature work)
-**Impact:** Medium (no production monitoring capabilities)
+**Status:** ✅ Implemented in `src/metrics/metrics.go`
+- Prometheus text exposition format at configurable endpoint (default: /metrics)
+- All metrics prefixed with `caspaste_`
+- Required metrics:
+  - App info: `caspaste_app_info`, `caspaste_app_uptime_seconds`, `caspaste_app_start_timestamp`
+  - HTTP: `caspaste_http_requests_total`, `caspaste_http_request_duration_seconds`, `caspaste_http_active_requests`
+  - Database: `caspaste_db_queries_total`, `caspaste_db_query_duration_seconds`, `caspaste_db_connections_open`
+  - Auth: `caspaste_auth_attempts_total`, `caspaste_auth_sessions_active`
+  - Rate limiting: `caspaste_ratelimit_requests_total`, `caspaste_ratelimit_blocked_total`
+  - Pastes: `caspaste_pastes_total`, `caspaste_pastes_created_total`, `caspaste_pastes_deleted_total`
+  - Go runtime: `caspaste_go_goroutines`, `caspaste_go_mem_alloc_bytes`, `caspaste_go_gc_runs_total`
+- Configuration in yaml (server.metrics section: enabled, endpoint, include_system, include_runtime, token)
+- Optional bearer token authentication for metrics endpoint
+- Path normalization for low-cardinality metric labels
+- Metrics middleware automatically tracks HTTP request/response metrics
 
 ### Update Command (PART 23)
 Per AI.md PART 23, projects should have `--update` command for self-updates:
@@ -322,8 +346,15 @@ Per AI.md PART 23, projects should have `--update` command for self-updates:
 - `--update yes` - Perform update
 - `--update branch {name}` - Switch update branch
 
-**Status:** Not implemented
-**Impact:** Low (manual updates work, no self-update)
+**Status:** ✅ Implemented
+**Implementation:**
+- `src/updater/update.go` - Shared update logic with GitHub Releases API
+- `src/updater/update_unix.go` - Unix binary replacement (atomic rename)
+- `src/updater/update_windows.go` - Windows binary replacement (.old rename workaround)
+- `src/updater/service_linux.go` - Linux service restart (systemd, service, runit, s6)
+- `src/updater/service_darwin.go` - macOS service restart (launchd)
+- `src/updater/service_bsd.go` - BSD service restart (rc.d)
+- `src/updater/service_windows.go` - Windows service restart (sc.exe)
 
 ### Automatic SSL/Let's Encrypt (PART 15)
 Per AI.md PART 15, ALL projects MUST have built-in Let's Encrypt support with automatic certificate issuance via ACME.
@@ -381,37 +412,39 @@ Per AI.md PART 16, projects should use toast notifications instead of JavaScript
 **Status:** Not implemented
 **Impact:** Low (current alerts work but not modern UX)
 
-### Audit Logging (PART 11)
-Per AI.md PART 11, security events should be logged to `audit.log` in JSON format:
-- Login attempts (success/failure)
-- Admin actions
-- Security-relevant events
+### Audit Logging (PART 11) - IMPLEMENTED
+Per AI.md PART 11, security events should be logged to `audit.log` in JSON format.
 
-Current project has:
-- Access logs (multiple formats: apache, nginx, json, text)
-- Error logs
-- Server logs
+**Status:** ✅ Implemented in `src/audit/audit.go`
+- JSON Lines format (one JSON object per line)
+- Event types: admin.login, admin.login_failed, security.csrf_failure, security.rate_limit_exceeded, server.started, server.stopped, etc.
+- Global convenience functions for easy logging from anywhere
+- Configurable: enable/disable, mask emails, include user-agent
+- CSRF middleware logs all CSRF validation failures
+- Server logs start/stop events with uptime tracking
+- Configuration in yaml: logging.audit section
 
-Missing:
-- Dedicated audit.log for security events
-- security.log for security-specific events
-
-**Status:** Partial (logging exists but no dedicated audit log)
-**Impact:** Low (events are logged, just not in dedicated audit format)
-
-### Database Query Timeouts (PART 10)
+### Database Query Timeouts (PART 10) - IMPLEMENTED
 Per AI.md PART 10, ALL database queries MUST have timeouts using context.WithTimeout.
 
-Current implementation uses direct Query/Exec calls without context timeouts.
+**Status:** ✅ Implemented in `src/storage/paste.go` and `src/storage/migrate.go`
+- defaultQueryTimeout = 5 seconds (simple queries: INSERT, UPDATE, DELETE, SELECT single)
+- defaultListTimeout = 10 seconds (list queries: SELECT multiple rows)
+- defaultBatchTimeout = 30 seconds (batch operations: DELETE expired)
+- migrationTimeout = 5 minutes (database migrations)
+- All operations use ExecContext, QueryRowContext, QueryContext with timeout
+- Backup pool operations also have independent timeouts
 
-**Status:** Not implemented
-**Impact:** Medium (long-running queries could hang the server)
+### CSRF Protection (PART 11) - IMPLEMENTED
+Per AI.md PART 11, ALL forms MUST have CSRF protection.
 
-### CSRF Protection (PART 11)
-Per AI.md PART 11, ALL forms MUST have CSRF protection using gorilla/csrf or nosurf.
-
-**Status:** Not implemented
-**Impact:** Medium (security vulnerability for form submissions)
+**Status:** ✅ Implemented in `src/web/csrf.go`
+- CSRFMiddleware with token generation, validation, cleanup
+- Configuration in yaml (enabled, token_length, cookie_name, header_name, field_name, secure)
+- All forms have hidden csrf_token field (login, create paste, settings, paste continue)
+- Token stored in cookie and validated on POST requests
+- Constant-time comparison to prevent timing attacks
+- Token regeneration support for login (session fixation prevention)
 
 ### Request ID Tracing (PART 11) - IMPLEMENTED
 Per AI.md PART 11, every request MUST have a Request ID (X-Request-ID header) for tracing and debugging.
@@ -422,20 +455,19 @@ Per AI.md PART 11, every request MUST have a Request ID (X-Request-ID header) fo
 - Returns X-Request-ID in response headers
 - GetRequestID() helper available for logging integration
 
-### Missing CLI Flags (PART 8)
-Per AI.md PART 8, these CLI flags are required but missing:
-- `--shell completions [SHELL]` - Print shell completion scripts
-- `--shell init [SHELL]` - Print shell init command for eval
-- `--pid {pid_file}` - Set PID file path
-- `--backup {backup_dir}` - Set backup directory
-- `--mode {production|development}` - Set application mode
+### CLI Flags (PART 8) - IMPLEMENTED
+Per AI.md PART 8, these CLI flags are now all implemented:
+- ✅ `--pid {pid_file}` - Set PID file path
+- ✅ `--backup {backup_dir}` - Set backup directory
+- ✅ `--mode {production|development}` - Set application mode
+- ✅ `--shell completions [SHELL]` - Print shell completion script
+- ✅ `--shell init [SHELL]` - Print shell init command
 
-Current implementation has:
-- `--maintenance backup` for backup operations (different from --backup dir flag)
-- PID file written to fixed location (not configurable)
-
-**Status:** Partial (core flags work, missing shell/pid/backup/mode)
-**Impact:** Low (server functions, power user features missing)
+**Status:** ✅ Implemented
+- `--pid` uses platform-specific defaults: /var/run/casjay-forks/caspaste.pid (root) or ~/.local/share/casjay-forks/caspaste/caspaste.pid (user)
+- `--backup` uses platform-specific defaults with priority: flag > env var > config > OS defaults
+- `--mode development` enables debug features (equivalent to --debug)
+- `--mode production` is default (debug disabled unless explicitly set)
 
 ### Client TUI/GUI Mode (PART 33)
 Per AI.md PART 33, CLI MUST have TUI and GUI modes (NON-NEGOTIABLE):
@@ -457,14 +489,16 @@ Missing:
 **Status:** Partial (CLI works, no TUI/GUI)
 **Impact:** Medium (power users have CLI, no interactive mode)
 
-### Shell Completions (PART 8/33)
+### Shell Completions (PART 8/33) - IMPLEMENTED
 Per AI.md, ALL binaries (server, agent, client) MUST support shell completions - built into binary, no separate files:
 - `--shell completions [SHELL]` - Print completion script to stdout
 - `--shell init [SHELL]` - Alias: prints eval-wrapped completions command
-- Support for bash, zsh, fish, powershell
 
-**Status:** Not implemented
-**Impact:** Medium (users must manually create completion scripts)
+**Status:** ✅ Implemented in `src/completions/completions.go`
+- Full support for bash, zsh, fish, sh, dash, ksh, powershell, pwsh
+- Auto-detection of shell from $SHELL environment variable
+- Both server (caspaste) and client (caspaste-cli) binaries support completions
+- Context-aware completions for flags, commands, and values
 
 ### Config Hot Reload (PART 12)
 Per AI.md PART 12, config should auto-reload via file watcher (fsnotify):

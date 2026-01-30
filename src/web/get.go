@@ -100,6 +100,8 @@ type pasteContinueTmpl struct {
 	Language  string
 	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
+	// CSRF token for form protection per AI.md PART 11
+	CSRFToken string
 }
 
 func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) error {
@@ -129,6 +131,7 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 				Language:  getCookie(req, "lang"),
 				Theme:     data.getThemeFunc(req),
 				Translate: data.Locales.findLocale(req).translate,
+				CSRFToken: GetCSRFToken(req, 32),
 			}
 
 			return data.PasteContinue.Execute(rw, tmplData)

@@ -11,17 +11,25 @@ import (
 )
 
 const (
-	MaxLengthAuthorAll = 100 // Max length or paste author name, email and URL.
+	// Max length for paste author name, email and URL
+	MaxLengthAuthorAll = 100
 )
 
 var (
-	ErrBadRequest       = errors.New("Bad Request")        // 400
-	ErrUnauthorized     = errors.New("Unauthorized")       // 401
-	ErrNotFound         = errors.New("Not Found")          // 404
-	ErrMethodNotAllowed = errors.New("Method Not Allowed") // 405
-	ErrPayloadTooLarge  = errors.New("Payload Too Large")  // 413
-	ErrTooManyRequests  = errors.New("Too Many Requests")  // 429
-	ErrInternal         = errors.New("Internal Server Error") // 500
+	// HTTP 400
+	ErrBadRequest = errors.New("Bad Request")
+	// HTTP 401
+	ErrUnauthorized = errors.New("Unauthorized")
+	// HTTP 404
+	ErrNotFound = errors.New("Not Found")
+	// HTTP 405
+	ErrMethodNotAllowed = errors.New("Method Not Allowed")
+	// HTTP 413
+	ErrPayloadTooLarge = errors.New("Payload Too Large")
+	// HTTP 429
+	ErrTooManyRequests = errors.New("Too Many Requests")
+	// HTTP 500
+	ErrInternal = errors.New("Internal Server Error")
 )
 
 type RateLimitError struct {

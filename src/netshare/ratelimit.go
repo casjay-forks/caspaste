@@ -50,15 +50,20 @@ func (rateSys *RateLimitSystem) CheckAndUse(ip net.IP) error {
 type RateLimit struct {
 	sync.RWMutex
 
-	limitPeriod int  // N - Rate limit period (in seconds)
-	limitCount  uint // X - Max request count per N seconds period
+	// N - Rate limit period (in seconds)
+	limitPeriod int
+	// X - Max request count per N seconds period
+	limitCount uint
 
-	list map[string]rateLimitIP // Rate limit bucket
+	// Rate limit bucket
+	list map[string]rateLimitIP
 }
 
 type rateLimitIP struct {
-	UseTime  int64 // Fist IP use time
-	UseCount uint  // Requests count by IP
+	// First IP use time
+	UseTime int64
+	// Requests count by IP
+	UseCount uint
 }
 
 func NewRateLimit(rateLimitPeriod int, limitCount uint) *RateLimit {

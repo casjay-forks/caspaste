@@ -20,8 +20,10 @@ type errorTmpl struct {
 	Code      int
 	AdminName string
 	AdminMail string
-	Language  string       // Language for base template
-	Theme     func(string) string // Theme function to get theme values
+	// Language for base template
+	Language string
+	// Theme function to get theme values
+	Theme     func(string) string
 	Translate func(string, ...interface{}) template.HTML
 }
 
@@ -50,8 +52,10 @@ func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error)
 		Code:      0,
 		AdminName: data.AdminName,
 		AdminMail: data.AdminMail,
-		Language:  getCookie(req, "lang"), // Get language from cookie
-		Theme:     themeLookup,             // Theme lookup function
+		// Get language from cookie
+		Language: getCookie(req, "lang"),
+		// Theme lookup function
+		Theme:     themeLookup,
 		Translate: locale.translate,
 	}
 
