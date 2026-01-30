@@ -470,7 +470,7 @@ if cacheSize > 1024*1024*1024 {
 
 | Rule | Description |
 |------|-------------|
-| **SQLite default** | `{data_dir}/db/server.db` and `{data_dir}/db/users.db` |
+| **SQLite default** | `/data/db/sqlite/server.db` and `/data/db/sqlite/users.db` |
 | **Password hashing** | Argon2id - NEVER bcrypt |
 | **Valkey/Redis** | Every app supports it for caching/clustering |
 
@@ -1375,7 +1375,7 @@ This distinction exists for clarity. When referring to OS-level resources that b
 | Constraint | Value |
 |------------|-------|
 | File size | ~2.0MB |
-| Line count | ~54,100 lines |
+| Line count | ~54,200 lines |
 | Read limit | ~500 lines per read |
 | Full reads needed | ~108 reads (impractical) |
 
@@ -1396,36 +1396,36 @@ This distinction exists for clarity. When referring to OS-level resources that b
 | 6 | ~7847 | Application Modes | Mode handling, debug endpoints |
 | 7 | ~8455 | Binary Requirements | Binary building, **Display detection**, **TERM=dumb**, **NO_COLOR** |
 | 8 | ~9118 | Server Binary CLI | CLI flags/commands, **NO_COLOR Support**, **--color flag** |
-| 9 | ~12271 | Error Handling & Caching | Error/cache patterns |
-| 10 | ~12648 | Database & Cluster | Database work |
-| 11 | ~13063 | Security & Logging | Security features, **Scoped Agent Tokens**, **Context Detection** |
-| 12 | ~14955 | Server Configuration | Server settings |
-| 13 | ~16015 | Health & Versioning | Health endpoints |
-| 14 | ~16766 | API Structure | REST/GraphQL/Route Compliance, **Non-Interactive Text Output** |
-| 15 | ~18358 | SSL/TLS & Let's Encrypt | SSL certificates |
-| 16 | ~19231 | Web Frontend | Frontend/UI, **Sitemap**, **Site Verification**, **Branding/SEO** |
-| 17 | ~25167 | Admin Panel | Admin UI, **Server Admin**, **Scoped Agents API** |
-| 18 | ~27207 | Email & Notifications | Email/SMTP, **SMTP Auto-Detection** |
-| 19 | ~28527 | Scheduler | Background tasks, **NO external schedulers**, **Backup tasks** |
-| 20 | ~29012 | GeoIP | GeoIP features |
-| 21 | ~29085 | Metrics | Prometheus metrics, **INTERNAL only** |
-| 22 | ~30530 | Backup & Restore | Backup features, **Compliance encryption**, **Cluster backups** |
-| 23 | ~31259 | Update Command | Update feature |
-| 24 | ~31738 | Privilege Escalation & Service | Service/privilege work |
-| 25 | ~32636 | Service Support | Systemd/runit/rc.d/launchd templates |
-| 26 | ~32820 | Makefile | Local dev/tests/debug only, **NOT used in CI/CD** |
-| 27 | ~33575 | Docker | Docker/containers, **NEVER copy/symlink binaries** |
-| 28 | ~34943 | CI/CD Workflows | GitHub/GitLab/Gitea Actions |
-| 29 | ~37797 | Testing & Development | Testing/dev workflow, **AI Docker Compose Rules**, **Content Negotiation Testing** |
-| 30 | ~39618 | ReadTheDocs Documentation | Documentation |
-| 31 | ~40348 | I18N & A11Y | Internationalization |
-| 32 | ~40769 | Tor Hidden Service | Tor support, **binary controls Tor** |
-| 33 | ~42548 | Client & Agent | Client **REQUIRED**, Agent optional - CLI/TUI/GUI, **Scoped Agent Tokens**, **Smart Context**, **First-Run Wizard** |
-| 34 | ~46957 | Multi-User | **OPTIONAL** - Regular User accounts/registration, vanity URLs |
-| 35 | ~50609 | Organizations | **OPTIONAL** - multi-user orgs, vanity URLs |
-| 36 | ~51250 | Custom Domains | **OPTIONAL** - user/org branded domains |
-| 37 | ~52273 | IDEA.md Reference | **Examples only** - NEVER modify |
-| FINAL | ~52527 | Compliance Checklist | Final verification, **AI Quick Reference Rules** |
+| 9 | ~12277 | Error Handling & Caching | Error/cache patterns |
+| 10 | ~12654 | Database & Cluster | Database work |
+| 11 | ~13069 | Security & Logging | Security features, **Scoped Agent Tokens**, **Context Detection** |
+| 12 | ~14961 | Server Configuration | Server settings |
+| 13 | ~16021 | Health & Versioning | Health endpoints |
+| 14 | ~16772 | API Structure | REST/GraphQL/Route Compliance, **Non-Interactive Text Output** |
+| 15 | ~18364 | SSL/TLS & Let's Encrypt | SSL certificates |
+| 16 | ~19237 | Web Frontend | Frontend/UI, **Sitemap**, **Site Verification**, **Branding/SEO** |
+| 17 | ~25173 | Admin Panel | Admin UI, **Server Admin**, **Scoped Agents API** |
+| 18 | ~27213 | Email & Notifications | Email/SMTP, **SMTP Auto-Detection** |
+| 19 | ~28533 | Scheduler | Background tasks, **NO external schedulers**, **Backup tasks** |
+| 20 | ~29018 | GeoIP | GeoIP features |
+| 21 | ~29091 | Metrics | Prometheus metrics, **INTERNAL only** |
+| 22 | ~30536 | Backup & Restore | Backup features, **Compliance encryption**, **Cluster backups** |
+| 23 | ~31265 | Update Command | Update feature |
+| 24 | ~31744 | Privilege Escalation & Service | Service/privilege work |
+| 25 | ~32642 | Service Support | Systemd/runit/rc.d/launchd templates |
+| 26 | ~32826 | Makefile | Local dev/tests/debug only, **NOT used in CI/CD** |
+| 27 | ~33581 | Docker | Docker/containers, **NEVER copy/symlink binaries** |
+| 28 | ~35074 | CI/CD Workflows | GitHub/GitLab/Gitea Actions |
+| 29 | ~37928 | Testing & Development | Testing/dev workflow, **AI Docker Compose Rules**, **Content Negotiation Testing** |
+| 30 | ~39749 | ReadTheDocs Documentation | Documentation |
+| 31 | ~40479 | I18N & A11Y | Internationalization |
+| 32 | ~40900 | Tor Hidden Service | Tor support, **binary controls Tor** |
+| 33 | ~42679 | Client & Agent | Client **REQUIRED**, Agent optional - CLI/TUI/GUI, **Scoped Agent Tokens**, **Smart Context**, **First-Run Wizard** |
+| 34 | ~47088 | Multi-User | **OPTIONAL** - Regular User accounts/registration, vanity URLs |
+| 35 | ~50740 | Organizations | **OPTIONAL** - multi-user orgs, vanity URLs |
+| 36 | ~51381 | Custom Domains | **OPTIONAL** - user/org branded domains |
+| 37 | ~52404 | IDEA.md Reference | **Examples only** - NEVER modify |
+| FINAL | ~52658 | Compliance Checklist | Final verification, **AI Quick Reference Rules** |
 
 **When Implementing OPTIONAL PARTs (34-36, Agent from 33):**
 1. Change PART title from `OPTIONAL` → `NON-NEGOTIABLE` in AI.md
@@ -2501,7 +2501,7 @@ When the specification is unclear:
 | Element | Allowed Changes | Example |
 |---------|-----------------|---------|
 | **Dockerfile packages** | Add packages app needs | `RUN apk add --no-cache ffmpeg` |
-| **Base image** | Change if app requires | `debian:bookworm-slim` instead of `alpine` |
+| **Base image** | Change if app requires | `debian:latest` instead of `alpine` |
 | **Config values** | App-specific settings | `search.engines`, `jokes.categories` |
 | **Routes** | App-specific endpoints | `/api/{api_version}/search`, `/api/{api_version}/jokes` |
 | **Database schema** | App-specific tables | `searches`, `jokes`, `engines` |
@@ -2631,7 +2631,7 @@ logging:
 
 | Scenario | Solution |
 |----------|----------|
-| **App needs debian packages** | Use `debian:bookworm-slim` base image |
+| **App needs debian packages** | Use `debian:latest` base image |
 | **App needs specific runtime** | Add to Dockerfile, document in IDEA.md |
 | **App has unique requirements** | Document exception in IDEA.md |
 
@@ -4808,24 +4808,18 @@ package main
 | **Name** | caspaste |
 | **Organization** | casjay-forks |
 | **Official Site** | https://caspaste.casjay-forks.us |
-| **Repository** | https://github.com/casjay-forks/caspaste |
+| **Repository** | {PLATFORM_REPO_URL} |
 | **README** | README.md |
 | **License** | MIT > LICENSE.md |
 | **Embedded Licenses** | Added to bottom of LICENSE.md |
 
 ## Project Description
 
-CasPaste is a self-hosted, privacy-focused pastebin service. It provides a fast, secure platform for sharing text snippets and code with syntax highlighting, burn-after-reading, and file upload support. Designed as a single static binary with no external runtime dependencies.
+{Brief description of what this project does}
 
 ## Project-Specific Features
 
-- **Paste Creation**: Create text pastes with optional syntax highlighting
-- **File Upload**: Upload files (images, documents) as pastes
-- **Privacy Options**: Burn-after-reading, password protection, expiration
-- **Themes**: 12+ syntax highlighting themes (dark/light)
-- **Localization**: Multi-language support (en, de, bn_IN, ru)
-- **PWA**: Progressive Web App support for offline access
-- **Multi-Database**: SQLite (default), PostgreSQL, MySQL support
+{List features unique to this project}
 
 ---
 
@@ -5774,7 +5768,7 @@ Before proceeding, confirm you understand:
 | PID File | `/var/run/casjay-forks/caspaste.pid` |
 | SSL | `/etc/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `/etc/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/var/lib/casjay-forks/caspaste/db/` |
+| SQLite DB | `/var/lib/casjay-forks/caspaste/db/` (server.db, users.db) |
 | Service | `/etc/systemd/system/caspaste.service` |
 
 ### User (non-privileged)
@@ -5792,7 +5786,7 @@ Before proceeding, confirm you understand:
 | PID File | `~/.local/share/casjay-forks/caspaste/caspaste.pid` |
 | SSL | `~/.config/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `~/.config/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` |
+| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` (server.db, users.db) |
 
 ---
 
@@ -5813,7 +5807,7 @@ Before proceeding, confirm you understand:
 | PID File | `/var/run/casjay-forks/caspaste.pid` |
 | SSL | `/Library/Application Support/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `/Library/Application Support/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/Library/Application Support/casjay-forks/caspaste/db/` |
+| SQLite DB | `/Library/Application Support/casjay-forks/caspaste/db/` (server.db, users.db) |
 | Service | `/Library/LaunchDaemons/com.casjay-forks.caspaste.plist` |
 
 ### User (non-privileged)
@@ -5831,7 +5825,7 @@ Before proceeding, confirm you understand:
 | PID File | `~/Library/Application Support/casjay-forks/caspaste/caspaste.pid` |
 | SSL | `~/Library/Application Support/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `~/Library/Application Support/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/Library/Application Support/casjay-forks/caspaste/db/` |
+| SQLite DB | `~/Library/Application Support/casjay-forks/caspaste/db/` (server.db, users.db) |
 | Service | `~/Library/LaunchAgents/com.casjay-forks.caspaste.plist` |
 
 ---
@@ -5853,7 +5847,7 @@ Before proceeding, confirm you understand:
 | PID File | `/var/run/casjay-forks/caspaste.pid` |
 | SSL | `/usr/local/etc/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `/usr/local/etc/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `/var/db/casjay-forks/caspaste/db/` |
+| SQLite DB | `/var/db/casjay-forks/caspaste/db/` (server.db, users.db) |
 | Service | `/usr/local/etc/rc.d/caspaste` |
 
 ### User (non-privileged)
@@ -5871,7 +5865,7 @@ Before proceeding, confirm you understand:
 | PID File | `~/.local/share/casjay-forks/caspaste/caspaste.pid` |
 | SSL | `~/.config/casjay-forks/caspaste/ssl/` (letsencrypt/, local/) |
 | Security | `~/.config/casjay-forks/caspaste/security/` (geoip/, blocklists/, cve/, trivy/) |
-| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` |
+| SQLite DB | `~/.local/share/casjay-forks/caspaste/db/` (server.db, users.db) |
 
 ---
 
@@ -5891,7 +5885,7 @@ Before proceeding, confirm you understand:
 | Backup | `%ProgramData%\Backups\casjay-forks\caspaste\` |
 | SSL | `%ProgramData%\casjay-forks\caspaste\ssl\` (letsencrypt\, local\) |
 | Security | `%ProgramData%\casjay-forks\caspaste\security\` (geoip\, blocklists\, cve\, trivy\) |
-| SQLite DB | `%ProgramData%\casjay-forks\caspaste\db\` |
+| SQLite DB | `%ProgramData%\casjay-forks\caspaste\db\` (server.db, users.db) |
 | Service | Windows Service Manager |
 
 ### User (non-privileged)
@@ -5908,7 +5902,7 @@ Before proceeding, confirm you understand:
 | Backup | `%LocalAppData%\Backups\casjay-forks\caspaste\` |
 | SSL | `%AppData%\casjay-forks\caspaste\ssl\` (letsencrypt\, local\) |
 | Security | `%AppData%\casjay-forks\caspaste\security\` (geoip\, blocklists\, cve\, trivy\) |
-| SQLite DB | `%LocalAppData%\casjay-forks\caspaste\db\` |
+| SQLite DB | `%LocalAppData%\casjay-forks\caspaste\db\` (server.db, users.db) |
 
 ---
 
@@ -5924,7 +5918,7 @@ Before proceeding, confirm you understand:
 | Cache | `/data/caspaste/cache/` |
 | Logs | `/data/log/caspaste/` |
 | Log File | `/data/log/caspaste/server.log` |
-| SQLite DB | `/data/db/{dbtype}/` |
+| SQLite DB | `/data/db/sqlite/` (server.db, users.db) |
 | Backup | `/data/backups/caspaste/` |
 | Internal Port | `80` |
 
@@ -11558,7 +11552,7 @@ $ kill -TERM $(cat /var/run/myapp.pid)
 | `--port` | `PORT` | Listen port |
 | `--address` | `LISTEN` | Listen address |
 | `--mode` | `MODE` | Application mode (production/development) |
-| (none) | `DATABASE_DIR` | SQLite database directory (defaults to `{data_dir}/db/`, changeable) |
+| (none) | `DATABASE_DIR` | SQLite database directory (Docker: `/data/db/sqlite`, Native: `{data_dir}/db/`) |
 | (none) | `BACKUP_DIR` | Backup directory (defaults to `{data_dir}/backup/`, changeable) |
 
 **External backup mounts:** In production, `BACKUP_DIR` should typically point to external storage (NAS, separate disk, etc.) rather than staying under `{data_dir}`. Example: `BACKUP_DIR=/mnt/Backups/casjay-forks/caspaste`. The default `{data_dir}/backup/` is for development/testing only.
@@ -11578,12 +11572,18 @@ func GetConfigDir(flagValue string) string {
     return defaultConfigDir()
 }
 
-// GetDatabaseDir returns database directory (always under data dir)
-// This ensures SQLite is NEVER in {data_dir} root, always in {data_dir}/db/
+// GetDatabaseDir returns SQLite database directory
+// Docker: /data/db/sqlite (separate from app data)
+// Native: {data_dir}/db/ (under app data dir)
 func GetDatabaseDir(dataDir string) string {
     if envValue := os.Getenv("DATABASE_DIR"); envValue != "" {
         return envValue
     }
+    // Docker uses separate /data/db/sqlite directory
+    if isContainer() {
+        return "/data/db/sqlite"
+    }
+    // Native uses {data_dir}/db/
     return filepath.Join(dataDir, "db")
 }
 
@@ -11699,6 +11699,7 @@ export BACKUP_DIR="/data/backups/${APP_NAME}"
 services:
   caspaste:
     image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste-app
     command:
       - --config=/config
       - --data=/data
@@ -11709,7 +11710,7 @@ services:
       - config:/config:ro          # Config (read-only)
       - data:/data                 # Data (read-write)
       - logs:/logs                 # Logs (read-write)
-      - /var/run:/run                # PID file
+      - /var/run:/run:z            # PID file
     ports:
       - "8080:8080"
 ```
@@ -11720,6 +11721,7 @@ services:
 services:
   caspaste:
     image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
+    container_name: caspaste-app
     volumes:
       - caspaste-data:/data
     ports:
@@ -12651,7 +12653,7 @@ func runScheduledBackup(ctx context.Context) error {
 ---
 
 
-# PART 10: DATABASE & CLUSTER 
+# PART 10: DATABASE & CLUSTER
 
 ## Database Schema
 
@@ -12661,10 +12663,141 @@ func runScheduledBackup(ctx context.Context) error {
 |---------|-------------|
 | Self-creating | Tables created on startup if missing |
 | Idempotent | Safe to run multiple times |
-| Schema changes | Use `ALTER TABLE` inline when needed |
+| Schema changes | Idempotent `ALTER TABLE` on startup |
 | No migrations table | Keep it simple |
 
 See **Database Schema for Configuration** section in PART 5 for full table definitions.
+
+### Schema Updates (Idempotent Approach)
+
+**No migration files. No version tracking. All schema changes are idempotent and run on every startup.**
+
+```go
+// EnsureSchema runs on startup - creates tables and applies updates
+// Safe to run multiple times (idempotent)
+func EnsureSchema(db *sql.DB) error {
+    // 1. Create tables (idempotent)
+    for _, stmt := range createStatements {
+        if _, err := db.Exec(stmt); err != nil {
+            return fmt.Errorf("create table: %w", err)
+        }
+    }
+
+    // 2. Apply schema updates (idempotent)
+    for _, stmt := range schemaUpdates {
+        if _, err := db.Exec(stmt); err != nil {
+            // Ignore "column already exists" errors
+            if !isColumnExistsError(err) {
+                return fmt.Errorf("schema update: %w", err)
+            }
+        }
+    }
+
+    return nil
+}
+
+// Schema updates - each statement is idempotent
+var schemaUpdates = []string{
+    // v1.1.0 - Add org_visibility column
+    `ALTER TABLE users ADD COLUMN org_visibility INTEGER NOT NULL DEFAULT 1`,
+
+    // v1.2.0 - Add index for performance
+    `CREATE INDEX IF NOT EXISTS idx_users_visibility ON users(visibility)`,
+
+    // v1.3.0 - Add new table
+    `CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        key_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+}
+
+// isColumnExistsError checks if error is "column already exists"
+func isColumnExistsError(err error) bool {
+    msg := err.Error()
+    return strings.Contains(msg, "duplicate column") ||      // SQLite
+           strings.Contains(msg, "already exists") ||        // PostgreSQL
+           strings.Contains(msg, "Duplicate column name")    // MySQL
+}
+```
+
+### Schema Update Rules
+
+| Rule | Description |
+|------|-------------|
+| **Always idempotent** | Every statement safe to run multiple times |
+| **Never destructive** | Never `DROP COLUMN`, `DROP TABLE`, or `DELETE` |
+| **Add only** | Add columns, add tables, add indexes |
+| **Defaults required** | New columns must have `DEFAULT` or be nullable |
+| **No renames** | Add new column, migrate data in app code, deprecate old |
+| **Comments in code** | Note version that introduced each change |
+
+### Handling Column Renames
+
+**Never rename columns. Add new, migrate, deprecate:**
+
+```go
+// v1.4.0 - Rename "name" to "display_name" (3-step process)
+
+// Step 1: Add new column (v1.4.0)
+`ALTER TABLE users ADD COLUMN display_name TEXT DEFAULT ''`,
+
+// Step 2: App code reads from new, writes to both (v1.4.0)
+func (u *User) GetDisplayName() string {
+    if u.DisplayName != "" {
+        return u.DisplayName
+    }
+    return u.Name  // Fallback to old column
+}
+
+func (u *User) SetDisplayName(name string) {
+    u.DisplayName = name
+    u.Name = name  // Keep old column in sync
+}
+
+// Step 3: After all nodes upgraded, old column ignored (v1.5.0+)
+// Old column stays in DB (never drop), just unused
+```
+
+### Remote Database Updates
+
+**Same approach for SQLite and remote databases (PostgreSQL/MySQL).**
+
+| Database | `CREATE TABLE IF NOT EXISTS` | `ALTER TABLE ADD COLUMN` |
+|----------|------------------------------|--------------------------|
+| SQLite | ✓ Native support | Ignore "duplicate column" error |
+| PostgreSQL | ✓ Native support | `ADD COLUMN IF NOT EXISTS` (v9.6+) |
+| MySQL | ✓ Native support | Ignore error code 1060 |
+
+**PostgreSQL-specific (v9.6+):**
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS org_visibility INTEGER DEFAULT 1;
+```
+
+**Cross-database compatible:**
+```go
+// Try ALTER, ignore "already exists" errors
+_, err := db.Exec(`ALTER TABLE users ADD COLUMN org_visibility INTEGER DEFAULT 1`)
+if err != nil && !isColumnExistsError(err) {
+    return err
+}
+```
+
+### Cluster Schema Updates
+
+**All nodes must run the same application version.**
+
+| Scenario | Behavior |
+|----------|----------|
+| Rolling upgrade | Each node applies schema updates on startup |
+| First node | Creates tables, adds columns |
+| Subsequent nodes | Statements succeed (idempotent) or ignored |
+| Version mismatch | Older nodes may lack new columns (app handles gracefully) |
+
+**Upgrade order doesn't matter** - schema changes are additive, so:
+- New nodes can read old data (new columns have defaults)
+- Old nodes can read new data (ignore unknown columns)
 
 ## Cluster Support
 
@@ -23756,7 +23889,7 @@ func FetchRemoteImage(ctx context.Context, rawURL string, cfg FetchRemoteImageCo
     }
 
     // Set safe headers
-    req.Header.Set("User-Agent", "caspaste-server/1.0")
+    req.Header.Set("User-Agent", "caspaste/1.0")
     req.Header.Set("Accept", strings.Join(cfg.AllowedTypes, ", "))
 
     resp, err := client.Do(req)
@@ -33628,27 +33761,92 @@ docker/
 | Internal port | **80** |
 | **ENV MODE** | **development** (allows localhost, .local, .test, etc.) |
 
-### Container Paths 
+### Container Paths
 
 **Container directory structure - organized by component:**
 
+```
+/config/
+└── caspaste/                    # App config directory
+    ├── server.yml                    # Main config file
+    ├── security/                     # Security databases
+    │   ├── geoip.mmdb               # GeoIP database
+    │   └── blocklists/              # IP/domain blocklists
+    └── tor/                          # Tor config (binary owns Tor)
+        └── torrc                     # Tor configuration
+
+/data/
+├── caspaste/                    # App data directory
+│   ├── uploads/                      # User uploads
+│   ├── cache/                        # App cache
+│   └── tor/                          # Tor data (binary owns Tor)
+│       ├── hostname                  # .onion address
+│       └── hs_ed25519_*             # Hidden service keys
+├── db/                               # All database storage
+│   ├── sqlite/                       # SQLite databases
+│   │   ├── server.db                # Main app database
+│   │   └── users.db                 # Users DB (if multi-user)
+│   ├── postgres/                     # PostgreSQL data (if used)
+│   └── valkey/                       # Valkey/Redis data (if used)
+├── log/                              # Log files
+│   └── caspaste/               # App logs
+│       ├── access.log
+│       ├── error.log
+│       └── tor.log
+└── backups/                          # Backup archives
+    └── caspaste/
+```
+
+**Path Reference:**
+
 | Path | Purpose |
 |------|---------|
-| `/config/caspaste/` | Binary's {config_dir} (server.yml, etc.) |
-| `/config/caspaste/security/` | Security databases (geoip, blocklists, cve, trivy) |
-| `/config/caspaste/tor/` | Tor config (torrc) - binary owns Tor |
-| `/config/{servicename}/` | External service configs (valkey, nginx, etc.) |
-| `/data/caspaste/` | Binary's {data_dir} |
-| `/data/caspaste/tor/` | Tor data (hidden service keys) - binary owns Tor |
-| `/data/db/{dbtype}/` | Database data (postgres, valkey, mssql, etc.) |
-| `/data/log/caspaste/` | App logs (access.log, error.log, tor.log, etc.) |
-| `/data/log/{servicename}/` | Service logs (nginx, caddy, etc.) |
+| `/config/caspaste/` | App config (server.yml, security/, tor/) |
+| `/data/caspaste/` | App data (uploads, cache, tor/) |
+| `/data/db/sqlite/` | SQLite databases (server.db, users.db) |
+| `/data/db/postgres/` | PostgreSQL data directory |
+| `/data/db/valkey/` | Valkey/Redis persistence |
+| `/data/log/caspaste/` | App logs |
 | `/data/backups/caspaste/` | Backup archives |
-| `/data/{servicename}/` | External service data (nginx, apache, etc.) |
 | `/usr/local/bin/caspaste` | Application binary |
-| `/root/Dockerfile` | Build reference and backup |
 
-**Key principle:** Binary owns Tor completely - Tor dirs are under `caspaste/`, not separate.
+**Host Volume Mapping (docker-compose):**
+
+All compose files mount two volumes:
+
+```yaml
+volumes:
+  - './rootfs/config:/config:z'
+  - './rootfs/data:/data:z'
+```
+
+| Host Path | Container Path |
+|-----------|----------------|
+| `./rootfs/config/` | `/config/` |
+| `./rootfs/data/` | `/data/` |
+
+**Expected host directory structure (auto-created by binary on first run):**
+
+```
+./rootfs/
+├── config/
+│   └── caspaste/        # App config
+└── data/
+    ├── caspaste/        # App data
+    ├── db/
+    │   ├── sqlite/           # SQLite databases (server.db, users.db)
+    │   ├── postgres/         # PostgreSQL (if multi-service)
+    │   └── valkey/           # Valkey (if multi-service)
+    ├── log/
+    └── backups/
+```
+
+**Key principles:**
+- Binary owns Tor completely - Tor dirs are under `caspaste/`, not separate
+- All SQLite databases in `/data/db/sqlite/` (not scattered)
+- Database names are ALWAYS `server.db` and `users.db` (globally consistent)
+- External services (postgres, valkey) have their own `/data/db/{service}/` dirs
+- Compose mounts entire `/config` and `/data` - not individual subdirectories
 
 ### OCI Meta Labels (Required)
 
@@ -33735,7 +33933,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build \
     -ldflags "-s -w -X 'main.Version=${VERSION}' -X 'main.CommitID=${COMMIT_ID}' -X 'main.BuildDate=${BUILD_DATE}' -X 'main.OfficialSite=${OFFICIALSITE}'" \
-    -o /build/binary/caspaste src
+    -o /build/binary/caspaste ./src
 
 # =============================================================================
 # Runtime Stage - Minimal Alpine image
@@ -33796,8 +33994,10 @@ RUN chmod 755 /usr/local/bin/*
 
 # Set environment
 # Note: Tor available (binary installed) but server binary controls Tor startup (see PART 32)
+# DATABASE_DIR: SQLite location (binary auto-detects container, but explicit is clearer)
 ENV MODE=development \
-    TZ=America/New_York
+    TZ=America/New_York \
+    DATABASE_DIR=/data/db/sqlite
 
 # Expose internal port (always 80)
 EXPOSE 80
@@ -33950,8 +34150,8 @@ exec $APP_BIN $FLAGS "$@"
 | `build:` | **NEVER include** |
 | `version:` | **NEVER include** |
 | `name:` | `caspaste` (top-level) |
-| `container_name:` | `caspaste-{servicename}` |
-| Main service name | `server` (not `app`) |
+| `container_name:` | `caspaste-app` (main), `caspaste-db` (database) |
+| Main service name | `caspaste` (matches project name) |
 | `pull_policy:` | `always` |
 | `restart:` | `always` |
 | `x-logging:` | Anchor for consistent logging (see below) |
@@ -33974,9 +34174,9 @@ x-logging: &default-logging
   driver: json-file
 
 services:
-  server:
+  caspaste:
     image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
-    container_name: caspaste-server
+    container_name: caspaste-app
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -34011,8 +34211,9 @@ networks:
 | Field | Value | Description |
 |-------|-------|-------------|
 | `name:` | `caspaste` | Top-level compose project name |
-| `container_name:` | `caspaste-{servicename}` | e.g., `jokes-server`, `jokes-db`, `jokes-cache` |
-| Main service | `server` | Primary application service (not `app`) |
+| `container_name:` | `caspaste-app`, `caspaste-db` | e.g., `jokes-app`, `jokes-db` |
+| Main service | `caspaste` | Service name matches project name |
+| Database service | `caspaste-db` | Database service name |
 | `hostname:` | `${BASE_HOST_NAME:-$HOSTNAME}` | Uses env or system hostname |
 | `restart:` | `always` | Always restart on failure |
 | `pull_policy:` | `always` | Always pull latest image |
@@ -34034,14 +34235,14 @@ x-logging: &default-logging
 **Every service MUST use the anchor:**
 ```yaml
 services:
-  server:
+  caspaste:
     logging: *default-logging
 ```
 
 ### Multi-Service Example
 
 ```yaml
-# caspaste - with Redis cache
+# caspaste - with PostgreSQL + Valkey
 # nginx proxy address - http://172.17.0.1:64580
 
 name: caspaste
@@ -34053,9 +34254,9 @@ x-logging: &default-logging
   driver: json-file
 
 services:
-  server:
+  caspaste:
     image: ghcr.io/casjay-forks/caspaste:latest
-    container_name: caspaste-server
+    container_name: caspaste-app
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -34065,6 +34266,10 @@ services:
       - PORT=80
       - DEBUG=false
       - TZ=${TZ:-America/New_York}
+      - DB_HOST=caspaste-db
+      - DB_NAME=caspaste
+      - DB_USER=caspaste
+      - CACHE_HOST=caspaste-cache
     volumes:
       - './rootfs/config:/config:z'
       - './rootfs/data:/data:z'
@@ -34077,22 +34282,42 @@ services:
       retries: 3
       start_period: 90s
     depends_on:
-      cache:
+      caspaste-db:
+        condition: service_healthy
+      caspaste-cache:
         condition: service_healthy
     networks:
       - caspaste
 
-  cache:
-    image: redis:alpine
-    container_name: caspaste-cache
-    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+  caspaste-db:
+    image: postgres:alpine
+    container_name: caspaste-db
     restart: always
-    pull_policy: always
+    logging: *default-logging
+    environment:
+      - POSTGRES_DB=caspaste
+      - POSTGRES_USER=caspaste
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-caspaste}
+    volumes:
+      - './rootfs/data/db/postgres/caspaste:/var/lib/postgresql/data:z'
+    healthcheck:
+      test: pg_isready -U caspaste -d caspaste
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - caspaste
+
+  caspaste-cache:
+    image: valkey/valkey:alpine
+    container_name: caspaste-cache
+    restart: always
     logging: *default-logging
     volumes:
-      - './rootfs/data/redis:/data:z'
+      - './rootfs/data/db/valkey/caspaste:/data:z'
     healthcheck:
-      test: redis-cli ping || exit 1
+      test: valkey-cli ping || exit 1
       interval: 10s
       timeout: 5s
       retries: 3
@@ -34108,15 +34333,15 @@ networks:
 
 ### Service Naming Convention
 
-| Service Type | Service Name | Container Name Example |
-|--------------|--------------|------------------------|
-| Main application | `server` | `pastebin-server` |
-| All-in-one | `server` | `quotesvc-server` |
-| Database | `db` | `linktree-db` |
-| Cache (Redis/Valkey) | `cache` | `echoip-cache` |
-| Search (Meilisearch) | `search` | `gitmsg-search` |
-| Queue (RabbitMQ) | `queue` | `notifier-queue` |
-| Proxy (Nginx) | `proxy` | `gateway-proxy` |
+| Service Type | Service Name | Container Name |
+|--------------|--------------|----------------|
+| Main application | `caspaste` | `caspaste-app` |
+| All-in-one | `caspaste` | `caspaste-app` |
+| Database | `caspaste-db` | `caspaste-db` |
+| Cache (Valkey) | `caspaste-cache` | `caspaste-cache` |
+| Search (Meilisearch) | `caspaste-search` | `caspaste-search` |
+| Queue (RabbitMQ) | `caspaste-queue` | `caspaste-queue` |
+| Proxy (Nginx) | `caspaste-proxy` | `caspaste-proxy` |
 
 ### All-in-One vs Multi-Service 
 
@@ -34134,8 +34359,8 @@ networks:
 - Single container runs everything
 - Uses SQLite (embedded) or embedded key-value store
 - Valkey/Redis runs inside container via supervisor or embedded
-- Service name: `server`
-- Container name: `caspaste-server`
+- Service name: `caspaste`
+- Container name: `caspaste-app`
 - Simpler deployment, single image
 - **Trade-offs:** No horizontal scaling, single point of failure, harder to debug
 
@@ -34164,9 +34389,9 @@ x-logging: &default-logging
   driver: json-file
 
 services:
-  server:
+  caspaste:
     image: ghcr.io/casjay-forks/caspaste-aio:latest
-    container_name: caspaste-server
+    container_name: caspaste-app
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -34222,10 +34447,40 @@ networks:
 
 ```dockerfile
 # All-in-One Dockerfile - includes app + postgresql + valkey + tor
-# Base: debian:latest (stable, broad compatibility)
+# Build: golang:alpine (static binary, CGO_ENABLED=0)
+# Runtime: debian:latest (stable, broad compatibility)
 # Image name: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste-aio:latest
 # PORTS: Only 80 exposed (db/cache are internal-only)
 
+# =============================================================================
+# Stage 1: Build Go binary
+# =============================================================================
+FROM golang:alpine AS builder
+
+# Install git (required for go mod download with private repos)
+RUN apk add --no-cache git
+
+WORKDIR /build
+
+# Copy go.mod/go.sum first for better layer caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY src/ ./src/
+
+# Build static binary (CGO_ENABLED=0)
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BUILD_TIME=unknown
+
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.BuildTime=${BUILD_TIME}" \
+    -o caspaste ./src
+
+# =============================================================================
+# Stage 2: Runtime image with PostgreSQL + Valkey + Tor
+# =============================================================================
 FROM debian:latest
 
 LABEL org.opencontainers.image.source="{PLATFORM_REPO_URL}"
@@ -34244,28 +34499,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-# Create directories - organized by component
-RUN mkdir -p /config/caspaste /config/caspaste/security /config/caspaste/tor \
-             /config/valkey /config/postgres \
-             /data/caspaste /data/caspaste/tor \
+# Create directories for EXTERNAL services only (PostgreSQL, Valkey)
+# NOTE: App directories (config, data, sqlite, logs, backups) created by server binary
+# External services need dirs pre-created with special ownership (postgres user)
+RUN mkdir -p /config/postgres /config/valkey \
              /data/db/postgres /data/db/valkey \
-             /data/log/caspaste /data/backups/caspaste \
+             /data/log/postgres \
              /run/postgresql /run/valkey \
-    && chown -R postgres:postgres /data/db/postgres /run/postgresql
+    && chown -R postgres:postgres /data/db/postgres /data/log/postgres /run/postgresql
 
 # Copy configs and entrypoint
 COPY docker/file_system/ /
 
-# Copy application binary from builder or pre-built
-COPY caspaste /usr/local/bin/
+# Copy application binary from builder
+COPY --from=builder /build/caspaste /usr/local/bin/
 RUN chmod +x /usr/local/bin/caspaste /usr/local/bin/entrypoint.sh
 
 # Default environment
+# DATABASE_DIR: SQLite location (binary auto-detects container, but explicit is clearer)
 ENV MODE=production \
     PORT=80 \
     DEBUG=false \
     TZ=America/New_York \
-    PGDATA=/data/db \
+    DATABASE_DIR=/data/db/sqlite \
+    PGDATA=/data/db/postgres \
     DB_HOST=/run/postgresql \
     DB_NAME=caspaste \
     DB_USER=caspaste \
@@ -34289,16 +34546,16 @@ logfile=/data/log/supervisord.log
 pidfile=/var/run/supervisord.pid
 
 [program:postgresql]
-command=/usr/lib/postgresql/15/bin/postgres -D /data/db
+command=/usr/bin/postgres -D /data/db/postgres
 user=postgres
 autostart=true
 autorestart=true
 priority=10
-stdout_logfile=/data/log/postgresql.log
-stderr_logfile=/data/log/postgresql.log
+stdout_logfile=/data/log/postgres/postgresql.log
+stderr_logfile=/data/log/postgres/postgresql.log
 
 [program:valkey]
-command=/usr/bin/valkey-server /etc/valkey/valkey-aio.conf
+command=/usr/bin/valkey-server /config/valkey/valkey.conf
 autostart=true
 autorestart=true
 priority=20
@@ -34306,7 +34563,7 @@ stdout_logfile=/data/log/valkey.log
 stderr_logfile=/data/log/valkey.log
 
 [program:tor]
-command=/usr/bin/tor -f /etc/tor/torrc
+command=/usr/bin/tor -f /config/caspaste/tor/torrc
 autostart=%(ENV_TOR_ENABLED)s
 autorestart=true
 priority=30
@@ -34322,7 +34579,7 @@ stdout_logfile=/data/log/app.log
 stderr_logfile=/data/log/app.log
 ```
 
-**All-in-One PostgreSQL config (`docker/file_system/etc/postgresql/postgresql-aio.conf`):**
+**All-in-One PostgreSQL config (`docker/file_system/config/postgres/postgresql.conf`):**
 
 ```ini
 # PostgreSQL configuration optimized for AIO containers
@@ -34363,7 +34620,7 @@ autovacuum_naptime = 60s
 ssl = off
 ```
 
-**All-in-One Valkey config (`docker/file_system/etc/valkey/valkey-aio.conf`):**
+**All-in-One Valkey config (`docker/file_system/config/valkey/valkey.conf`):**
 
 ```ini
 # Valkey configuration optimized for AIO containers
@@ -34412,9 +34669,9 @@ if [ -n "$TZ" ]; then
     echo $TZ > /etc/timezone
 fi
 
-# Setup directories for external services (PostgreSQL, Valkey)
-# NOTE: App/Tor directories are created by the server binary, not entrypoint
-# Database dirs: /data/db/{dbtype}/
+# Setup directories for EXTERNAL services only (PostgreSQL, Valkey)
+# NOTE: App directories (config, data, sqlite, logs) are created by the server binary
+# External services need special ownership that binary can't set
 mkdir -p /data/db/postgres /data/db/valkey /run/postgresql /run/valkey
 chown -R postgres:postgres /data/db/postgres /run/postgresql
 chmod 700 /data/db/postgres
@@ -34423,13 +34680,13 @@ chmod 755 /run/valkey
 # Initialize PostgreSQL if not already done
 if [ ! -f /data/db/postgres/PG_VERSION ]; then
     echo "Initializing PostgreSQL database..."
-    su - postgres -c "/usr/lib/postgresql/15/bin/initdb -D /data/db/postgres"
+    su - postgres -c "initdb -D /data/db/postgres"
 
-    # Copy optimized config
-    cp /etc/postgresql/postgresql-aio.conf /data/db/postgres/postgresql.conf
+    # Copy optimized config from /config/postgres/
+    cp /config/postgres/postgresql.conf /data/db/postgres/postgresql.conf
 
     # Start PostgreSQL temporarily to create database and user
-    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /data/db/postgres -l /data/log/postgres/init.log start"
+    su - postgres -c "pg_ctl -D /data/db/postgres -l /data/log/postgres/init.log start"
     sleep 3
 
     # Create application database and user
@@ -34438,7 +34695,7 @@ if [ ! -f /data/db/postgres/PG_VERSION ]; then
     su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME:-caspaste} TO ${DB_USER:-caspaste};\""
 
     # Stop PostgreSQL (supervisor will start it)
-    su - postgres -c "/usr/lib/postgresql/15/bin/pg_ctl -D /data/db/postgres stop"
+    su - postgres -c "pg_ctl -D /data/db/postgres stop"
 fi
 
 # Set Tor enabled flag for supervisor
@@ -34678,8 +34935,8 @@ services:
     volumes:
       # TEMP DIR WORKFLOW: ./rootfs/ resolves to $TEMP_DIR/rootfs/
       # NEVER run from project directory - always use temp dir workflow
-      - ./rootfs/config:/config
-      - ./rootfs/data:/data
+      - ./rootfs/config:/config:z
+      - ./rootfs/data:/data:z
     networks:
       - caspaste-dev
 
@@ -34712,7 +34969,7 @@ name: caspaste
 services:
   caspaste:
     image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
-    container_name: caspaste
+    container_name: caspaste-app
     restart: unless-stopped
     environment:
       # Production: strict security, minimal logging, caching enabled
@@ -34778,8 +35035,8 @@ services:
       # CRITICAL: ./rootfs/ must resolve to $TEMP_DIR/rootfs/, NOT project directory
       # This file MUST be copied to a temp directory before running
       # AI: NEVER run this from the project directory
-      - ./rootfs/config:/config
-      - ./rootfs/data:/data
+      - ./rootfs/config:/config:z
+      - ./rootfs/data:/data:z
     networks:
       - caspaste-test
 
@@ -34809,10 +35066,11 @@ name: caspaste
 services:
   caspaste:
     image: {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:latest
-    container_name: caspaste
+    container_name: caspaste-app
     restart: unless-stopped
     depends_on:
-      - postgres
+      caspaste-db:
+        condition: service_healthy
     environment:
       # Tor auto-enabled (tor binary installed in image)
       - MODE=production
@@ -34820,11 +35078,11 @@ services:
       # DOMAIN (optional - containers behind reverse proxy auto-detect from headers)
       # Only set if NOT behind reverse proxy, comma-separated list supported
       # - DOMAIN=myapp.com,www.myapp.com,api.myapp.com
-      - DB_HOST=postgres
+      - DB_HOST=caspaste-db
       - DB_PORT=5432
       - DB_NAME=caspaste
       - DB_USER=caspaste
-      - DB_PASS=caspaste
+      - DB_PASS=${DB_PASSWORD:-caspaste}
     ports:
       # Production: bound to Docker bridge only (reverse proxy handles external)
       - "172.17.0.1:64580:80"
@@ -34834,17 +35092,23 @@ services:
     networks:
       - caspaste
 
-  postgres:
+  caspaste-db:
     image: postgres:alpine
-    container_name: caspaste-postgres
+    container_name: caspaste-db
     restart: unless-stopped
     environment:
       - POSTGRES_DB=caspaste
       - POSTGRES_USER=caspaste
-      - POSTGRES_PASSWORD=caspaste
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-caspaste}
       - TZ=America/New_York
     volumes:
-      - ./rootfs/data/db/postgres:/var/lib/postgresql/data:z
+      - ./rootfs/data/db/postgres/caspaste:/var/lib/postgresql/data:z
+    healthcheck:
+      test: pg_isready -U caspaste -d caspaste
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - caspaste
 
@@ -38523,9 +38787,9 @@ docker run --rm -v $(pwd):/build -w /build -e CGO_ENABLED=0 \
 # 2. Test (prefer Incus, fallback to Docker)
 if command -v incus &>/dev/null; then
   # PREFERRED: Full OS test in Incus (debian + systemd)
-  # Use latest Debian stable (currently 12/bookworm)
+  # Use latest Debian stable (currently 13/trixie)
   echo "Testing with Incus (Debian + systemd)..."
-  incus launch images:debian/12 test-caspaste
+  incus launch images:debian/trixie test-caspaste
   incus file push binaries/caspaste test-caspaste/usr/local/bin/
   incus exec test-caspaste -- chmod +x /usr/local/bin/caspaste
   incus exec test-caspaste -- caspaste --help
@@ -38839,7 +39103,7 @@ PROJECTORG=$(basename "$(dirname "$PWD")")
 CONTAINER_NAME="test-$CASPASTE-$$"
 
 # Incus image - use latest Debian stable (update when new stable releases)
-INCUS_IMAGE="images:debian/12"
+INCUS_IMAGE="images:debian/trixie"
 
 # Create temp directory for build
 mkdir -p "${TMPDIR:-/tmp}/$CASJAY-FORKS"
@@ -39409,8 +39673,8 @@ docker run --rm -v $(pwd)/binaries:/app alpine:latest sh -c "
 "
 
 # Test in Incus (full OS with systemd) - PREFERRED
-# Use latest Debian stable (currently 12/bookworm)
-incus launch images:debian/12 test-caspaste
+# Use latest Debian stable (currently 13/trixie)
+incus launch images:debian/trixie test-caspaste
 incus file push binaries/caspaste test-caspaste/usr/local/bin/
 incus exec test-caspaste -- caspaste --help
 incus delete test-caspaste --force
@@ -39472,7 +39736,7 @@ docker run --rm -v $(pwd):/build -w /build -e CGO_ENABLED=0 \
   golang:alpine go build -o /build/binaries/caspaste ./src
 
 # Launch Incus container (use latest Debian stable)
-incus launch images:debian/12 test-caspaste
+incus launch images:debian/trixie test-caspaste
 
 # Push binary and test data
 incus file push binaries/caspaste test-caspaste/usr/local/bin/

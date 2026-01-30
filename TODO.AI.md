@@ -1,9 +1,9 @@
 # CasPaste - AI.md Compliance Tasks
 
-## Status: AI.md TEMPLATE UPDATED
+## Status: AI.md TEMPLATE CONFIGURED
 
 AI.md has been replaced with the new template from `~/Projects/github/apimgr/TEMPLATE.md`.
-Structural compliance tasks previously completed. See compliance matrix below.
+All placeholders replaced with project values. Structural compliance tasks previously completed.
 
 ### Critical Rules from AI.md (Committed to Memory)
 
@@ -18,6 +18,13 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - NEVER use `.yaml` extension (use `.yml`)
 - NEVER modify AI.md PARTS 0-36 (except OPTIONAL→REQUIRED)
 - NEVER include AI attribution in code/commits
+- NEVER run git add/commit/push (write .git/COMMIT_MESS instead)
+- NEVER create forbidden files (SUMMARY.md, COMPLIANCE.md, NOTES.md, etc.)
+- NEVER put Dockerfile in root (use docker/Dockerfile)
+- NEVER use CGO (CGO_ENABLED=0 always)
+- NEVER use external cron (use internal scheduler)
+- NEVER create premium/enterprise tiers (all features free)
+- NEVER use Makefile in CI/CD (use explicit commands)
 
 **MUST Rules:**
 - MUST use CGO_ENABLED=0 for static binaries
@@ -28,10 +35,18 @@ Structural compliance tasks previously completed. See compliance matrix below.
 - MUST re-read spec before implementing (prevent drift)
 - MUST verify before claiming completion
 - MUST write `.git/COMMIT_MESS` file (AI cannot git commit)
+- MUST read file before editing
+- MUST search before create
+- MUST test before commit
+- MUST complete current task before starting next
+- MUST use MIT License
+- MUST build all 8 platforms (linux/darwin/windows/freebsd × amd64/arm64)
+- MUST have comments ABOVE code, never inline
 
 ### Recent Changes (This Session)
-- **REFRESHED:** AI.md re-copied from ~/Projects/github/apimgr/TEMPLATE.md (fresh template)
-- **Updated:** Placeholders replaced ({projectname}→caspaste, {projectorg}→casjay-forks)
+- **REFRESHED:** AI.md copied from ~/Projects/github/apimgr/TEMPLATE.md (fresh template)
+- **CONFIGURED:** All placeholders replaced ({projectname}→caspaste, {projectorg}→casjay-forks, {PROJECTNAME}→CASPASTE, {PROJECTORG}→CASJAY-FORKS)
+- **READ:** PART 0-5 completely read and rules committed to memory
 - **Updated:** AI.md PART 3 filled in with project description and features
 - **Fixed:** /api/healthz → /api/v1/healthz per AI.md PART 13
 - **Fixed:** Inline comments moved above code per AI.md:
