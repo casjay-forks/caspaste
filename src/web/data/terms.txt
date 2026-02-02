@@ -1,0 +1,113 @@
+# Terms of Use
+
+**Effective Date**: January 2026
+
+By using this CasPaste service, you agree to the following terms and conditions:
+
+## 1. Acceptance of Terms
+
+By accessing and using this service, you accept and agree to be bound by these Terms of Use and our Server Rules. If you do not agree to these terms, you may not use this service.
+
+## 2. Service Description
+
+This is a text and code sharing service ("pastebin") that allows users to share text content via unique URLs. The service is provided "as is" without warranties of any kind.
+
+## 3. User Responsibilities
+
+You are solely responsible for:
+- All content you submit to the service
+- Ensuring your content complies with applicable laws
+- Maintaining appropriate backups of important content
+- Understanding that pastes may be deleted based on expiration settings
+
+## 4. Prohibited Activities
+
+You agree NOT to:
+- Upload illegal, harmful, or malicious content
+- Violate intellectual property rights
+- Attempt to abuse, disrupt, or hack the service
+- Circumvent rate limits or security measures
+- Use the service for spam or unsolicited communications
+- Upload content that violates our Server Rules
+
+## 5. Content Storage and Deletion
+
+- Content is stored based on your selected expiration time
+- "Burn after reading" content is deleted after first view
+- We reserve the right to delete content that violates these terms
+- No guarantee of data persistence or availability
+- Expired content is automatically deleted
+
+## 6. Privacy
+
+- We collect minimal data necessary for operation
+- IP addresses used for rate limiting only
+- No cookies used for tracking purposes
+- We do not sell or share your data
+- See our Privacy Policy (if available) for details
+
+## 7. Service Availability
+
+- Service provided "as is" without uptime guarantees
+- May be interrupted for maintenance or updates
+- We reserve the right to modify or discontinue the service
+- No liability for service interruptions or data loss
+
+## 8. Intellectual Property
+
+- You retain all rights to content you submit
+- By submitting content, you grant us a license to display and serve it
+- This license terminates when your paste expires or is deleted
+- CasPaste software is licensed under MIT License
+
+## 9. Disclaimer of Warranties
+
+THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:
+
+- Merchantability
+- Fitness for a particular purpose
+- Non-infringement
+- Uninterrupted or error-free operation
+- Accuracy or reliability of content
+
+## 10. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR:
+
+- Any indirect, incidental, special, or consequential damages
+- Loss of profits, data, or use
+- Service interruptions or data loss
+- User-generated content
+- Third-party actions
+
+## 11. Indemnification
+
+You agree to indemnify and hold harmless the service operators from any claims, damages, or expenses arising from:
+- Your use of the service
+- Your violation of these terms
+- Your violation of any laws or regulations
+- Content you submit to the service
+
+## 12. Modifications to Terms
+
+We reserve the right to modify these terms at any time. Continued use after changes constitutes acceptance of modified terms.
+
+## 13. Governing Law
+
+These terms are governed by the laws of the jurisdiction where the service is operated.
+
+## 14. Severability
+
+If any provision of these terms is found invalid or unenforceable, the remaining provisions continue in full force and effect.
+
+## 15. Contact
+
+For questions about these terms, please contact the server administrator via the contact information on the About page.
+
+## 16. Entire Agreement
+
+These Terms of Use, together with our Server Rules, constitute the entire agreement between you and the service regarding use of the service.
+
+---
+
+**By using this service, you acknowledge that you have read, understood, and agree to be bound by these Terms of Use and our Server Rules.**

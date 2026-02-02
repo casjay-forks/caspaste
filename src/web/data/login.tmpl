@@ -1,0 +1,129 @@
+{{/*
+   Copyright (C) 2024 CasjaysDev.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}Login | {{end}}
+{{define "headAppend"}}
+<style>
+.login-container {
+	max-width: 400px;
+	margin: 2rem auto;
+}
+
+.login-header {
+	text-align: center;
+	margin-bottom: 2rem;
+}
+
+.login-header h1 {
+	margin-bottom: 0.5rem;
+}
+
+.login-header p {
+	color: {{call .Theme `color.Grey`}};
+	margin: 0;
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.login-form .form-group {
+	margin: 0;
+}
+
+.login-form input {
+	width: 100%;
+	padding: 1rem;
+	font-size: 1rem;
+}
+
+.login-form button {
+	width: 100%;
+	padding: 1rem;
+	font-size: 1.1rem;
+}
+
+.login-error {
+	background: {{call .Theme `color.Red`}}20;
+	border: 1px solid {{call .Theme `color.Red`}};
+	color: {{call .Theme `color.Red`}};
+	padding: 1rem;
+	border-radius: 8px;
+	text-align: center;
+	margin-bottom: 1rem;
+}
+
+.login-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.back-link {
+	text-align: center;
+	margin-top: 1.5rem;
+}
+
+.back-link a {
+	color: {{call .Theme `color.Link`}};
+}
+</style>
+{{end}}
+{{define "article"}}
+<div class="login-container">
+	<div class="login-header">
+		<div class="login-icon">🔐</div>
+		<h1>{{ call .Translate `login.Title` }}</h1>
+		<p>{{ call .Translate `login.Subtitle` }}</p>
+	</div>
+
+	{{if .Error}}
+	<div class="login-error">
+		{{ call .Translate `login.Error` }}
+	</div>
+	{{end}}
+
+	<form class="login-form" action="/login" method="post">
+		<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+		<input type="hidden" name="redirect" value="{{.Redirect}}">
+
+		<div class="form-group">
+			<label for="username">{{ call .Translate `login.Username` }}</label>
+			<input
+				type="text"
+				id="username"
+				name="username"
+				placeholder="{{ call .Translate `login.UsernamePlaceholder` }}"
+				autocomplete="username"
+				autofocus
+				required
+			>
+		</div>
+
+		<div class="form-group">
+			<label for="password">{{ call .Translate `login.Password` }}</label>
+			<input
+				type="password"
+				id="password"
+				name="password"
+				placeholder="{{ call .Translate `login.PasswordPlaceholder` }}"
+				autocomplete="current-password"
+				required
+			>
+		</div>
+
+		<button type="submit" class="button-green">{{ call .Translate `login.Submit` }}</button>
+	</form>
+
+	<div class="back-link">
+		<a href="/about">{{ call .Translate `login.BackToAbout` }}</a>
+	</div>
+</div>
+{{end}}

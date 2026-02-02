@@ -1,0 +1,25 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{.ID}} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3>{{ call .Translate `pasteContinue.Title` }}</h3>
+<p>{{ call .Translate `pasteContinue.Message` }}</p>
+<div class="button-block-right">
+	<form action="/" method="get">
+		<button class="button-cancel" type="submit" tabindex="1">{{ call .Translate `pasteContinue.Cancel` }}</button>
+	</form>
+	<form action="/{{.ID}}" method="post">
+		<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+		<input type="hidden" name="oneUseContinue" value="true">
+		<button class="button-green" type="submit" tabindex="2">{{ call .Translate `pasteContinue.Continue` }}</button>
+	</form>
+</div>
+{{end}}

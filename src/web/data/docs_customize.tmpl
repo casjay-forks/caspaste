@@ -1,0 +1,138 @@
+{{/*
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE.md file for details.
+*/}}
+
+{{define "titlePrefix"}}Content Customization - {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h2>{{ call .Translate `docsCustomize.Title` }}</h2>
+
+<section>
+	<h3>{{ call .Translate `docsCustomize.Overview` }}</h3>
+	<p>{{ call .Translate `docsCustomize.OverviewText` }}</p>
+</section>
+
+<section>
+	<h3>{{ call .Translate `docsCustomize.AvailableVariables` }}</h3>
+	<p>{{ call .Translate `docsCustomize.VariablesText` }}</p>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Variable</th>
+				<th>Description</th>
+				<th>Example</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><code>{fqdn}</code></td>
+				<td>Server FQDN</td>
+				<td>paste.example.com</td>
+			</tr>
+			<tr>
+				<td><code>{version}</code></td>
+				<td>CasPaste version</td>
+				<td>{{.Version}}</td>
+			</tr>
+			<tr>
+				<td><code>{protocol}</code></td>
+				<td>Protocol (http/https)</td>
+				<td>https</td>
+			</tr>
+			<tr>
+				<td><code>{port}</code></td>
+				<td>Server port(s)</td>
+				<td>8080 or 8080,64453</td>
+			</tr>
+			<tr>
+				<td><code>{server.title}</code></td>
+				<td>Server title</td>
+				<td>CasPaste</td>
+			</tr>
+			<tr>
+				<td><code>{server.administrator.name}</code></td>
+				<td>Administrator name</td>
+				<td>John Doe</td>
+			</tr>
+			<tr>
+				<td><code>{server.administrator.email}</code></td>
+				<td>Administrator email</td>
+				<td>admin@paste.example.com</td>
+			</tr>
+			<tr>
+				<td><code>{server.administrator.from}</code></td>
+				<td>Email from header</td>
+				<td>"CasPaste" &lt;no-reply@paste.example.com&gt;</td>
+			</tr>
+			<tr>
+				<td><code>{web.security.contact.email}</code></td>
+				<td>Security contact email</td>
+				<td>security@paste.example.com</td>
+			</tr>
+			<tr>
+				<td><code>{web.security.contact.name}</code></td>
+				<td>Security contact name</td>
+				<td>Security Team</td>
+			</tr>
+		</tbody>
+	</table>
+</section>
+
+<section>
+	<h3>{{ call .Translate `docsCustomize.ContentFiles` }}</h3>
+
+	<dl>
+		<dt><code>content.about</code></dt>
+		<dd>Path to custom about.txt file. If not specified or file doesn't exist, uses embedded default.</dd>
+
+		<dt><code>content.rules</code></dt>
+		<dd>Path to custom rules.txt file. If not specified or file doesn't exist, uses embedded default.</dd>
+
+		<dt><code>content.terms</code></dt>
+		<dd>Path to custom terms.txt file. If not specified or file doesn't exist, uses embedded default.</dd>
+
+		<dt><code>content.security</code></dt>
+		<dd>Path to custom security.txt file. If not specified, auto-generates from web.security.contact settings.</dd>
+	</dl>
+</section>
+
+<section>
+	<h3>{{ call .Translate `docsCustomize.Example` }}</h3>
+	<pre><code>content:
+  about: "/etc/casjay-forks/caspaste/custom-about.txt"
+  rules: ""  # Use embedded default
+  terms: ""  # Use embedded default
+  security: "/etc/casjay-forks/caspaste/security.txt"
+
+server:
+  title: "My Paste Server"
+  administrator:
+    name: "Admin Team"
+    email: "admin@paste.example.com"
+    from: '"My Paste Server" &lt;no-reply@paste.example.com&gt;'
+
+web:
+  security:
+    contact:
+      email: "security@paste.example.com"
+      name: "Security Team"
+</code></pre>
+</section>
+
+<section>
+	<h3>{{ call .Translate `docsCustomize.Usage` }}</h3>
+	<p>{{ call .Translate `docsCustomize.UsageText` }}</p>
+	<ol>
+		<li>Create your custom content file</li>
+		<li>Use variables like <code>{fqdn}</code> and <code>{server.title}</code></li>
+		<li>Set the path in server.yml</li>
+		<li>Restart CasPaste</li>
+	</ol>
+</section>
+
+<p><a href="/docs">{{ call .Translate `docsCustomize.BackToDocs` }}</a></p>
+{{end}}

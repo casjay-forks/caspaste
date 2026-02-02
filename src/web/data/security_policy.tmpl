@@ -1,0 +1,76 @@
+{{/*
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}Security Policy | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3><a href="/about">{{ call .Translate `about.Title` }}</a> / Security Policy</h3>
+
+<h4>Reporting Security Vulnerabilities</h4>
+<p>We take security seriously. If you discover a security vulnerability in CasPaste, please report it responsibly.</p>
+
+<h4>How to Report</h4>
+<ul>
+	<li><strong>Email:</strong> Send details to the security contact listed in our <a href="/.well-known/security.txt">security.txt</a> file</li>
+	<li><strong>What to Include:</strong>
+		<ul>
+			<li>Description of the vulnerability</li>
+			<li>Steps to reproduce the issue</li>
+			<li>Potential impact assessment</li>
+			<li>Any suggested fixes (optional)</li>
+		</ul>
+	</li>
+</ul>
+
+<h4>What to Expect</h4>
+<ul>
+	<li><strong>Acknowledgment:</strong> We will acknowledge receipt within 48 hours</li>
+	<li><strong>Assessment:</strong> We will assess the vulnerability and determine severity</li>
+	<li><strong>Updates:</strong> We will keep you informed of our progress</li>
+	<li><strong>Resolution:</strong> We aim to resolve critical issues within 30 days</li>
+	<li><strong>Credit:</strong> With your permission, we will credit you in our <a href="/about/authors">acknowledgments</a></li>
+</ul>
+
+<h4>Scope</h4>
+<p>This policy applies to:</p>
+<ul>
+	<li>The CasPaste server application</li>
+	<li>The CasPaste CLI client</li>
+	<li>Official Docker images</li>
+	<li>Official documentation</li>
+</ul>
+
+<h4>Out of Scope</h4>
+<ul>
+	<li>Third-party hosted instances (unless operated by us)</li>
+	<li>Social engineering attacks</li>
+	<li>Physical security</li>
+	<li>Denial of service attacks</li>
+</ul>
+
+<h4>Safe Harbor</h4>
+<p>We consider security research conducted in accordance with this policy to be:</p>
+<ul>
+	<li>Authorized and legal</li>
+	<li>Helpful to our security posture</li>
+	<li>Exempt from legal action on our part</li>
+</ul>
+<p>We ask that you:</p>
+<ul>
+	<li>Act in good faith</li>
+	<li>Avoid privacy violations and data destruction</li>
+	<li>Do not exploit vulnerabilities beyond what is necessary to demonstrate them</li>
+	<li>Give us reasonable time to address issues before public disclosure</li>
+</ul>
+
+<h4>References</h4>
+<ul>
+	<li><a href="/.well-known/security.txt">security.txt</a> - Machine-readable security contact (RFC 9116)</li>
+	<li><a href="/about/source_code">Source Code</a> - Review our code</li>
+	<li><a href="/about/license">License</a> - MIT License</li>
+</ul>
+{{end}}

@@ -1,0 +1,288 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{call .Translate `docsAPIv1.Title`}} | {{end}}
+{{define "headAppend"}}<script src="/code.js"></script>{{end}}
+{{define "article"}}
+<h3><a href="/docs">{{call .Translate `docs.Title`}}</a> / {{call .Translate `docsAPIv1.Title`}}</h3>
+
+<p>{{call .Translate `docsAPIv1.Introduction1`}}</p>
+<p>{{call .Translate `docsAPIv1.Introduction2`}}</p>
+
+<h4 id="table-of-content">{{call .Translate `docsAPIv1.TableOfContent`}}</h4>
+<ul>
+	<li><a href="#new">POST <code>/api/v1/new</code></a></li>
+	<li><a href="#get">GET <code>/api/v1/get</code></a></li>
+	<li><a href="#getServerInfo">GET <code>/api/v1/getServerInfo</code></a></li>
+	<li><a href="#errors">{{call .Translate `docsAPIv1.PossibleAPIErrors`}}</a></li>
+</ul>
+
+
+<h4 id="new">POST <code>/api/v1/new</code></h4>
+<p>{{call .Translate `docsAPIv1.NewPasteAuth`}}</p>
+<p>{{call .Translate `docsAPIv1.RequestParameters`}}</p>
+<table>
+	<th>{{call .Translate `docsAPIv1.Field`}}</th>
+	<th>{{call .Translate `docsAPIv1.Required`}}</th>
+	<th>{{call .Translate `docsAPIv1.Default`}}</th>
+	<th>{{call .Translate `docsAPIv1.Description`}}</th>
+	<tr>
+		<td><code>title</code></td>
+		<td></td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewTitle`}}</td>
+	</tr>
+	<tr>
+		<td><code>body</code></td>
+		<td>{{call .Translate `docsAPIv1.RequiredYes`}}</td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewBody`}}</td>
+	</tr>
+	<tr>
+		<td><code>lineEnd</code></td>
+		<td></td>
+		<td><code>LF</code></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewLineEnd`}}</td>
+	</tr>
+	<tr>
+		<td><code>syntax</code></td>
+		<td></td>
+		<td><code>plaintext</code></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewSyntax` `#getServerInfo`}}</td>
+	</tr>
+	<tr>
+		<td><code>oneUse</code></td>
+		<td></td>
+		<td><code>false</code></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewOneUse`}}</td>
+	</tr>
+	<tr>
+		<td><code>expiration</code></td>
+		<td></td>
+		<td><code>0</code></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewExpiration`}}</td>
+	</tr>
+	<tr>
+		<td><code>author</code></td>
+		<td></td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewAuthor` .MaxLenAuthorAll}}</td>
+	</tr>
+	<tr>
+		<td><code>authorEmail</code></td>
+		<td></td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewAuthorEmail` .MaxLenAuthorAll}}</td>
+	</tr>
+	<tr>
+		<td><code>authorURL</code></td>
+		<td></td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqNewAuthorURL` .MaxLenAuthorAll}}</td>
+	</tr>
+</table>
+<p>{{call .Translate `docsAPIv1.ResponseExample`}}</p>
+{{ call .Highlight `{
+	"id": "XcmX9ON1",
+	"url": "https://paste.example.com/XcmX9ON1",
+	"createTime": 1653387358,
+	"deleteTime": 0
+}` `json`}}
+
+<details>
+	<summary><strong>Code Examples</strong></summary>
+
+	<h5>cURL</h5>
+	{{ call .Highlight `curl -X POST https://paste.example.com/api/v1/new \
+  -d "title=My Paste" \
+  -d "body=Hello World" \
+  -d "syntax=autodetect" \
+  -d "expiration=3600"` `bash`}}
+
+	<h5>Node.js</h5>
+	{{ call .Highlight `const response = await fetch('https://paste.example.com/api/v1/new', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    title: 'My Paste',
+    body: 'Hello World',
+    syntax: 'autodetect',
+    expiration: '3600'
+  })
+});
+const data = await response.json();
+console.log('Paste URL:', data.url);` `javascript`}}
+
+	<h5>Python</h5>
+	{{ call .Highlight `import requests
+
+response = requests.post('https://paste.example.com/api/v1/new', data={
+    'title': 'My Paste',
+    'body': 'Hello World',
+    'syntax': 'autodetect',
+    'expiration': '3600'
+})
+data = response.json()
+print('Paste URL:', data['url'])` `python`}}
+</details>
+
+
+<h4 id="get">GET <code>/api/v1/get</code></h4>
+<p>{{call .Translate `docsAPIv1.RequestParameters`}}</p>
+<table>
+	<th>{{call .Translate `docsAPIv1.Field`}}</th>
+	<th>{{call .Translate `docsAPIv1.Required`}}</th>
+	<th>{{call .Translate `docsAPIv1.Default`}}</th>
+	<th>{{call .Translate `docsAPIv1.Description`}}</th>
+	<tr>
+		<td><code>id</code></td>
+		<td>{{call .Translate `docsAPIv1.RequiredYes`}}</td>
+		<td></td>
+		<td>{{call .Translate `docsAPIv1.ReqGetID`}}</td>
+	</tr>
+</table>
+<p><strong>Note:</strong> Burn-after-reading pastes (<code>oneUse: true</code>) are automatically deleted after retrieval. The full content is returned and the paste is immediately removed.</p>
+<p>{{call .Translate `docsAPIv1.ResponseExample`}}</p>
+{{ call .Highlight `{
+	"id": "XcmX9ON1",
+	"title": "Paste title.",
+	"body": "Line 1.\nLine 2.\nLine 3.\n\nLine 5.",
+	"createTime": 1653387358,
+	"deleteTime": 0,
+	"oneUse": false,
+	"syntax": "plaintext",
+	"author": "Anon",
+	"authorEmail": "me@example.org",
+	"authorURL": "https://example.org"
+}` `json`}}
+
+<details>
+	<summary><strong>Code Examples</strong></summary>
+
+	<h5>cURL</h5>
+	{{ call .Highlight `curl https://paste.example.com/api/v1/get?id=XcmX9ON1` `bash`}}
+
+	<h5>Node.js</h5>
+	{{ call .Highlight `const response = await fetch('https://paste.example.com/api/v1/get?id=XcmX9ON1');
+const data = await response.json();
+console.log('Body:', data.body);` `javascript`}}
+
+	<h5>Python</h5>
+	{{ call .Highlight `import requests
+
+response = requests.get('https://paste.example.com/api/v1/get', params={'id': 'XcmX9ON1'})
+data = response.json()
+print('Body:', data['body'])` `python`}}
+</details>
+
+
+<h4 id="getServerInfo">GET <code>/api/v1/getServerInfo</code></h4>
+<p>{{call .Translate `docsAPIv1.ResponseExample`}}</p>
+{{ call .Highlight `{
+	"software": "CasPaste",
+	"version": "1.2",
+	"titleMaxlength": 100,
+	"bodyMaxlength": 20000,
+	"maxLifeTime": -1,
+	"serverAbout": "",
+	"serverRules": "",
+	"serverTermsOfUse": "",
+	"adminName": "Vasya Pupkin",
+	"adminMail": "me@example.org",
+	"syntaxes": [
+		"ABAP",
+		"ABNF",
+		"AL",
+		"ANTLR",
+		"APL",
+		"ActionScript",
+		"ActionScript 3",
+		"Ada",
+		"Angular2",
+		"ApacheConf",
+		"AppleScript",
+		"Arduino",
+		"ArmAsm",
+		"Awk"
+	],
+	"uiDefaultLifeTime": "1y",
+	"authRequired": false
+}` `json`}}
+
+<details>
+	<summary><strong>Code Examples</strong></summary>
+
+	<h5>cURL</h5>
+	{{ call .Highlight `curl https://paste.example.com/api/v1/getServerInfo` `bash`}}
+
+	<h5>Node.js</h5>
+	{{ call .Highlight `const response = await fetch('https://paste.example.com/api/v1/getServerInfo');
+const info = await response.json();
+console.log('Server:', info.software, info.version);
+console.log('Max paste lifetime:', info.maxLifeTime);` `javascript`}}
+
+	<h5>Python</h5>
+	{{ call .Highlight `import requests
+
+response = requests.get('https://paste.example.com/api/v1/getServerInfo')
+info = response.json()
+print(f"Server: {info['software']} {info['version']}")
+print(f"Available syntaxes: {len(info['syntaxes'])}")` `python`}}
+</details>
+
+
+<h4 id="errors">{{call .Translate `docsAPIv1.PossibleAPIErrors`}}</h4>
+<p>{{call .Translate `docsAPIv1.Error400`}}</p>
+{{ call .Highlight `{
+	"code": 400,
+	"error": "Bad Request"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error401`}}</p>
+{{ call .Highlight `{
+	"code": 401,
+	"error": "Unauthorized"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error404n1`}}</p>
+{{ call .Highlight `{
+	"code": 404,
+	"error": "Could not find ID"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error404n2`}}</p>
+{{ call .Highlight `{
+	"code": 404,
+	"error": "Not Found"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error405`}}</p>
+{{ call .Highlight `{
+	"code": 405,
+	"error": "Method Not Allowed"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error413`}}</p>
+{{ call .Highlight `{
+	"code": 413,
+	"error": "Payload Too Large"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error429`}}</p>
+{{ call .Highlight `{
+	"code": 429,
+	"error": "Too Many Requests"
+}` `json`}}
+
+<p>{{call .Translate `docsAPIv1.Error500`}}</p>
+{{ call .Highlight `{
+	"code": 500,
+	"error": "Internal Server Error"
+}` `json`}}
+{{end}}

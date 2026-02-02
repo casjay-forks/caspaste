@@ -1,0 +1,246 @@
+
+// This file is part of CasPaste.
+
+// CasPaste is free software released under the MIT License.
+// See LICENSE.md file for details.
+
+package netshare
+
+import (
+	"encoding/base64"
+	"io"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
+
+	"github.com/casjay-forks/caspaste/src/lineend"
+	"github.com/casjay-forks/caspaste/src/storage"
+)
+
+func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem, titleMaxLen int, bodyMaxLen int, maxLifeTime int64, lexerNames []string) (string, int64, int64, error) {
+	// Check HTTP method
+	if req.Method != "POST" {
+		return "", 0, 0, ErrMethodNotAllowed
+	}
+
+	// Check rate limit
+	err := rateSys.CheckAndUse(GetClientAddr(req))
+	if err != nil {
+		return "", 0, 0, err
+	}
+
+	// Parse form data (both URL-encoded and multipart)
+	// ParseForm handles application/x-www-form-urlencoded
+	err = req.ParseForm()
+	if err != nil {
+		return "", 0, 0, err
+	}
+	// ParseMultipartForm handles multipart/form-data (includes file uploads)
+	// 50MB max - ignores error as it's optional for non-multipart
+	req.ParseMultipartForm(52428800)
+
+	paste := storage.Paste{
+		Title:       req.PostFormValue("title"),
+		Body:        req.PostFormValue("body"),
+		Syntax:      req.PostFormValue("syntax"),
+		DeleteTime:  0,
+		OneUse:      false,
+		Author:      req.PostFormValue("author"),
+		AuthorEmail: req.PostFormValue("authorEmail"),
+		AuthorURL:   req.PostFormValue("authorURL"),
+		IsEditable:  req.PostFormValue("editable") == "true",
+		IsPrivate:   req.PostFormValue("private") == "true",
+		IsURL:       req.PostFormValue("url") == "true",
+		OriginalURL: req.PostFormValue("originalURL"),
+	}
+
+	// Handle file upload
+	file, handler, err := req.FormFile("file")
+	if err == nil {
+		defer file.Close()
+
+		// Read file contents
+		fileData, err := io.ReadAll(file)
+		if err != nil {
+			return "", 0, 0, err
+		}
+
+		// Set file fields
+		paste.IsFile = true
+		paste.FileName = handler.Filename
+		paste.MimeType = handler.Header.Get("Content-Type")
+		if paste.MimeType == "" {
+			paste.MimeType = "application/octet-stream"
+		}
+
+		// Store file data as base64 in Body field to handle binary data safely
+		// This prevents UTF-8 encoding errors in databases like PostgreSQL
+		paste.Body = base64.StdEncoding.EncodeToString(fileData)
+
+		// Default syntax for files (use plaintext as it's always valid)
+		if paste.Syntax == "" {
+			paste.Syntax = "plaintext"
+		}
+	}
+
+	// Remove new line from title
+	paste.Title = strings.Replace(paste.Title, "\n", "", -1)
+	paste.Title = strings.Replace(paste.Title, "\r", "", -1)
+	paste.Title = strings.Replace(paste.Title, "\t", " ", -1)
+
+	// Check title
+	if utf8.RuneCountInString(paste.Title) > titleMaxLen && titleMaxLen >= 0 {
+		return "", 0, 0, ErrPayloadTooLarge
+	}
+
+	// Check paste body (allow empty for URL shortener)
+	if paste.Body == "" && !paste.IsURL {
+		return "", 0, 0, ErrBadRequest
+	}
+	
+	// For URL shortener, validate originalURL is provided
+	if paste.IsURL && paste.OriginalURL == "" {
+		return "", 0, 0, ErrBadRequest
+	}
+
+	if utf8.RuneCountInString(paste.Body) > bodyMaxLen && bodyMaxLen > 0 {
+		return "", 0, 0, ErrPayloadTooLarge
+	}
+
+	// Change paste body lines end (skip for file uploads to preserve binary data)
+	if !paste.IsFile {
+		switch req.PostForm.Get("lineEnd") {
+		case "", "LF", "lf":
+			paste.Body = lineend.UnknownToUnix(paste.Body)
+
+		case "CRLF", "crlf":
+			paste.Body = lineend.UnknownToDos(paste.Body)
+
+		case "CR", "cr":
+			paste.Body = lineend.UnknownToOldMac(paste.Body)
+
+		default:
+			return "", 0, 0, ErrBadRequest
+		}
+	}
+
+	// Check syntax
+	if paste.Syntax == "" {
+		paste.Syntax = "plaintext"
+	}
+
+	// Validate syntax (allow "autodetect" as special value)
+	// Syntax matching is case-insensitive for user convenience
+	syntaxOk := false
+	if strings.EqualFold(paste.Syntax, "autodetect") {
+		syntaxOk = true
+		paste.Syntax = "autodetect"
+	} else {
+		for _, name := range lexerNames {
+			if strings.EqualFold(name, paste.Syntax) {
+				syntaxOk = true
+				// Normalize to the official lexer name for proper highlighting
+				paste.Syntax = name
+				break
+			}
+		}
+	}
+
+	if !syntaxOk {
+		return "", 0, 0, ErrBadRequest
+	}
+
+	// Get delete time
+	expirStr := req.PostForm.Get("expiration")
+	if expirStr != "" {
+		// Convert string to int
+		expir, err := strconv.ParseInt(expirStr, 10, 64)
+		if err != nil {
+			return "", 0, 0, ErrBadRequest
+		}
+
+		// Check limits
+		if maxLifeTime > 0 {
+			if expir > maxLifeTime || expir <= 0 {
+				return "", 0, 0, ErrBadRequest
+			}
+		}
+
+		// Save if ok
+		if expir > 0 {
+			paste.DeleteTime = time.Now().Unix() + expir
+		}
+	}
+
+	// Get "one use" (burn after reading) parameter
+	// Accepts "true" for backward compatibility or numeric values for view count
+	oneUseVal := req.PostForm.Get("oneUse")
+	if oneUseVal == "true" || oneUseVal == "1" {
+		paste.OneUse = true
+	} else if oneUseVal != "" && oneUseVal != "false" {
+		// Check if it's a numeric value > 0 (custom view count)
+		if viewCount, err := strconv.Atoi(oneUseVal); err == nil && viewCount > 0 {
+			paste.OneUse = true
+		}
+	}
+
+	// Check author name, email and URL length.
+	if utf8.RuneCountInString(paste.Author) > MaxLengthAuthorAll {
+		return "", 0, 0, ErrPayloadTooLarge
+	}
+
+	if utf8.RuneCountInString(paste.AuthorEmail) > MaxLengthAuthorAll {
+		return "", 0, 0, ErrPayloadTooLarge
+	}
+
+	if utf8.RuneCountInString(paste.AuthorURL) > MaxLengthAuthorAll {
+		return "", 0, 0, ErrPayloadTooLarge
+	}
+
+	// Validate Author URL scheme to prevent XSS via javascript: or data: URLs
+	if paste.AuthorURL != "" {
+		// Convert to lowercase for comparison
+		urlLower := strings.ToLower(strings.TrimSpace(paste.AuthorURL))
+
+		// Only allow http:// and https:// schemes
+		if !strings.HasPrefix(urlLower, "http://") && !strings.HasPrefix(urlLower, "https://") {
+			return "", 0, 0, ErrBadRequest
+		}
+
+		// Prevent data:, javascript:, vbscript:, file:, etc.
+		if strings.Contains(urlLower, "javascript:") ||
+		   strings.Contains(urlLower, "data:") ||
+		   strings.Contains(urlLower, "vbscript:") ||
+		   strings.Contains(urlLower, "file:") {
+			return "", 0, 0, ErrBadRequest
+		}
+	}
+	
+	// Validate OriginalURL scheme for URL shortener
+	if paste.IsURL && paste.OriginalURL != "" {
+		urlLower := strings.ToLower(strings.TrimSpace(paste.OriginalURL))
+		
+		// Only allow http:// and https:// schemes
+		if !strings.HasPrefix(urlLower, "http://") && !strings.HasPrefix(urlLower, "https://") {
+			return "", 0, 0, ErrBadRequest
+		}
+		
+		// Prevent data:, javascript:, vbscript:, file:, etc.
+		if strings.Contains(urlLower, "javascript:") ||
+		   strings.Contains(urlLower, "data:") ||
+		   strings.Contains(urlLower, "vbscript:") ||
+		   strings.Contains(urlLower, "file:") {
+			return "", 0, 0, ErrBadRequest
+		}
+	}
+
+	// Create paste
+	pasteID, createTime, deleteTime, err := db.PasteAdd(paste)
+	if err != nil {
+		return pasteID, createTime, deleteTime, err
+	}
+
+	return pasteID, createTime, deleteTime, nil
+}

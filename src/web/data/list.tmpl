@@ -1,0 +1,46 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}Paste List | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3>Recent Pastes</h3>
+
+{{if .Pastes}}
+<div class="paste-list-container">
+	<table class="paste-list-table">
+		<thead>
+			<tr>
+				<th>Title</th>
+				<th>Language</th>
+				<th>Created</th>
+			</tr>
+		</thead>
+		<tbody>
+		{{range .Pastes}}
+			<tr>
+				<td><a href="/{{.ID}}">{{if .Title}}{{.Title}}{{else}}Untitled{{end}}</a></td>
+				<td>{{.Syntax}}</td>
+				<td>{{.CreateTime}}</td>
+			</tr>
+		{{end}}
+		</tbody>
+	</table>
+</div>
+
+<div class="pagination">
+	{{if .HasPrev}}<a href="/list?limit={{.Limit}}&offset={{.PrevOffset}}" class="pagination-link">&larr; Previous</a>{{end}}
+	{{if and .HasPrev .HasNext}}<span class="pagination-separator">|</span>{{end}}
+	{{if .HasNext}}<a href="/list?limit={{.Limit}}&offset={{.NextOffset}}" class="pagination-link">Next &rarr;</a>{{end}}
+</div>
+{{else}}
+<p>No pastes found.</p>
+{{end}}
+
+{{end}}

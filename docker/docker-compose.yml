@@ -1,0 +1,47 @@
+# Production docker-compose - HUMAN USE ONLY
+# Per AI.md PART 27: AI must NEVER use this file
+name: caspaste
+
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: ghcr.io/casjay-forks/caspaste:latest
+    container_name: caspaste
+    hostname: ${HOSTNAME:-caspaste}
+    restart: always
+    logging: *default-logging
+    environment:
+      - PORT=80
+      - TZ=${TZ:-America/New_York}
+      - CASPASTE_DB_CLEANUP_PERIOD=1m
+      - CASPASTE_ROBOTS_DISALLOW=false
+      - CASPASTE_TITLE_MAX_LENGTH=120
+      - CASPASTE_BODY_MAX_LENGTH=9999999999999999
+      - CASPASTE_MAX_PASTE_LIFETIME=unlimited
+      - CASPASTE_ADMIN_NAME=${APP_ORG_NAME:-CasPaste}
+      - CASPASTE_UI_DEFAULT_LIFETIME=never
+      - CASPASTE_UI_DEFAULT_THEME=dark
+      - CASPASTE_DB_DRIVER=sqlite
+    ports:
+      - '64580:80'
+    volumes:
+      - './rootfs/config:/config:z'
+      - './rootfs/data:/data:z'
+    healthcheck:
+      test: ["CMD", "caspaste", "--status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - caspaste
+
+networks:
+  caspaste:
+    name: caspaste
+    external: false

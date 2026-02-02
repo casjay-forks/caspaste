@@ -1,0 +1,41 @@
+# .dockerignore - per AI.md PART 3
+# Deny-all approach with explicit includes
+
+# Start by excluding everything
+*
+
+# Include required build files
+!src/**
+!go.mod
+!go.sum
+!release.txt
+!docker/**
+
+# Exclude from docker/ what's not needed
+docker/docker-compose*.yml
+
+# Explicitly exclude what should never be in build context
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitea/
+.forgejo/
+.gitlab-ci.yml
+Jenkinsfile
+rootfs/
+binaries/
+releases/
+tests/
+docs/
+*.md
+!src/**/*.md
+Makefile
+.idea/
+.vscode/
+*.swp
+.claude/
+.cursor/
+.ai/
+.aider/
+.windsurf/

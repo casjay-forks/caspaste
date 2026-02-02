@@ -1,0 +1,53 @@
+{{define "titlePrefix"}}{{ call .Translate `license.LicenseTitle`}} | {{end}}
+{{define "headAppend"}}{{end}}
+{{define "article"}}
+<h3><a href="/about">{{ call .Translate `about.Title` }}</a> / {{ call .Translate `license.LicenseTitle` }}</h3>
+
+<div class="license-header">
+	<h3>MIT License</h3>
+</div>
+
+<p>Copyright (c) 2024 CasjaysDev</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+
+<p><strong>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</strong></p>
+
+<hr>
+
+<h4>Third-Party Attributions</h4>
+
+<p>CasPaste uses several open-source libraries. See <a href="https://github.com/casjay-forks/caspaste/blob/main/LICENSE.md">LICENSE.md</a> for complete attribution details.</p>
+
+<h5>Key Dependencies:</h5>
+<ul>
+	<li><strong>Chroma</strong> (MIT) - Syntax highlighting</li>
+	<li><strong>PostgreSQL Driver</strong> (MIT) - Database connectivity</li>
+	<li><strong>MySQL Driver</strong> (MPL-2.0) - Database connectivity</li>
+	<li><strong>SQLite Driver</strong> (BSD-3-Clause) - Database connectivity</li>
+	<li><strong>Go Crypto</strong> (BSD-3-Clause) - Argon2id password hashing</li>
+	<li><strong>YAML Parser</strong> (MIT/Apache-2.0) - Configuration parsing</li>
+</ul>
+
+<h5>Design Inspiration:</h5>
+<ul>
+	<li><strong>MicroBin</strong> (BSD-3-Clause) - Feature inspiration for file uploads, URL shortening, QR codes</li>
+</ul>
+
+<h5>Theme Color Schemes:</h5>
+<p>Color schemes inspired by Dracula, Nord, Gruvbox, Tokyo Night, Catppuccin, One Dark, Solarized, and GitHub themes (all MIT licensed).</p>
+{{end}}

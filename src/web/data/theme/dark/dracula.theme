@@ -1,0 +1,34 @@
+theme.Name.en = Dracula
+theme.Name.de = Dracula
+theme.Name.ru = Дракула
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji"
+font.Monospace = "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", "Liberation Mono", monospace
+
+highlight.Theme = dracula
+
+color.Font             = #F8F8F2
+color.SVG              = #F8F8F2
+color.BackgroundBody   = #1E1F29
+color.Header           = #282A36
+color.HeaderFont       = #F8F8F2
+color.Article          = #282A36
+color.BackgroundBlack  = #191A21
+color.FocusOutline     = #BD93F9
+color.Element          = #383A4A
+
+color.Red  = #FF5555
+color.Grey = #9BA8D0
+
+color.Border = #676A82
+color.Link   = #8BE9FD
+
+color.Button           = #44475A
+color.ButtonHover      = #6272A4
+color.ButtonFont       = #F8F8F2
+color.ButtonGreen      = #50FA7B
+color.ButtonGreenHover = #69FF94
+color.ButtonGreenFont  = #282A36
+
+color.InputHover       = #4A4D61
+color.InputPlaceholder = #A3AEC8

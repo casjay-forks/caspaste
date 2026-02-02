@@ -1,0 +1,34 @@
+theme.Name.en = Nord
+theme.Name.de = Nord
+theme.Name.ru = Норд
+
+font.Default   = -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif
+font.Monospace = "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace
+
+highlight.Theme = nord
+
+color.Font             = #ECEFF4
+color.SVG              = #ECEFF4
+color.BackgroundBody   = #2E3440
+color.Header           = #2E3440
+color.HeaderFont       = #ECEFF4
+color.Article          = #3B4252
+color.BackgroundBlack  = #2E3440
+color.FocusOutline     = #88C0D0
+color.Element          = #434C5E
+
+color.Red  = #BF616A
+color.Grey = #A5AFB8
+
+color.Border = #747E92
+color.Link   = #88C0D0
+
+color.Button           = #4C566A
+color.ButtonHover      = #5E81AC
+color.ButtonFont       = #ECEFF4
+color.ButtonGreen      = #A3BE8C
+color.ButtonGreenHover = #8FBCBB
+color.ButtonGreenFont  = #2E3440
+
+color.InputHover       = #4C566A
+color.InputPlaceholder = #B5BDC9

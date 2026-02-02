@@ -1,0 +1,36 @@
+# About This CasPaste Server
+
+Welcome to our paste sharing service! CasPaste is a privacy-focused, self-hosted pastebin that respects your data.
+
+## Features
+
+- **Privacy First**: No cookies, no tracking, no registration required
+- **Syntax Highlighting**: Automatic language detection for code snippets
+- **Flexible Expiration**: From 10 minutes to never
+- **Burn After Reading**: One-time view for sensitive content
+- **API Access**: Full REST API for programmatic access
+- **Mobile Friendly**: Responsive design works on all devices
+- **PWA Support**: Install as a standalone app
+- **Open Source**: Free software under MIT license
+
+## How It Works
+
+1. Paste your text or code
+2. Choose expiration time (or never expire)
+3. Optionally enable "Burn after reading" for one-time access
+4. Get a shareable link
+5. Share with anyone
+
+Your pastes are stored securely and deleted automatically based on your chosen expiration time.
+
+## Privacy
+
+- We don't use cookies to track you
+- No registration or account required
+- Works perfectly without JavaScript (though enhanced with it)
+- Your IP address is only used for rate limiting
+- Expired pastes are automatically deleted
+
+## Open Source
+
+CasPaste is free software released under the MIT License. View the source code and contribute at our repository.

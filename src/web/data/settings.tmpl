@@ -1,0 +1,96 @@
+{{/*
+   This file is part of CasPaste.
+
+   This file is part of CasPaste.
+
+   CasPaste is free software released under the MIT License.
+   See LICENSE file for details.
+*/}}
+
+{{define "titlePrefix"}}{{call .Translate `settings.Title`}} | {{end}}
+{{define "headAppend"}}<script src="/settings.js"></script>{{end}}
+{{define "article"}}
+<h3>{{call .Translate `settings.Title`}}</h3>
+<form action="/settings" method="post">
+	<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+	<fieldset>
+		<legend>Preferences</legend>
+		<div class="form-group">
+			<label for="lang-select">{{ call .Translate `settings.Language` }}</label>
+			<select id="lang-select" name="lang" tabindex="1">
+				<option value="">{{call .Translate `settings.LanguageDefault`}}</option>
+				{{ $language := .LanguageCode }}
+				{{range $key, $value := .LanguageSelector}}
+				<option value="{{$key}}"{{if eq $key $language}} selected="selected"{{end}}>{{$value}}</option>
+				{{end}}
+			</select>
+		</div>
+		
+		<div class="form-group">
+			<label for="theme-select">{{ call .Translate `settings.Theme` }}</label>
+			<select id="theme-select" name="theme" tabindex="2">
+				{{ $theme := .ThemeCode }}
+				{{range $key, $value := .ThemeSelector}}
+				<option value="{{$key}}"{{if eq $key $theme}} selected="selected"{{end}}>{{$value}}</option>
+				{{end}}
+			</select>
+		</div>
+	</fieldset>
+	
+	{{if .AuthOk}}
+	<fieldset>
+		<legend>{{ call .Translate `main.AdvancedParameters` }}</legend>
+		<div class="form-group">
+			<label for="author-input">{{ call .Translate `main.Author` }}</label>
+			<input
+				id="author-input"
+				name="author" 
+				value="{{.Author}}"
+				autocomplete="off" 
+				autocorrect="off" 
+				spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorPlaceholder`}}"
+				tabindex="3" 
+				maxlength="{{.AuthorAllMaxLen}}"
+			>
+		</div>
+		
+		<div class="form-group">
+			<label for="email-input">{{ call .Translate `main.AuthorEmail` }}</label>
+			<input
+				id="email-input"
+				type="email"
+				name="authorEmail" 
+				value="{{.AuthorEmail}}"
+				autocomplete="off" 
+				autocorrect="off" 
+				spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorEmailPlaceholder`}}"
+				tabindex="4" 
+				maxlength="{{.AuthorAllMaxLen}}"
+			>
+		</div>
+		
+		<div class="form-group">
+			<label for="url-input">{{ call .Translate `main.AuthorURL` }}</label>
+			<input
+				id="url-input"
+				type="url"
+				name="authorURL" 
+				value="{{.AuthorURL}}"
+				autocomplete="off" 
+				autocorrect="off" 
+				spellcheck="true"
+				placeholder="{{call .Translate `main.AuthorURLPlaceholder`}}"
+				tabindex="5" 
+				maxlength="{{.AuthorAllMaxLen}}"
+			>
+		</div>
+	</fieldset>
+	{{end}}
+	
+	<div class="form-actions">
+		<button class="button-green" type="submit" tabindex="6">{{ call .Translate `settings.Save` }}</button>
+	</div>
+</form>
+{{end}}
