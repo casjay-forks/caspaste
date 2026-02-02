@@ -58,17 +58,17 @@ function historyRefreshList() {
 }
 
 function historyPopUpShow() {
-	document.getElementById("js-history-popup").style.visibility = "visible";
-	document.getElementById("js-history-popup-background").style.visibility = "visible";
-	document.getElementsByTagName("body")[0].style.overflow = "hidden";
+	document.getElementById("js-history-popup").classList.remove("js-hidden");
+	document.getElementById("js-history-popup-background").classList.remove("js-hidden");
+	document.body.classList.add("overflow-hidden");
 	document.addEventListener("keydown", historyPopUpEscEvent);
 	historyRefreshList();
 }
 
 function historyPopUpHide() {
-	document.getElementById("js-history-popup").style.visibility = "hidden";
-	document.getElementById("js-history-popup-background").style.visibility = "hidden";
-	document.getElementsByTagName("body")[0].style.overflow = null;
+	document.getElementById("js-history-popup").classList.add("js-hidden");
+	document.getElementById("js-history-popup-background").classList.add("js-hidden");
+	document.body.classList.remove("overflow-hidden");
 	document.removeEventListener("keydown", historyPopUpEscEvent);
 }
 
@@ -82,10 +82,10 @@ function historyPopUpEscEvent(event) {
 function historyEnable() {
 	if (document.getElementById("js-history-popup-enable").checked == true) {
 		localStorage.removeItem("DisableHistory");
-		alert("{{ call .Translate `historyJS.HistoryEnabledAlert` }}");
+		showToast("{{ call .Translate `historyJS.HistoryEnabledAlert` }}", "success");
 	} else {
 		localStorage.setItem("DisableHistory", true);
-		alert("{{ call .Translate `historyJS.HistoryDisabledAlert` }}");
+		showToast("{{ call .Translate `historyJS.HistoryDisabledAlert` }}", "info");
 	}
 }
 
@@ -99,6 +99,18 @@ function historyClear() {
 document.addEventListener("DOMContentLoaded", () => {
 	// Edit CSS
 	let newStyleSheet = `
+.js-hidden {
+	visibility: hidden;
+}
+
+.overflow-hidden {
+	overflow: hidden;
+}
+
+.popup-title {
+	margin: 0;
+}
+
 #js-history-button:hover {
 	cursor: pointer;
 }
@@ -181,34 +193,41 @@ document.addEventListener("DOMContentLoaded", () => {
 	// History button is now in base.tmpl, no need to inject it
 
 	// Add history pop-up background
-	document.body.insertAdjacentHTML("afterbegin", "<div style='visibility: hidden;' id='js-history-popup-background' onclick='historyPopUpHide()'></div>")	
+	document.body.insertAdjacentHTML("afterbegin", "<div class='js-hidden' id='js-history-popup-background'></div>");
+	document.getElementById("js-history-popup-background").addEventListener("click", historyPopUpHide);
 
 	// If local storage is not supported
 	if (isLocalStoageSupported() == false) {
-	document.body.insertAdjacentHTML("afterbegin", `<div style='visibility: hidden;' id='js-history-popup'>
+	document.body.insertAdjacentHTML("afterbegin", `<div class='js-hidden' id='js-history-popup'>
 <div id='js-history-popup-header'>
-	<div><h4 style='margin: 0;'>{{ call .Translate `historyJS.History` }}</h4></div
-	><div id='js-history-popup-close' onclick='historyPopUpHide()'>&times;</div>
+	<div><h4 class='popup-title'>{{ call .Translate `historyJS.History` }}</h4></div
+	><div id='js-history-popup-close'>&times;</div>
 </div>
 <hr/>
 <p>{{ call .Translate `historyJS.LocalStorageNotSupported1` }}</p>
 <p>{{ call .Translate `historyJS.LocalStorageNotSupported2` }}</p>
 `);
+		document.getElementById("js-history-popup-close").addEventListener("click", historyPopUpHide);
 		return;
 	}
 
 	// Add history pop-up
-	document.body.insertAdjacentHTML("afterbegin", `<div style='visibility: hidden;' id='js-history-popup'>
+	document.body.insertAdjacentHTML("afterbegin", `<div class='js-hidden' id='js-history-popup'>
 <div id='js-history-popup-header'>
-	<div><h4 style='margin: 0;'>{{ call .Translate `historyJS.History` }}</h4></div
-	><div id='js-history-popup-close' onclick='historyPopUpHide()'>&times;</div>
+	<div><h4 class='popup-title'>{{ call .Translate `historyJS.History` }}</h4></div
+	><div id='js-history-popup-close'>&times;</div>
 </div>
 <hr/>
 <div>
-	<label class='checkbox'><input id='js-history-popup-enable' onchange = 'historyEnable()' type='checkbox'></input>{{ call .Translate `historyJS.EnableHistory` }}</label
-	><span id='js-history-popup-clear' class='text-red' onclick='historyClear()'>{{ call .Translate `historyJS.ClearHistory` }}</span>
+	<label class='checkbox'><input id='js-history-popup-enable' type='checkbox'>{{ call .Translate `historyJS.EnableHistory` }}</label
+	><span id='js-history-popup-clear' class='text-red'>{{ call .Translate `historyJS.ClearHistory` }}</span>
 </div>
 <div id='js-history-popup-list-div'><ul id='js-history-popup-list'></ul></div>`);
+
+	// Attach event listeners
+	document.getElementById("js-history-popup-close").addEventListener("click", historyPopUpHide);
+	document.getElementById("js-history-popup-enable").addEventListener("change", historyEnable);
+	document.getElementById("js-history-popup-clear").addEventListener("click", historyClear);
 
 	// Set "Remember history" checkbox state
 	document.getElementById("js-history-popup-enable").checked = !localStorage.getItem("DisableHistory");
@@ -255,21 +274,21 @@ document.addEventListener("DOMContentLoaded", () => {
 			// Send request
 			var xhr = new XMLHttpRequest();
 			xhr.responseType = "json";
-			xhr.open("POST", "/api/v1/new", true);
+			xhr.open("POST", "/api/v1/pastes", true);
 			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
 			xhr.onload = () => {
 				// Check HTTP code
 				if (xhr.status != 200) {
 					switch (xhr.status) {
-						case 400: alert("{{ call .Translate `error.400` | call .Translate `historyJS.Error` 400 }}"); break;
-						case 401: alert("{{ call .Translate `error.401` | call .Translate `historyJS.Error` 401 }}"); break;
-						case 404: alert("{{ call .Translate `error.404` | call .Translate `historyJS.Error` 404 }}"); break;
-						case 405: alert("{{ call .Translate `error.405` | call .Translate `historyJS.Error` 405 }}"); break;
-						case 413: alert("{{ call .Translate `error.413` | call .Translate `historyJS.Error` 413 }}"); break;
-						case 429: alert("{{ call .Translate `error.429` | call .Translate `historyJS.Error` 429 }}"); break;
-						case 500: alert("{{ call .Translate `error.500` | call .Translate `historyJS.Error` 500 }}"); break;
-						default: alert("{{ call .Translate `historyJS.ErrorUnknown` `"+xhr.status+"` }}"); break;	
+						case 400: showToast("{{ call .Translate `error.400` | call .Translate `historyJS.Error` 400 }}", "error"); break;
+						case 401: showToast("{{ call .Translate `error.401` | call .Translate `historyJS.Error` 401 }}", "error"); break;
+						case 404: showToast("{{ call .Translate `error.404` | call .Translate `historyJS.Error` 404 }}", "error"); break;
+						case 405: showToast("{{ call .Translate `error.405` | call .Translate `historyJS.Error` 405 }}", "error"); break;
+						case 413: showToast("{{ call .Translate `error.413` | call .Translate `historyJS.Error` 413 }}", "error"); break;
+						case 429: showToast("{{ call .Translate `error.429` | call .Translate `historyJS.Error` 429 }}", "warning"); break;
+						case 500: showToast("{{ call .Translate `error.500` | call .Translate `historyJS.Error` 500 }}", "error"); break;
+						default: showToast("{{ call .Translate `historyJS.ErrorUnknown` `"+xhr.status+"` }}", "error"); break;
 					}
 					return;
 				}

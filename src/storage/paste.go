@@ -9,6 +9,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -100,9 +101,9 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 			paste.IsFile, paste.FileName, paste.MimeType, paste.IsEditable, paste.IsPrivate, paste.IsURL, paste.OriginalURL,
 		)
 		// Log backup errors but don't fail primary operation
+		// Per AI.md PART 11: warn level for recoverable issues
 		if backupErr != nil {
-			// TODO: Log this error when logger is available in this context
-			_ = backupErr
+			log.Printf("[WARN] storage: backup insert failed for paste %s: %v", paste.ID, backupErr)
 		}
 	}
 
@@ -152,8 +153,9 @@ func (db DB) PasteUpdate(paste Paste) error {
 			paste.IsFile, paste.FileName, paste.MimeType, paste.IsEditable, paste.IsPrivate, paste.IsURL, paste.OriginalURL,
 			paste.ID,
 		)
+		// Log backup errors but don't fail primary operation
 		if backupErr != nil {
-			_ = backupErr
+			log.Printf("[WARN] storage: backup update failed for paste %s: %v", paste.ID, backupErr)
 		}
 	}
 
@@ -189,8 +191,9 @@ func (db DB) PasteDelete(id string) error {
 		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
 		defer backupCancel()
 		_, backupErr := db.backupPool.ExecContext(backupCtx, `DELETE FROM pastes WHERE id = ?`, id)
+		// Log backup errors but don't fail primary operation
 		if backupErr != nil {
-			_ = backupErr
+			log.Printf("[WARN] storage: backup delete failed for paste %s: %v", id, backupErr)
 		}
 	}
 
@@ -272,8 +275,9 @@ func (db DB) PasteDeleteExpired() (int64, error) {
 			`DELETE FROM pastes WHERE (delete_time < ?) AND (delete_time > 0)`,
 			time.Now().Unix(),
 		)
+		// Log backup errors but don't fail primary operation
 		if backupErr != nil {
-			_ = backupErr
+			log.Printf("[WARN] storage: backup delete expired failed: %v", backupErr)
 		}
 	}
 

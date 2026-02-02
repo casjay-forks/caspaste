@@ -3,8 +3,8 @@
 // CasPaste is free software released under the MIT License.
 // See LICENSE.md file for details.
 
-// Package paths provides OS-specific path resolution per AI.md PART 4
-package paths
+// Package path provides OS-specific path resolution per AI.md PART 4
+package path
 
 import (
 	"os"

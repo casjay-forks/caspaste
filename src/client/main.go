@@ -20,10 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/completions"
+	"gopkg.in/yaml.v3"
+
+	"github.com/casjay-forks/caspaste/src/completion"
 	"github.com/casjay-forks/caspaste/src/display"
 	"github.com/casjay-forks/caspaste/src/tui"
-	"gopkg.in/yaml.v3"
 )
 
 // Build info - set via -ldflags at build time
@@ -95,7 +96,7 @@ type ErrorResponse struct {
 func main() {
 	// Handle --shell completions/init commands first (per AI.md PART 8/33)
 	if len(os.Args) >= 2 && os.Args[1] == "--shell" {
-		completions.Handle(os.Args[1:])
+		completion.Handle(os.Args[1:])
 		return
 	}
 

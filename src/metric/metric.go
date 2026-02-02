@@ -4,9 +4,9 @@
 // CasPaste is free software released under the MIT License.
 // See LICENSE.md file for details.
 
-// Package metrics provides Prometheus metrics per AI.md PART 21.
-// All metrics follow Prometheus naming conventions with caspaste_ prefix.
-package metrics
+// Package metric provides Prometheus metrics per AI.md PART 21.
+// All metric follow Prometheus naming conventions with caspaste_ prefix.
+package metric
 
 import (
 	"net/http"

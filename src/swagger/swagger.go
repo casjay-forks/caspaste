@@ -193,7 +193,54 @@ func (h *Handler) generateSpec() *Spec {
 					},
 				},
 			},
-			"/api/v1/new": {
+			"/api/v1/pastes": {
+				Get: &Operation{
+					Tags:        []string{"pastes"},
+					Summary:     "Get paste(s)",
+					Description: "Get a single paste by ID (with ?id=X) or list public pastes (without id parameter)",
+					OperationID: "getPastes",
+					Parameters: []Parameter{
+						{
+							Name:        "id",
+							In:          "query",
+							Description: "Paste ID (optional - if provided, returns single paste; if omitted, returns list)",
+							Required:    false,
+							Schema:      &Schema{Type: "string"},
+						},
+						{
+							Name:        "limit",
+							In:          "query",
+							Description: "Maximum number of pastes to return (1-100, default 50)",
+							Required:    false,
+							Schema:      &Schema{Type: "integer"},
+						},
+						{
+							Name:        "offset",
+							In:          "query",
+							Description: "Number of pastes to skip for pagination",
+							Required:    false,
+							Schema:      &Schema{Type: "integer"},
+						},
+					},
+					Responses: map[string]Response{
+						"200": {
+							Description: "Paste(s) found - returns single Paste object if id provided, or array of PasteSummary if listing",
+							Content: map[string]Media{
+								"application/json": {
+									Schema: &Schema{Ref: "#/components/schemas/Paste"},
+								},
+							},
+						},
+						"404": {
+							Description: "Paste not found (when id is provided)",
+							Content: map[string]Media{
+								"application/json": {
+									Schema: &Schema{Ref: "#/components/schemas/Error"},
+								},
+							},
+						},
+					},
+				},
 				Post: &Operation{
 					Tags:        []string{"pastes"},
 					Summary:     "Create a new paste",
@@ -252,63 +299,7 @@ func (h *Handler) generateSpec() *Spec {
 					},
 				},
 			},
-			"/api/v1/get": {
-				Get: &Operation{
-					Tags:        []string{"pastes"},
-					Summary:     "Get a paste",
-					Description: "Retrieves a paste by ID",
-					OperationID: "getPaste",
-					Parameters: []Parameter{
-						{
-							Name:        "id",
-							In:          "query",
-							Description: "Paste ID",
-							Required:    true,
-							Schema:      &Schema{Type: "string"},
-						},
-					},
-					Responses: map[string]Response{
-						"200": {
-							Description: "Paste found",
-							Content: map[string]Media{
-								"application/json": {
-									Schema: &Schema{Ref: "#/components/schemas/Paste"},
-								},
-							},
-						},
-						"404": {
-							Description: "Paste not found",
-							Content: map[string]Media{
-								"application/json": {
-									Schema: &Schema{Ref: "#/components/schemas/Error"},
-								},
-							},
-						},
-					},
-				},
-			},
-			"/api/v1/list": {
-				Get: &Operation{
-					Tags:        []string{"pastes"},
-					Summary:     "List pastes",
-					Description: "Returns a list of public pastes",
-					OperationID: "listPastes",
-					Responses: map[string]Response{
-						"200": {
-							Description: "List of pastes",
-							Content: map[string]Media{
-								"application/json": {
-									Schema: &Schema{
-										Type:  "array",
-										Items: &Schema{Ref: "#/components/schemas/PasteSummary"},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"/api/v1/getServerInfo": {
+			"/api/v1/server/info": {
 				Get: &Operation{
 					Tags:        []string{"server"},
 					Summary:     "Get server information",

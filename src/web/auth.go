@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/casjay-forks/caspaste/src/caspasswd"
+	"github.com/casjay-forks/caspaste/src/netshare"
 )
 
 // Session cookie name and settings
@@ -186,20 +187,55 @@ func (data *Data) handleLoginSubmit(rw http.ResponseWriter, req *http.Request) e
 		redirect = "/"
 	}
 
+	// Get client IP for brute force protection
+	clientIP := netshare.GetClientAddr(req)
+
+	// Check if IP is blocked due to too many failed attempts
+	// Per AI.md PART 11: 5 failed attempts = 15-minute lockout
+	if data.BruteForce != nil && data.BruteForce.CheckBlocked(clientIP) {
+		remaining := data.BruteForce.GetRemainingLockout(clientIP)
+		rw.Header().Set("Retry-After", strconv.Itoa(int(remaining.Seconds())))
+		return data.handleLoginError(rw, req, redirect)
+	}
+
 	// Validate credentials
 	if data.CasPasswdFile == "" {
 		// No password file configured, reject login
+		if data.BruteForce != nil {
+			data.BruteForce.RecordFailure(clientIP)
+		}
 		return data.handleLoginError(rw, req, redirect)
 	}
 
 	// Check if password file exists
 	if _, err := os.Stat(data.CasPasswdFile); err != nil {
+		if data.BruteForce != nil {
+			data.BruteForce.RecordFailure(clientIP)
+		}
 		return data.handleLoginError(rw, req, redirect)
 	}
 
-	isValid, err := caspasswd.LoadAndCheck(data.CasPasswdFile, username, password)
+	isValid, needsRehash, err := caspasswd.LoadAndCheckWithRehash(data.CasPasswdFile, username, password)
 	if err != nil || !isValid {
+		// Record failed login attempt
+		if data.BruteForce != nil {
+			data.BruteForce.RecordFailure(clientIP)
+		}
 		return data.handleLoginError(rw, req, redirect)
+	}
+
+	// Clear failed attempts on successful login
+	if data.BruteForce != nil {
+		data.BruteForce.RecordSuccess(clientIP)
+	}
+
+	// Rehash legacy passwords (bcrypt/plain text) to Argon2id
+	// Per AI.md PART 11: "Verify existing passwords, then rehash with Argon2id"
+	if needsRehash {
+		// Rehash in background - don't block login on rehash failure
+		go func() {
+			_ = caspasswd.RehashPassword(data.CasPasswdFile, username, password)
+		}()
 	}
 
 	// Set session cookie and redirect
@@ -271,12 +307,11 @@ func (data *Data) requireAuth(rw http.ResponseWriter, req *http.Request) bool {
 
 // IsPublicPath returns true if the path should be accessible without authentication
 func IsPublicPath(path string) bool {
-	// Exact match paths
+	// Exact match paths per AI.md PART 13, PART 14
 	publicPaths := []string{
 		"/login",
 		"/logout",
 		"/healthz",
-		"/api/healthz",
 		"/style.css",
 		"/main.js",
 		"/toast.js",
@@ -289,6 +324,8 @@ func IsPublicPath(path string) bool {
 		"/sitemap.xml",
 		"/favicon.ico",
 		"/.well-known/security.txt",
+		"/openapi",
+		"/openapi.json",
 	}
 
 	for _, p := range publicPaths {

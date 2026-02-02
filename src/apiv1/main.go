@@ -7,8 +7,9 @@
 package apiv1
 
 import (
-	"github.com/casjay-forks/caspaste/src/netshare"
 	"net/http"
+
+	"github.com/casjay-forks/caspaste/src/netshare"
 )
 
 // GET /api/v1/

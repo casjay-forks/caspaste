@@ -49,6 +49,13 @@ document.addEventListener("DOMContentLoaded", function() {
 		pre:hover > button {\
 			visibility: visible;\
 		}\
+		.copy-btn {\
+			position: absolute;\
+			top: 16px;\
+			right: 16px;\
+			margin: 0;\
+			animation: fadeout .2s both;\
+		}\
 	";
 
 	var styleSheet = document.createElement("style");
@@ -59,9 +66,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	var preElements = document.getElementsByTagName("pre");
 
 	for (var i = 0; preElements.length > i; i++) {
-		preElements[i].insertAdjacentHTML(
-			"beforeend",
-			"<button class='button-green' style='position: absolute; top: 16px; right: 16px; margin: 0; animation: fadeout .2s both;' onclick='copyButton(this)'>{{call .Translate `codeJS.Paste`}}</button>"
-		);
+		var btn = document.createElement("button");
+		btn.className = "button-green copy-btn";
+		btn.textContent = "{{call .Translate `codeJS.Paste`}}";
+		btn.addEventListener("click", function() {
+			copyButton(this);
+		});
+		preElements[i].appendChild(btn);
 	}
 });

@@ -33,10 +33,10 @@ import (
 	"github.com/casjay-forks/caspaste/src/audit"
 	"github.com/casjay-forks/caspaste/src/caspasswd"
 	"github.com/casjay-forks/caspaste/src/cli"
-	"github.com/casjay-forks/caspaste/src/completions"
+	"github.com/casjay-forks/caspaste/src/completion"
 	"github.com/casjay-forks/caspaste/src/config"
 	"github.com/casjay-forks/caspaste/src/logger"
-	"github.com/casjay-forks/caspaste/src/metrics"
+	"github.com/casjay-forks/caspaste/src/metric"
 	"github.com/casjay-forks/caspaste/src/netshare"
 	"github.com/casjay-forks/caspaste/src/portutil"
 	"github.com/casjay-forks/caspaste/src/privilege"
@@ -1213,7 +1213,7 @@ func main() {
 	// Handle --shell completions/init commands first (per AI.md PART 8/33)
 	// This must run before other flag parsing since --shell takes subcommands
 	if len(os.Args) >= 2 && os.Args[1] == "--shell" {
-		completions.Handle(os.Args[1:])
+		completion.Handle(os.Args[1:])
 		return
 	}
 
@@ -1484,20 +1484,18 @@ func main() {
 	// Try to load config file from config directory or platform-specific locations
 	// (yamlCfg already declared earlier for --status/--service early exit)
 	var configFilePath string
+	// Per AI.md config-rules.md: NEVER use .yaml extension (use .yml)
 	configPaths := []string{}
 	if *flagConfigDir != "" {
 		// When --config is explicitly set, ONLY look in that directory
-		configPaths = append(configPaths, *flagConfigDir+"/server.yml", *flagConfigDir+"/server.yaml")
+		configPaths = append(configPaths, *flagConfigDir+"/server.yml")
 	} else {
 		// When --config is NOT set, search platform-specific and standard locations
 		defaultConfigDir := getDefaultConfigDir()
 		configPaths = append(configPaths,
 			defaultConfigDir+"/server.yml",
-			defaultConfigDir+"/server.yaml",
 			"/etc/casjay-forks/caspaste/server.yml",
-			"/etc/casjay-forks/caspaste/server.yaml",
 			"/config/server.yml",
-			"/config/server.yaml",
 		)
 	}
 
@@ -2123,7 +2121,7 @@ func main() {
 	}
 
 	// Initialize Prometheus metrics per AI.md PART 21
-	metricsCfg := metrics.Config{
+	metricsCfg := metric.Config{
 		Enabled:         yamlCfg.Server.Metrics.Enabled,
 		Endpoint:        yamlCfg.Server.Metrics.Endpoint,
 		IncludeSystem:   yamlCfg.Server.Metrics.IncludeSystem,
@@ -2143,7 +2141,7 @@ func main() {
 		metricsCfg.SizeBuckets = []float64{100, 1000, 10000, 100000, 1000000, 10000000}
 	}
 	// Initialize metrics with app info (Version, CommitID, BuildDate from -ldflags)
-	metrics.Init(metricsCfg, Version, CommitID, BuildDate)
+	metric.Init(metricsCfg, Version, CommitID, BuildDate)
 
 	// Apply defaults for logging stdout/stderr settings if config values are zero (not explicitly set)
 	// Default behavior: Server logs to stdout, Errors to stderr
@@ -2372,7 +2370,7 @@ func main() {
 	// Register Prometheus metrics endpoint per AI.md PART 21
 	// INTERNAL ONLY - should be firewalled from public access
 	if metricsCfg.Enabled {
-		mux.Handle(metricsCfg.Endpoint, metrics.Handler(metricsCfg))
+		mux.Handle(metricsCfg.Endpoint, metric.Handler(metricsCfg))
 	}
 
 	// Wrap with maintenance mode middleware
@@ -2413,7 +2411,7 @@ func main() {
 	// Per AI.md PART 21: Metrics middleware for HTTP request tracking
 	handler := web.PanicRecoveryMiddleware(*flagDebug)(
 		web.RequestIDMiddleware(
-			metrics.Middleware(metricsCfg)(
+			metric.Middleware(metricsCfg)(
 				web.SecurityHeadersMiddleware(securityHeadersCfg)(
 					web.CORSMiddleware(
 						web.CSRFMiddleware(csrfCfg)(

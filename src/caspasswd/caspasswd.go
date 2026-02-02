@@ -67,13 +67,19 @@ func LoadFile(path string) (Data, error) {
 	return data, nil
 }
 
-// Argon2id parameters (recommended by OWASP)
+// Argon2id parameters (OWASP 2023 recommended)
+// Per AI.md PART 11 Password Hashing
 const (
-	argon2Time    = 3
-	argon2Memory  = 64 * 1024 // 64 MB
-	argon2Threads = 4
-	argon2KeyLen  = 32
-	argon2SaltLen = 16
+	// Iterations
+	ArgonTime = 3
+	// Memory in KB (64 MB)
+	ArgonMemory = 64 * 1024
+	// Parallelism
+	ArgonThreads = 4
+	// Output length in bytes
+	ArgonKeyLen = 32
+	// Salt length in bytes
+	ArgonSaltLen = 16
 )
 
 func (data Data) Check(user string, pass string) bool {
@@ -88,24 +94,19 @@ func (data Data) Check(user string, pass string) bool {
 		return verifyArgon2Hash(storedPass, pass)
 	}
 
-	// Check if the stored password is a bcrypt hash (legacy support)
+	// Check if the stored password is a bcrypt hash (migration support)
 	// Bcrypt hashes start with $2a$, $2b$, or $2y$
+	// Per AI.md PART 11: bcrypt verification allowed for migration, then rehash to Argon2id
 	if strings.HasPrefix(storedPass, "$2a$") ||
-	   strings.HasPrefix(storedPass, "$2b$") ||
-	   strings.HasPrefix(storedPass, "$2y$") {
-		// Use bcrypt comparison
+		strings.HasPrefix(storedPass, "$2b$") ||
+		strings.HasPrefix(storedPass, "$2y$") {
 		err := bcrypt.CompareHashAndPassword([]byte(storedPass), []byte(pass))
 		return err == nil
 	}
 
-	// Legacy plain text password (INSECURE - deprecated)
-	// This is kept for backward compatibility only
-	// TODO: Remove in future versions and require argon2id hashes
-	if pass != storedPass {
-		return false
-	}
-
-	return true
+	// Unrecognized hash format - reject
+	// Per AI.md PART 11: NEVER store or accept plaintext passwords
+	return false
 }
 
 // HashPassword generates an argon2id hash from a plain text password
@@ -113,14 +114,14 @@ func (data Data) Check(user string, pass string) bool {
 // Returns hash in format: $argon2id$v=19$m=65536,t=3,p=4$salt$hash
 func HashPassword(password string) (string, error) {
 	// Generate random salt
-	salt := make([]byte, argon2SaltLen)
+	salt := make([]byte, ArgonSaltLen)
 	_, err := cryptoRandRead(salt)
 	if err != nil {
 		return "", err
 	}
 
 	// Generate the hash
-	hash := argon2.IDKey([]byte(password), salt, argon2Time, argon2Memory, argon2Threads, argon2KeyLen)
+	hash := argon2.IDKey([]byte(password), salt, ArgonTime, ArgonMemory, ArgonThreads, ArgonKeyLen)
 
 	// Encode to base64
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
@@ -128,7 +129,7 @@ func HashPassword(password string) (string, error) {
 
 	// Format: $argon2id$v=19$m=65536,t=3,p=4$salt$hash
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
-		argon2.Version, argon2Memory, argon2Time, argon2Threads, b64Salt, b64Hash), nil
+		argon2.Version, ArgonMemory, ArgonTime, ArgonThreads, b64Salt, b64Hash), nil
 }
 
 // verifyArgon2Hash verifies an argon2id hash
@@ -232,4 +233,86 @@ func FileExistsAndHasUsers(path string) bool {
 	}
 
 	return len(data) > 0
+}
+
+// NeedsRehash checks if a user's password needs to be rehashed to Argon2id
+// Returns true for bcrypt hashes (migration from legacy systems)
+// Per AI.md PART 11: bcrypt passwords should be automatically migrated to Argon2id
+func (data Data) NeedsRehash(user string) bool {
+	storedPass, exist := data[user]
+	if !exist {
+		return false
+	}
+
+	// Argon2id hashes do NOT need rehashing
+	if strings.HasPrefix(storedPass, "$argon2id$") {
+		return false
+	}
+
+	// Bcrypt hashes need rehashing to Argon2id
+	if strings.HasPrefix(storedPass, "$2a$") ||
+		strings.HasPrefix(storedPass, "$2b$") ||
+		strings.HasPrefix(storedPass, "$2y$") {
+		return true
+	}
+
+	// Unrecognized format - no rehash (Check() will reject it anyway)
+	return false
+}
+
+// RehashPassword rehashes a user's password to Argon2id and updates the password file
+// This is called after successful login with a legacy hash format (bcrypt or plain text)
+// Per AI.md PART 11: "Verify existing passwords, then rehash with Argon2id"
+func RehashPassword(path, user, password string) error {
+	// Load the existing file
+	data, err := LoadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to load password file: %w", err)
+	}
+
+	// Generate new Argon2id hash
+	newHash, err := HashPassword(password)
+	if err != nil {
+		return fmt.Errorf("failed to generate Argon2id hash: %w", err)
+	}
+
+	// Update the user's password
+	data[user] = newHash
+
+	// Write updated file
+	return writePasswordFile(path, data)
+}
+
+// writePasswordFile writes the password data to file
+func writePasswordFile(path string, data Data) error {
+	var content strings.Builder
+	for user, pass := range data {
+		content.WriteString(user)
+		content.WriteString(":")
+		content.WriteString(pass)
+		content.WriteString("\n")
+	}
+
+	if err := os.WriteFile(path, []byte(content.String()), 0600); err != nil {
+		return fmt.Errorf("failed to write password file: %w", err)
+	}
+
+	return nil
+}
+
+// LoadAndCheckWithRehash verifies credentials and indicates if rehash is needed
+// Returns: (isValid, needsRehash, error)
+func LoadAndCheckWithRehash(path, user, pass string) (bool, bool, error) {
+	data, err := LoadFile(path)
+	if err != nil {
+		return false, false, err
+	}
+
+	isValid := data.Check(user, pass)
+	if !isValid {
+		return false, false, nil
+	}
+
+	needsRehash := data.NeedsRehash(user)
+	return true, needsRehash, nil
 }

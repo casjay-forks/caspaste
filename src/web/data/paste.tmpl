@@ -36,25 +36,25 @@
 
 {{if .IsImage}}
 <div class="file-preview">
-	<img src="{{.MediaDataURL}}" alt="{{.FileName}}" style="max-width: 100%; height: auto;">
+	<img src="{{.MediaDataURL}}" alt="{{.FileName}}">
 </div>
 {{else if .IsVideo}}
 <div class="file-preview">
-	<video controls style="max-width: 100%;">
+	<video controls>
 		<source src="{{.MediaDataURL}}" type="{{.MimeType}}">
 		Your browser does not support the video tag.
 	</video>
 </div>
 {{else if .IsAudio}}
 <div class="file-preview">
-	<audio controls style="width: 100%;">
+	<audio controls>
 		<source src="{{.MediaDataURL}}" type="{{.MimeType}}">
 		Your browser does not support the audio tag.
 	</audio>
 </div>
 {{else if .IsPDF}}
-<div class="file-preview">
-	<iframe src="{{.MediaDataURL}}" style="width: 100%; height: 600px; border: 1px solid var(--border-color, #ccc);"></iframe>
+<div class="file-preview file-preview-pdf">
+	<iframe src="{{.MediaDataURL}}"></iframe>
 </div>
 {{else if and .IsFile (not .IsText)}}
 <div class="file-preview file-binary">

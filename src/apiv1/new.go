@@ -21,8 +21,28 @@ type newPasteAnswer struct {
 	DeleteTime int64  `json:"deleteTime"`
 }
 
-// POST /api/v1/new
-func (data *Data) newHand(rw http.ResponseWriter, req *http.Request) error {
+// handlePastes handles all paste operations per AI.md PART 14
+// POST /api/v1/pastes - create new paste
+// GET /api/v1/pastes?id=X - get single paste
+// GET /api/v1/pastes - list pastes
+func (data *Data) handlePastes(rw http.ResponseWriter, req *http.Request) error {
+	switch req.Method {
+	case "POST":
+		return data.createPaste(rw, req)
+	case "GET":
+		// Check if getting single paste or listing
+		req.ParseForm()
+		if req.Form.Get("id") != "" {
+			return data.getPaste(rw, req)
+		}
+		return data.listPastes(rw, req)
+	default:
+		return netshare.ErrMethodNotAllowed
+	}
+}
+
+// POST /api/v1/pastes - create new paste
+func (data *Data) createPaste(rw http.ResponseWriter, req *http.Request) error {
 	var err error
 
 	// Check auth (required when server.public=false)

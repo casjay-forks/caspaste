@@ -520,6 +520,9 @@ func (p *Panel) renderPage(w http.ResponseWriter, title, content string) {
             color: var(--text-secondary);
             font-size: 0.875rem;
         }
+        .mt-lg {
+            margin-top: 1.5rem;
+        }
         .footer {
             height: 40px;
             background: var(--bg-secondary);
@@ -652,7 +655,7 @@ func (p *Panel) dashboardContent() string {
         <div class="stat-label">Requests Today</div>
     </div>
 </div>
-<div class="card" style="margin-top: 1.5rem;">
+<div class="card mt-lg">
     <div class="card-title">System Status</div>
     <p>Server is running normally.</p>
 </div>`

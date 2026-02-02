@@ -13,13 +13,8 @@ import (
 	"github.com/casjay-forks/caspaste/src/netshare"
 )
 
-// GET /api/v1/list
-func (data *Data) handleList(rw http.ResponseWriter, req *http.Request) error {
-	// Check method
-	if req.Method != "GET" {
-		return netshare.ErrMethodNotAllowed
-	}
-
+// GET /api/v1/pastes - list pastes per AI.md PART 14
+func (data *Data) listPastes(rw http.ResponseWriter, req *http.Request) error {
 	// Check rate limit
 	err := data.RateLimitGet.CheckAndUse(netshare.GetClientAddr(req))
 	if err != nil {

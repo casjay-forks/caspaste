@@ -79,7 +79,7 @@ func NormalizeConnectionString(driver, source string) string {
 		return source
 	}
 
-	// PostgreSQL: postgres:// URLs are supported by lib/pq driver, keep as-is
+	// PostgreSQL: postgres:// URLs are supported by pgx driver, keep as-is
 	if driver == "postgres" {
 		return source
 	}

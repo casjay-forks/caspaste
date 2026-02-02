@@ -28,8 +28,8 @@ type serverInfoType struct {
 	AuthRequired      bool     `json:"authRequired"`
 }
 
-// GET /api/v1/getServerInfo
-func (data *Data) getServerInfoHand(rw http.ResponseWriter, req *http.Request) error {
+// GET /api/v1/server/info - server information per AI.md PART 14
+func (data *Data) handleServerInfo(rw http.ResponseWriter, req *http.Request) error {
 	// Check method
 	if req.Method != "GET" {
 		return netshare.ErrMethodNotAllowed

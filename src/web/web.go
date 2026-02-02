@@ -8,17 +8,20 @@ package web
 
 import (
 	"embed"
+	"html/template"
+	"net/http"
 	"os"
+	"strings"
+	textTemplate "text/template"
+	"time"
 
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
+
+	"github.com/casjay-forks/caspaste/src/caspasswd"
 	"github.com/casjay-forks/caspaste/src/config"
 	"github.com/casjay-forks/caspaste/src/logger"
 	"github.com/casjay-forks/caspaste/src/netshare"
 	"github.com/casjay-forks/caspaste/src/storage"
-	"html/template"
-	"net/http"
-	"strings"
-	textTemplate "text/template"
 )
 
 //go:embed data/*
@@ -101,6 +104,9 @@ type Data struct {
 	Public        bool
 	CasPasswdFile string
 
+	// Brute force protection for login (5 attempts, 15 min lockout per AI.md)
+	BruteForce *caspasswd.BruteForceProtection
+
 	UiDefaultLifeTime string
 	UiDefaultTheme    string
 }
@@ -149,6 +155,10 @@ func Load(db storage.DB, cfg config.Config) (*Data, error) {
 	data.UiDefaultTheme = cfg.UiDefaultTheme
 	data.Public = cfg.Public
 	data.CasPasswdFile = cfg.CasPasswdFile
+
+	// Initialize brute force protection for login
+	// Per AI.md PART 11: 5 failed attempts = 15-minute lockout
+	data.BruteForce = caspasswd.NewBruteForceProtection(5, 15*time.Minute)
 
 	data.ServerAbout = cfg.ServerAbout
 	data.ServerRules = cfg.ServerRules
@@ -366,11 +376,11 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	switch req.URL.Path {
-	// Health checks
+	// Health checks per AI.md PART 13
+	// /healthz - HTML frontend with emojis
+	// /api/v1/healthz - JSON API (handled by apiv1 package)
 	case "/healthz":
 		err = data.handleHealthz(rw, req)
-	case "/api/healthz":
-		err = data.handleAPIHealthz(rw, req)
 	// Search engines
 	case "/robots.txt":
 		err = data.handleRobotsTxt(rw, req)

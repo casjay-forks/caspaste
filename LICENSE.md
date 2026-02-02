@@ -38,11 +38,11 @@ CasPaste is built upon and includes code from various open-source projects. This
 - **Source:** https://github.com/alecthomas/chroma
 
 ### PostgreSQL Driver
-- **Package:** `github.com/lib/pq`
-- **Version:** v1.10.7
+- **Package:** `github.com/jackc/pgx/v5`
+- **Version:** v5.7.2
 - **License:** MIT License
-- **Copyright:** © 2011-2013 'pq' Contributors
-- **Source:** https://github.com/lib/pq
+- **Copyright:** © 2013-2024 Jack Christensen
+- **Source:** https://github.com/jackc/pgx
 
 ### MySQL/MariaDB Driver
 - **Package:** `github.com/go-sql-driver/mysql`

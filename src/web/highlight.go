@@ -8,11 +8,12 @@ package web
 
 import (
 	"bytes"
+	"html/template"
+
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
-	"html/template"
 )
 
 func tryHighlight(source string, lexer string, theme string) template.HTML {

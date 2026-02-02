@@ -4,9 +4,9 @@
 // CasPaste is free software released under the MIT License.
 // See LICENSE.md file for details.
 
-// Package completions provides shell completion generation for CLI binaries.
+// Package completion provides shell completion generation for CLI binaries.
 // Per AI.md PART 8/33: ALL binaries MUST support built-in shell completions.
-package completions
+package completion
 
 import (
 	"fmt"

@@ -10,6 +10,7 @@ import (
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -165,6 +166,11 @@ func getSessionID(req *http.Request) string {
 	// Use client IP + User-Agent as fallback session identifier
 	// Not ideal but better than nothing for anonymous users
 	ip := req.RemoteAddr
+	// Strip port from RemoteAddr (e.g., "127.0.0.1:45678" -> "127.0.0.1")
+	// RemoteAddr includes port which changes per request, breaking session tracking
+	if host, _, err := net.SplitHostPort(ip); err == nil {
+		ip = host
+	}
 	if forwardedFor := req.Header.Get("X-Forwarded-For"); forwardedFor != "" {
 		parts := strings.Split(forwardedFor, ",")
 		ip = strings.TrimSpace(parts[0])

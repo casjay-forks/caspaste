@@ -11,8 +11,9 @@ import (
 	"time"
 
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
-	"github.com/casjay-forks/caspaste/src/config"
+
 	"github.com/casjay-forks/caspaste/src/caspasswd"
+	"github.com/casjay-forks/caspaste/src/config"
 	"github.com/casjay-forks/caspaste/src/logger"
 	"github.com/casjay-forks/caspaste/src/netshare"
 	"github.com/casjay-forks/caspaste/src/storage"
@@ -90,15 +91,12 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 	// Health check per AI.md PART 13
 	case "/api/v1/healthz":
 		err = data.handleHealthz(rw, req)
-	// API v1 endpoints
-	case "/api/v1/new":
-		err = data.newHand(rw, req)
-	case "/api/v1/get":
-		err = data.getHand(rw, req)
-	case "/api/v1/list":
-		err = data.handleList(rw, req)
-	case "/api/v1/getServerInfo":
-		err = data.getServerInfoHand(rw, req)
+	// API v1 endpoints per AI.md PART 14 (noun-based REST routes)
+	case "/api/v1/pastes":
+		// Route by method: POST=create, GET=list or get single
+		err = data.handlePastes(rw, req)
+	case "/api/v1/server/info":
+		err = data.handleServerInfo(rw, req)
 	default:
 		err = netshare.ErrNotFound
 	}
