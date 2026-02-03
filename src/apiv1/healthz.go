@@ -7,8 +7,11 @@ package apiv1
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/casjay-forks/caspaste/src/httputil"
 )
 
 type healthzResponse struct {
@@ -21,7 +24,10 @@ type healthzResponse struct {
 
 var startTime = time.Now()
 
-// GET /api/healthz
+// GET /api/healthz - health check per AI.md PART 13
+// Supports content negotiation per AI.md PART 14:
+// - Default: JSON
+// - .txt extension or Accept: text/plain: plain text
 func (data *Data) handleHealthz(rw http.ResponseWriter, req *http.Request) error {
 	if req.Method != "GET" {
 		rw.Header().Set("Allow", "GET")
@@ -29,7 +35,7 @@ func (data *Data) handleHealthz(rw http.ResponseWriter, req *http.Request) error
 		return nil
 	}
 
-	resp := healthzResponse{
+	healthData := healthzResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().Unix(),
 		Version:   data.Version,
@@ -40,19 +46,50 @@ func (data *Data) handleHealthz(rw http.ResponseWriter, req *http.Request) error
 	// Try to ping database
 	_, err := data.DB.PasteDeleteExpired()
 	if err != nil {
-		resp.Status = "degraded"
-		resp.Database = "error"
+		healthData.Status = "degraded"
+		healthData.Database = "error"
 	}
 
-	// Set status code and return response per AI.md PART 14 (indented JSON with newline)
-	rw.Header().Set("Content-Type", "application/json")
+	// Determine response format per AI.md PART 14
+	format := httputil.GetAPIResponseFormat(req)
+
+	// Set status code
+	statusCode := http.StatusOK
 	if err != nil {
-		rw.WriteHeader(http.StatusServiceUnavailable)
-	} else {
-		rw.WriteHeader(http.StatusOK)
+		statusCode = http.StatusServiceUnavailable
 	}
-	jsonData, _ := json.MarshalIndent(resp, "", "  ")
-	rw.Write(jsonData)
-	rw.Write([]byte("\n"))
+
+	// Return response based on format per AI.md PART 14, 16
+	switch format {
+	case httputil.FormatText:
+		// Plain text response per AI.md PART 16
+		rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		rw.WriteHeader(statusCode)
+		if healthData.Status == "healthy" {
+			fmt.Fprintf(rw, "OK: healthy\n")
+			fmt.Fprintf(rw, "status: %s\n", healthData.Status)
+			fmt.Fprintf(rw, "database: %s\n", healthData.Database)
+			fmt.Fprintf(rw, "version: %s\n", healthData.Version)
+			fmt.Fprintf(rw, "uptime: %d\n", healthData.Uptime)
+		} else {
+			fmt.Fprintf(rw, "ERROR: DEGRADED: %s (database: %s)\n", healthData.Status, healthData.Database)
+		}
+	default:
+		// JSON response per AI.md PART 16 unified format
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(statusCode)
+		resp := APIResponse{
+			OK:   healthData.Status == "healthy",
+			Data: healthData,
+		}
+		if healthData.Status != "healthy" {
+			resp.Error = "DEGRADED"
+			resp.Message = fmt.Sprintf("Service degraded: database %s", healthData.Database)
+		}
+		jsonData, _ := json.MarshalIndent(resp, "", "  ")
+		rw.Write(jsonData)
+		rw.Write([]byte("\n"))
+	}
+
 	return nil
 }

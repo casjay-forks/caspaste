@@ -5246,7 +5246,7 @@ package main
 |-------|-------|
 | **Name** | caspaste |
 | **Organization** | casjay-forks |
-| **Official Site** | https://caspaste.casjay-forks.us |
+| **Official Site** | https://pste.us |
 | **Repository** | {PLATFORM_REPO_URL} |
 | **README** | README.md |
 | **License** | MIT > LICENSE.md |
@@ -41252,7 +41252,7 @@ docker run -p 64580:80 {PLATFORM_CONTAINER_REGISTRY}/casjay-forks/caspaste:lates
 ## Links
 
 - [Repository]({PLATFORM_REPO_URL})
-- [Live Demo](https://caspaste.casjay-forks.us) (if applicable)
+- [Live Demo](https://pste.us) (if applicable)
 - [API Documentation](/openapi) (Swagger UI)
 - [GraphQL Playground](/graphql)
 

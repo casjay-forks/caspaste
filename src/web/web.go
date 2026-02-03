@@ -440,6 +440,17 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 		}
 	case "/logout":
 		err = data.handleLogout(rw, req)
+	// User routes (PART 34)
+	case "/users":
+		err = data.handleUserDashboard(rw, req)
+	case "/users/settings":
+		err = data.handleUserSettings(rw, req)
+	case "/users/security":
+		err = data.handleUserSecurity(rw, req)
+	case "/users/tokens":
+		err = data.handleUserTokens(rw, req)
+	case "/users/domains":
+		err = data.handleUserDomains(rw, req)
 	// Pages
 	case "/":
 		err = data.handleNewPaste(rw, req)
@@ -468,6 +479,14 @@ func (data *Data) Handler(rw http.ResponseWriter, req *http.Request) {
 
 		} else if strings.HasPrefix(req.URL.Path, "/edit/") {
 			err = data.handleEditPaste(rw, req)
+
+		} else if strings.HasPrefix(req.URL.Path, "/auth/") {
+			// Auth routes (PART 34)
+			err = data.routeAuth(rw, req)
+
+		} else if strings.HasPrefix(req.URL.Path, "/orgs") {
+			// Organization routes (PART 35)
+			err = data.routeOrgs(rw, req)
 
 		} else {
 			err = data.handleGetPaste(rw, req)

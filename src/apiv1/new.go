@@ -7,8 +7,10 @@
 package apiv1
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/casjay-forks/caspaste/src/caspasswd"
 	"github.com/casjay-forks/caspaste/src/netshare"
@@ -95,11 +97,20 @@ func (data *Data) createPaste(rw http.ResponseWriter, req *http.Request) error {
 	// Construct full URL for paste
 	url := netshare.BuildPasteURL(req, pasteID)
 
-	// Return response per AI.md PART 14 (indented JSON with newline)
-	return writeJSON(rw, newPasteAnswer{
+	answer := newPasteAnswer{
 		ID:         pasteID,
 		URL:        url,
 		CreateTime: createTime,
 		DeleteTime: deleteTime,
-	})
+	}
+
+	// Build text representation for plain text response
+	var textBuilder strings.Builder
+	fmt.Fprintf(&textBuilder, "id: %s\n", answer.ID)
+	fmt.Fprintf(&textBuilder, "url: %s\n", answer.URL)
+	fmt.Fprintf(&textBuilder, "createTime: %d\n", answer.CreateTime)
+	fmt.Fprintf(&textBuilder, "deleteTime: %d\n", answer.DeleteTime)
+
+	// Return response with content negotiation per AI.md PART 14, 16
+	return writeSuccess(rw, req, answer, "Paste created", textBuilder.String())
 }

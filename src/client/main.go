@@ -41,7 +41,15 @@ type Config struct {
 	Password string `yaml:"password"`
 }
 
-// API response types
+// APIResponse is the unified response wrapper per AI.md PART 16
+type APIResponse struct {
+	OK      bool            `json:"ok"`
+	Data    json.RawMessage `json:"data,omitempty"`
+	Error   string          `json:"error,omitempty"`
+	Message string          `json:"message,omitempty"`
+}
+
+// API response types (data payloads)
 type NewPasteResponse struct {
 	ID         string `json:"id"`
 	URL        string `json:"url"`
@@ -87,10 +95,28 @@ type ServerInfoResponse struct {
 	AuthRequired      bool     `json:"authRequired"`
 }
 
-type ErrorResponse struct {
-	Error   string `json:"error"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+// parseAPIResponse parses the unified API response format
+// Returns the data field if successful, or an error message if not
+func parseAPIResponse(body []byte) (json.RawMessage, error) {
+	var resp APIResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		// Not a wrapped response, return raw body as data (for backwards compatibility)
+		return body, nil
+	}
+
+	if !resp.OK {
+		if resp.Message != "" {
+			return nil, fmt.Errorf("%s: %s", resp.Error, resp.Message)
+		}
+		return nil, fmt.Errorf("%s", resp.Error)
+	}
+
+	// If no data field, return the whole body (for backwards compatibility)
+	if resp.Data == nil || len(resp.Data) == 0 {
+		return body, nil
+	}
+
+	return resp.Data, nil
 }
 
 func main() {
@@ -391,7 +417,7 @@ func handleLogin() {
 
 	// Test connection
 	fmt.Print("\nTesting connection... ")
-	resp, err := makeRequest("GET", "/api/healthz", nil, "", cfg)
+	resp, err := makeRequest("GET", "/api/v1/healthz", nil, "", cfg)
 	if err != nil {
 		fmt.Printf("FAILED\nError: %v\n", err)
 		os.Exit(1)
@@ -531,8 +557,8 @@ Examples:
 		form.Set("private", "true")
 	}
 
-	// Make request
-	resp, err := makeRequest("POST", "/api/v1/new", strings.NewReader(form.Encode()), "application/x-www-form-urlencoded", cfg)
+	// Make request - POST to /api/v1/pastes per REST API spec
+	resp, err := makeRequest("POST", "/api/v1/pastes", strings.NewReader(form.Encode()), "application/x-www-form-urlencoded", cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -553,17 +579,25 @@ Examples:
 	}
 
 	if resp.StatusCode != 200 {
-		var errResp ErrorResponse
-		if json.Unmarshal(body, &errResp) == nil && errResp.Message != "" {
-			fmt.Fprintf(os.Stderr, "Error: %s\n", errResp.Message)
+		// Parse unified error response per AI.md PART 16
+		data, parseErr := parseAPIResponse(body)
+		if parseErr != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
 		} else {
-			fmt.Fprintf(os.Stderr, "Error: %s\n%s\n", resp.Status, string(body))
+			fmt.Fprintf(os.Stderr, "Error: %s\n%s\n", resp.Status, string(data))
 		}
 		os.Exit(1)
 	}
 
+	// Parse unified success response per AI.md PART 16
+	data, parseErr := parseAPIResponse(body)
+	if parseErr != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
+		os.Exit(1)
+	}
+
 	var result NewPasteResponse
-	if err := json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing response: %v\n", err)
 		os.Exit(1)
 	}
@@ -594,7 +628,8 @@ func handleGet() {
 		}
 	}
 
-	resp, err := makeRequest("GET", "/api/v1/get?id="+url.QueryEscape(pasteID), nil, "", cfg)
+	// GET /api/v1/pastes?id= per REST API spec
+	resp, err := makeRequest("GET", "/api/v1/pastes?id="+url.QueryEscape(pasteID), nil, "", cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -609,12 +644,25 @@ func handleGet() {
 	}
 
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		// Parse unified error response per AI.md PART 16
+		_, parseErr := parseAPIResponse(body)
+		if parseErr != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		}
+		os.Exit(1)
+	}
+
+	// Parse unified success response per AI.md PART 16
+	data, parseErr := parseAPIResponse(body)
+	if parseErr != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
 		os.Exit(1)
 	}
 
 	var result GetPasteResponse
-	if err := json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing response: %v\n", err)
 		os.Exit(1)
 	}
@@ -662,7 +710,8 @@ func handleList() {
 		}
 	}
 
-	endpoint := fmt.Sprintf("/api/v1/list?limit=%s&offset=%s", limit, offset)
+	// GET /api/v1/pastes without id parameter returns list per REST API spec
+	endpoint := fmt.Sprintf("/api/v1/pastes?limit=%s&offset=%s", limit, offset)
 	resp, err := makeRequest("GET", endpoint, nil, "", cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -673,15 +722,28 @@ func handleList() {
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		// Parse unified error response per AI.md PART 16
+		_, parseErr := parseAPIResponse(body)
+		if parseErr != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		}
+		os.Exit(1)
+	}
+
+	// Parse unified success response per AI.md PART 16
+	data, parseErr := parseAPIResponse(body)
+	if parseErr != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
 		os.Exit(1)
 	}
 
 	var result ListResponse
-	if err := json.Unmarshal(body, &result); err != nil {
-		// Try parsing as array (older API format)
+	if err := json.Unmarshal(data, &result); err != nil {
+		// Try parsing as array (older API format or direct array in data)
 		var pastes []ListPasteItem
-		if err2 := json.Unmarshal(body, &pastes); err2 == nil {
+		if err2 := json.Unmarshal(data, &pastes); err2 == nil {
 			result.Pastes = pastes
 			result.Total = len(pastes)
 		} else {
@@ -714,7 +776,8 @@ func handleList() {
 func handleServerInfo() {
 	cfg := loadConfig()
 
-	resp, err := makeRequest("GET", "/api/v1/getServerInfo", nil, "", cfg)
+	// GET /api/v1/server/info per REST API spec
+	resp, err := makeRequest("GET", "/api/v1/server/info", nil, "", cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -724,12 +787,25 @@ func handleServerInfo() {
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		// Parse unified error response per AI.md PART 16
+		_, parseErr := parseAPIResponse(body)
+		if parseErr != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %s\n", resp.Status)
+		}
+		os.Exit(1)
+	}
+
+	// Parse unified success response per AI.md PART 16
+	data, parseErr := parseAPIResponse(body)
+	if parseErr != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", parseErr)
 		os.Exit(1)
 	}
 
 	var result ServerInfoResponse
-	if err := json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing response: %v\n", err)
 		os.Exit(1)
 	}
@@ -751,7 +827,7 @@ func handleServerInfo() {
 func handleHealth() {
 	cfg := loadConfig()
 
-	resp, err := makeRequest("GET", "/api/healthz", nil, "", cfg)
+	resp, err := makeRequest("GET", "/api/v1/healthz", nil, "", cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -832,7 +908,8 @@ func uploadFile(filePath string, cfg Config) (*NewPasteResponse, error) {
 
 	writer.Close()
 
-	resp, err := makeRequest("POST", "/api/v1/new", &buf, writer.FormDataContentType(), cfg)
+	// POST to /api/v1/pastes per REST API spec
+	resp, err := makeRequest("POST", "/api/v1/pastes", &buf, writer.FormDataContentType(), cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -841,11 +918,22 @@ func uploadFile(filePath string, cfg Config) (*NewPasteResponse, error) {
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != 200 {
+		// Parse unified error response per AI.md PART 16
+		_, parseErr := parseAPIResponse(body)
+		if parseErr != nil {
+			return nil, parseErr
+		}
 		return nil, fmt.Errorf("upload failed: %s", resp.Status)
 	}
 
+	// Parse unified success response per AI.md PART 16
+	data, parseErr := parseAPIResponse(body)
+	if parseErr != nil {
+		return nil, parseErr
+	}
+
 	var result NewPasteResponse
-	if err := json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, err
 	}
 

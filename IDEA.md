@@ -90,6 +90,43 @@ CasPaste is a self-hosted, privacy-focused pastebin service with URL shortening 
 - Get server info and configuration - see PART 14
 - Health check endpoint - see PART 13
 
+### External API Compatibility
+
+CasPaste provides create-only compatibility with popular pastebin services, allowing existing tools and scripts to work by simply changing the URL.
+
+**Supported Services:**
+
+| Service | Endpoint | Field Names | Response |
+|---------|----------|-------------|----------|
+| sprunge.us | POST /sprunge | `sprunge` | Plain text URL |
+| ix.io | POST /ix | `f:1`, `f:0`, `f` | Plain text URL |
+| termbin | POST /termbin or /nc | Raw body | Plain text URL |
+| pastebin.com | POST /api/api_post.php | `api_paste_code`, `api_paste_format`, etc. | Plain text URL |
+| stikked/stiqued | POST /api/create | `text`, `code`, `data`, `lang`, `title` | JSON |
+| microbin | POST /upload or /p | `content`, `text`, `editordata` | Plain text URL or JSON |
+| lenpaste | POST /api/v1/new | `body`, `title`, `syntax`, etc. | JSON |
+| Generic | POST /compat or /paste | Multiple field names | Plain text URL or JSON |
+
+**Example Usage:**
+```bash
+# sprunge-style
+echo "hello world" | curl -F 'sprunge=<-' https://yourserver.com/sprunge
+
+# ix.io-style
+echo "hello world" | curl -F 'f:1=<-' https://yourserver.com/ix
+
+# termbin-style
+echo "hello world" | curl -X POST --data-binary @- https://yourserver.com/termbin
+
+# Generic (accepts multiple field names)
+curl -F 'text=hello world' https://yourserver.com/compat
+```
+
+**Notes:**
+- Anonymous paste creation is supported (no auth required by default)
+- All compatibility endpoints use rate limiting
+- View/list/delete operations use standard CasPaste API routes
+
 ### Data Sources
 
 - Database for paste storage - see PART 10 (SQLite default, PostgreSQL, MySQL)

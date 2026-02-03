@@ -7,7 +7,9 @@
 package apiv1
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/casjay-forks/caspaste/src/netshare"
 )
@@ -52,6 +54,17 @@ func (data *Data) handleServerInfo(rw http.ResponseWriter, req *http.Request) er
 		AuthRequired:      !data.Public,
 	}
 
-	// Return response per AI.md PART 14 (indented JSON with newline)
-	return writeJSON(rw, serverInfo)
+	// Build text representation for plain text response
+	var textBuilder strings.Builder
+	fmt.Fprintf(&textBuilder, "software: %s\n", serverInfo.Software)
+	fmt.Fprintf(&textBuilder, "version: %s\n", serverInfo.Version)
+	fmt.Fprintf(&textBuilder, "titleMaxLength: %d\n", serverInfo.TitleMaxLen)
+	fmt.Fprintf(&textBuilder, "bodyMaxLength: %d\n", serverInfo.BodyMaxLen)
+	fmt.Fprintf(&textBuilder, "maxLifeTime: %d\n", serverInfo.MaxLifeTime)
+	fmt.Fprintf(&textBuilder, "adminName: %s\n", serverInfo.AdminName)
+	fmt.Fprintf(&textBuilder, "adminMail: %s\n", serverInfo.AdminMail)
+	fmt.Fprintf(&textBuilder, "authRequired: %t\n", serverInfo.AuthRequired)
+
+	// Return response with content negotiation per AI.md PART 14, 16
+	return writeSuccess(rw, req, serverInfo, "Server info", textBuilder.String())
 }

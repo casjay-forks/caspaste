@@ -19,6 +19,8 @@
 <div class="text-bar">
 	{{if .IsFile}}
 	<div>{{.FileName}} ({{.MimeType}}, {{.FileSize}} bytes)</div>
+	{{else if .IsMarkdown}}
+	<div>Markdown, {{.LineEnd}}</div>
 	{{else}}
 	<div>{{.Syntax}}, {{.LineEnd}}</div>
 	{{end}}
@@ -62,6 +64,10 @@
 	<p>Type: {{.MimeType}}</p>
 	<p>Size: {{.FileSize}} bytes</p>
 	<p><a href="/dl/{{.ID}}" class="download-btn">Download File</a></p>
+</div>
+{{else if .IsMarkdown}}
+<div class="markdown-content">
+{{.Body}}
 </div>
 {{else}}
 {{.Body}}

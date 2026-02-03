@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/casjay-forks/caspaste/src/config"
 )
 
 // Config holds swagger configuration
@@ -168,7 +170,7 @@ func (h *Handler) generateSpec() *Spec {
 			{Name: "health", Description: "Health check endpoints"},
 		},
 		Paths: map[string]PathItem{
-			"/api/v1/healthz": {
+			config.APIBasePath() + "/healthz": {
 				Get: &Operation{
 					Tags:        []string{"health"},
 					Summary:     "Health check",
@@ -193,7 +195,7 @@ func (h *Handler) generateSpec() *Spec {
 					},
 				},
 			},
-			"/api/v1/pastes": {
+			config.APIBasePath() + "/pastes": {
 				Get: &Operation{
 					Tags:        []string{"pastes"},
 					Summary:     "Get paste(s)",
@@ -299,7 +301,7 @@ func (h *Handler) generateSpec() *Spec {
 					},
 				},
 			},
-			"/api/v1/server/info": {
+			config.APIBasePath() + "/server/info": {
 				Get: &Operation{
 					Tags:        []string{"server"},
 					Summary:     "Get server information",

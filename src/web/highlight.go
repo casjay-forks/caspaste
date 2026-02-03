@@ -9,12 +9,45 @@ package web
 import (
 	"bytes"
 	"html/template"
+	"path/filepath"
+	"strings"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters/html"
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
 )
+
+// DetectSyntaxFromFilename detects programming language from file extension
+// Returns the lexer name or empty string if not detected
+func DetectSyntaxFromFilename(filename string) string {
+	if filename == "" {
+		return ""
+	}
+
+	// Try Chroma's built-in filename matching
+	l := lexers.Match(filename)
+	if l != nil {
+		return l.Config().Name
+	}
+
+	// Additional common extensions not in Chroma
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".txt":
+		return "plaintext"
+	case ".log":
+		return "plaintext"
+	case ".cfg", ".conf", ".ini":
+		return "INI"
+	case ".env":
+		return "Bash"
+	case ".gitignore", ".dockerignore":
+		return "plaintext"
+	}
+
+	return ""
+}
 
 func tryHighlight(source string, lexer string, theme string) template.HTML {
 	// Determine lexer

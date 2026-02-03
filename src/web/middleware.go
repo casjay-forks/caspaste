@@ -10,9 +10,11 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -209,4 +211,201 @@ func PanicRecoveryMiddleware(debug bool) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+// URLNormalizeMiddleware normalizes URLs per AI.md PART 14
+// - Removes trailing slashes (except for root "/")
+// - 301 redirects to canonical path
+// - Preserves query string
+// This should be the FIRST middleware in the chain.
+func URLNormalizeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// Don't normalize root path
+		if path == "/" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check for trailing slash
+		if len(path) > 1 && strings.HasSuffix(path, "/") {
+			// Build canonical URL without trailing slash
+			canonical := strings.TrimSuffix(path, "/")
+			if r.URL.RawQuery != "" {
+				canonical += "?" + r.URL.RawQuery
+			}
+
+			// 301 Permanent Redirect to canonical URL
+			http.Redirect(w, r, canonical, http.StatusMovedPermanently)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// PathSecurityMiddleware blocks path traversal attacks per AI.md PART 11
+// - Blocks ".." in paths
+// - Blocks encoded traversal attempts (%2e%2e, %2E%2E)
+// - Returns 400 Bad Request for malicious paths
+func PathSecurityMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// Check for path traversal in raw path
+		if strings.Contains(path, "..") {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		// Check for encoded traversal attempts
+		// URL decode and check again
+		decoded, err := url.PathUnescape(path)
+		if err != nil {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		if strings.Contains(decoded, "..") {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
+
+		// Also check the raw query for traversal attempts
+		if strings.Contains(r.URL.RawQuery, "..") {
+			decodedQuery, err := url.QueryUnescape(r.URL.RawQuery)
+			if err == nil && strings.Contains(decodedQuery, "..") {
+				http.Error(w, "Bad Request", http.StatusBadRequest)
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Context keys for authentication (PART 34, 35, 36)
+type (
+	UserContextKey       struct{}
+	SessionContextKey    struct{}
+	TokenInfoContextKey  struct{}
+	CustomDomainKey      struct{}
+	OrgContextKey        struct{}
+	OrgMemberRoleKey     struct{}
+)
+
+// AuthUser represents an authenticated user in the request context
+type AuthUser struct {
+	ID            int64
+	Username      string
+	Email         string
+	DisplayName   string
+	Role          string
+	EmailVerified bool
+	TOTPEnabled   bool
+}
+
+// GetAuthUser retrieves the authenticated user from context
+func GetAuthUser(ctx context.Context) *AuthUser {
+	if user, ok := ctx.Value(UserContextKey{}).(*AuthUser); ok {
+		return user
+	}
+	return nil
+}
+
+// GetSessionToken retrieves the session token from context
+func GetSessionToken(ctx context.Context) string {
+	if token, ok := ctx.Value(SessionContextKey{}).(string); ok {
+		return token
+	}
+	return ""
+}
+
+// GetCustomDomain retrieves the custom domain from context
+func GetCustomDomain(ctx context.Context) interface{} {
+	return ctx.Value(CustomDomainKey{})
+}
+
+// GetOrgContext retrieves the organization from context
+func GetOrgContext(ctx context.Context) interface{} {
+	return ctx.Value(OrgContextKey{})
+}
+
+// GetOrgMemberRole retrieves the user's role in the current org context
+func GetOrgMemberRole(ctx context.Context) string {
+	if role, ok := ctx.Value(OrgMemberRoleKey{}).(string); ok {
+		return role
+	}
+	return ""
+}
+
+// SetAuthUser sets the authenticated user in context
+func SetAuthUser(ctx context.Context, user *AuthUser) context.Context {
+	return context.WithValue(ctx, UserContextKey{}, user)
+}
+
+// SetSessionToken sets the session token in context
+func SetSessionToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, SessionContextKey{}, token)
+}
+
+// SetCustomDomain sets the custom domain in context
+func SetCustomDomain(ctx context.Context, domain interface{}) context.Context {
+	return context.WithValue(ctx, CustomDomainKey{}, domain)
+}
+
+// SetOrgContext sets the organization in context
+func SetOrgContext(ctx context.Context, org interface{}) context.Context {
+	return context.WithValue(ctx, OrgContextKey{}, org)
+}
+
+// SetOrgMemberRole sets the user's role in the org context
+func SetOrgMemberRole(ctx context.Context, role string) context.Context {
+	return context.WithValue(ctx, OrgMemberRoleKey{}, role)
+}
+
+// IsAuthenticated checks if the request has an authenticated user
+func IsAuthenticated(ctx context.Context) bool {
+	return GetAuthUser(ctx) != nil
+}
+
+// RequireAuth returns 401 if not authenticated
+func RequireAuth(w http.ResponseWriter, r *http.Request) bool {
+	if !IsAuthenticated(r.Context()) {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return false
+	}
+	return true
+}
+
+// RequireRole returns 403 if user doesn't have the required role
+func RequireRole(w http.ResponseWriter, r *http.Request, requiredRole string) bool {
+	user := GetAuthUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return false
+	}
+	if user.Role != requiredRole && user.Role != "admin" {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return false
+	}
+	return true
+}
+
+// RequireOrgRole returns 403 if user doesn't have the required org role
+func RequireOrgRole(w http.ResponseWriter, r *http.Request, minRole string) bool {
+	role := GetOrgMemberRole(r.Context())
+	if role == "" {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return false
+	}
+
+	// Role hierarchy: owner > admin > member
+	roleRank := map[string]int{"owner": 3, "admin": 2, "member": 1}
+	if roleRank[role] < roleRank[minRole] {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return false
+	}
+	return true
 }

@@ -29,6 +29,7 @@ import (
 
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
 
+	"github.com/casjay-forks/caspaste/src/admin"
 	"github.com/casjay-forks/caspaste/src/apiv1"
 	"github.com/casjay-forks/caspaste/src/audit"
 	"github.com/casjay-forks/caspaste/src/caspasswd"
@@ -2303,6 +2304,45 @@ func main() {
 
 	// Handlers
 	mux := http.NewServeMux()
+
+	// External API Compatibility routes per AI.md "External API Compatibility"
+	// These are registered before "/" to ensure specific matching
+	// sprunge.us compatibility
+	mux.HandleFunc("/sprunge", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	mux.HandleFunc("/sprunge/", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	// ix.io compatibility
+	mux.HandleFunc("/ix", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	mux.HandleFunc("/ix/", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	// termbin/netcat compatibility
+	mux.HandleFunc("/termbin", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	mux.HandleFunc("/nc", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	// microbin compatibility
+	mux.HandleFunc("/upload", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	mux.HandleFunc("/p", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	// Generic compatibility
+	mux.HandleFunc("/compat", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+	mux.HandleFunc("/paste", func(rw http.ResponseWriter, req *http.Request) {
+		apiv1Data.Hand(rw, req)
+	})
+
 	mux.HandleFunc("/", func(rw http.ResponseWriter, req *http.Request) {
 		webData.Handler(rw, req)
 	})
@@ -2312,6 +2352,23 @@ func main() {
 	mux.HandleFunc("/api/", func(rw http.ResponseWriter, req *http.Request) {
 		apiv1Data.Hand(rw, req)
 	})
+
+	// Register admin panel and API per AI.md PART 17
+	// Admin panel at /{admin_path}/ and API at /api/{version}/{admin_path}/
+	adminCfg := &admin.Config{
+		BasePath:   config.AdminPath(),
+		APIVersion: config.APIVersion(),
+		Enabled:    true,
+	}
+	adminPanel := admin.New(adminCfg)
+	adminBasePath := config.AdminBasePath()
+	adminAPIPath := config.AdminAPIPath()
+
+	// Admin panel UI handler
+	mux.Handle(adminBasePath+"/", http.StripPrefix(adminBasePath, adminPanel.Handler()))
+
+	// Admin API handler
+	mux.Handle(adminAPIPath+"/", http.StripPrefix(adminAPIPath, adminPanel.APIHandler()))
 
 	// Register debug/pprof endpoints per AI.md PART 6
 	// Only enabled when --debug flag is set
@@ -2403,19 +2460,36 @@ func main() {
 		HeaderName:  yamlCfg.Security.CSRF.HeaderName,
 		FieldName:   yamlCfg.Security.CSRF.FieldName,
 		Secure:      yamlCfg.Security.CSRF.Secure,
+		// Exempt API and compatibility endpoints from CSRF (they use tokens, not cookies)
+		ExemptPaths: []string{
+			"/sprunge", "/sprunge/",
+			"/ix", "/ix/",
+			"/termbin", "/nc",
+			"/upload", "/p",
+			"/compat", "/paste",
+		},
+		ExemptPrefixes: []string{
+			"/api/",
+			"/raw/",
+		},
 	}
 
-	// Apply middleware chain: PanicRecovery → RequestID → Metrics → SecurityHeaders → CORS → CSRF → Maintenance → App
+	// Apply middleware chain per AI.md:
+	// URLNormalize → PathSecurity → PanicRecovery → RequestID → Metrics → SecurityHeaders → CORS → CSRF → Maintenance → App
+	// Per AI.md PART 14: URL normalization (trailing slashes) must be first
+	// Per AI.md PART 11: Path security blocks traversal attacks early
 	// Per AI.md PART 6: Panic recovery must catch all panics
 	// Per AI.md PART 11: Request ID middleware for tracing, security headers, CSRF protection
 	// Per AI.md PART 21: Metrics middleware for HTTP request tracking
-	handler := web.PanicRecoveryMiddleware(*flagDebug)(
-		web.RequestIDMiddleware(
-			metric.Middleware(metricsCfg)(
-				web.SecurityHeadersMiddleware(securityHeadersCfg)(
-					web.CORSMiddleware(
-						web.CSRFMiddleware(csrfCfg)(
-							web.MaintenanceMiddleware(dataDirectory, mux)))))))
+	handler := web.URLNormalizeMiddleware(
+		web.PathSecurityMiddleware(
+			web.PanicRecoveryMiddleware(*flagDebug)(
+				web.RequestIDMiddleware(
+					metric.Middleware(metricsCfg)(
+						web.SecurityHeadersMiddleware(securityHeadersCfg)(
+							web.CORSMiddleware(
+								web.CSRFMiddleware(csrfCfg)(
+									web.MaintenanceMiddleware(dataDirectory, mux)))))))))
 
 	// Run background job
 	go func(cleanJobPeriod time.Duration) {

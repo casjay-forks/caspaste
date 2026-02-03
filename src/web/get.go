@@ -47,6 +47,10 @@ func isTextMimeType(mimeType string) bool {
 		"application/ecmascript",
 		"application/x-sh",
 		"application/x-csh",
+		"application/x-python",
+		"application/x-ruby",
+		"application/x-perl",
+		"application/x-php",
 	}
 	for _, t := range textTypes {
 		if mimeType == t {
@@ -54,6 +58,58 @@ func isTextMimeType(mimeType string) bool {
 		}
 	}
 	return false
+}
+
+// isTextFileExtension checks if filename has a known text/code extension
+func isTextFileExtension(filename string) bool {
+	if filename == "" {
+		return false
+	}
+	ext := strings.ToLower(filename)
+	// Get the extension part
+	if idx := strings.LastIndex(ext, "."); idx >= 0 {
+		ext = ext[idx:]
+	} else {
+		return false
+	}
+
+	// Common text/code file extensions
+	textExts := map[string]bool{
+		// Programming languages
+		".py": true, ".rb": true, ".pl": true, ".php": true,
+		".js": true, ".ts": true, ".jsx": true, ".tsx": true,
+		".go": true, ".rs": true, ".java": true, ".kt": true,
+		".c": true, ".cpp": true, ".cc": true, ".h": true, ".hpp": true,
+		".cs": true, ".swift": true, ".m": true, ".mm": true,
+		".scala": true, ".clj": true, ".ex": true, ".exs": true,
+		".hs": true, ".ml": true, ".fs": true, ".r": true,
+		".lua": true, ".vim": true, ".el": true, ".lisp": true,
+		".asm": true, ".s": true, ".d": true, ".nim": true,
+		".cr": true, ".v": true, ".zig": true, ".odin": true,
+		// Web
+		".html": true, ".htm": true, ".css": true, ".scss": true,
+		".sass": true, ".less": true, ".vue": true, ".svelte": true,
+		// Data/Config
+		".json": true, ".xml": true, ".yaml": true, ".yml": true,
+		".toml": true, ".ini": true, ".cfg": true, ".conf": true,
+		".env": true, ".properties": true,
+		// Shell/Script
+		".sh": true, ".bash": true, ".zsh": true, ".fish": true,
+		".ps1": true, ".bat": true, ".cmd": true,
+		// Text/Doc
+		".txt": true, ".md": true, ".markdown": true, ".rst": true,
+		".tex": true, ".org": true, ".adoc": true,
+		// SQL/Database
+		".sql": true, ".graphql": true, ".gql": true,
+		// Build/Make
+		".make": true, ".cmake": true, ".gradle": true,
+		// Other
+		".diff": true, ".patch": true, ".log": true,
+		".csv": true, ".tsv": true,
+		".dockerfile": true, ".containerfile": true,
+		".gitignore": true, ".dockerignore": true,
+	}
+	return textExts[ext]
 }
 
 type pasteTmpl struct {
@@ -80,11 +136,12 @@ type pasteTmpl struct {
 	FileSize int
 
 	// File type flags for template rendering
-	IsImage bool
-	IsVideo bool
-	IsAudio bool
-	IsPDF   bool
-	IsText  bool
+	IsImage    bool
+	IsVideo    bool
+	IsAudio    bool
+	IsPDF      bool
+	IsText     bool
+	IsMarkdown bool
 
 	// Data URL for embedding media (images, video, audio)
 	// Using template.URL to mark as safe for embedding
@@ -155,6 +212,9 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 	var mediaDataURL template.URL
 	var isImage, isVideo, isAudio, isPDF, isText bool
 
+	// Detect if content is markdown
+	var isMarkdown bool
+
 	if paste.IsFile {
 		// File upload: try to decode base64, fall back to raw for legacy data
 		var base64Data string
@@ -170,29 +230,52 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 			base64Data = paste.Body
 		}
 
-		// Detect file type from MIME type
+		// Detect file type from MIME type and extension
 		mimeType := paste.MimeType
 		isImage = isImageMimeType(mimeType)
 		isVideo = isVideoMimeType(mimeType)
 		isAudio = isAudioMimeType(mimeType)
 		isPDF = isPDFMimeType(mimeType)
-		isText = isTextMimeType(mimeType)
+		// Check text by MIME type or by file extension (for application/octet-stream)
+		isText = isTextMimeType(mimeType) || isTextFileExtension(paste.FileName)
+
+		// Check for markdown content
+		isMarkdown = IsMarkdownMimeType(mimeType) || IsMarkdownFile(paste.FileName) || IsMarkdownSyntax(paste.Syntax)
 
 		// For media files, create data URL for embedding
 		if isImage || isVideo || isAudio || isPDF {
 			mediaDataURL = template.URL("data:" + mimeType + ";base64," + base64Data)
 			// Don't syntax highlight media - body will be empty
 			bodyHTML = ""
+		} else if isMarkdown {
+			// Render markdown to HTML
+			bodyHTML = RenderMarkdown(bodyContent)
 		} else if isText {
+			// Detect syntax from filename if not explicitly set
+			syntax := paste.Syntax
+			if syntax == "" || syntax == "plaintext" {
+				if detected := DetectSyntaxFromFilename(paste.FileName); detected != "" {
+					syntax = detected
+				}
+			}
 			// Text files can be syntax highlighted
-			bodyHTML = data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(bodyContent, paste.Syntax)
+			bodyHTML = data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(bodyContent, syntax)
 		} else {
 			// Binary files - show file info, don't try to display content
 			bodyHTML = ""
 		}
 	} else {
 		bodyContent = paste.Body
-		bodyHTML = data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(bodyContent, paste.Syntax)
+
+		// Check for markdown content by syntax
+		isMarkdown = IsMarkdownSyntax(paste.Syntax)
+
+		if isMarkdown {
+			// Render markdown to HTML
+			bodyHTML = RenderMarkdown(bodyContent)
+		} else {
+			bodyHTML = data.Themes.findTheme(req, data.UiDefaultTheme).tryHighlight(bodyContent, paste.Syntax)
+		}
 	}
 
 	tmplData := pasteTmpl{
@@ -220,6 +303,7 @@ func (data *Data) handleGetPaste(rw http.ResponseWriter, req *http.Request) erro
 		IsAudio:      isAudio,
 		IsPDF:        isPDF,
 		IsText:       isText,
+		IsMarkdown:   isMarkdown,
 		MediaDataURL: mediaDataURL,
 
 		Language:  getCookie(req, "lang"),

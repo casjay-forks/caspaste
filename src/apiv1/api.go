@@ -14,6 +14,7 @@ import (
 
 	"github.com/casjay-forks/caspaste/src/caspasswd"
 	"github.com/casjay-forks/caspaste/src/config"
+	"github.com/casjay-forks/caspaste/src/httputil"
 	"github.com/casjay-forks/caspaste/src/logger"
 	"github.com/casjay-forks/caspaste/src/netshare"
 	"github.com/casjay-forks/caspaste/src/storage"
@@ -87,16 +88,48 @@ func (data *Data) Hand(rw http.ResponseWriter, req *http.Request) {
 
 	rw.Header().Set("Server", config.Software+"/"+data.Version)
 
-	switch req.URL.Path {
+	// Build API paths dynamically per AI.md PART 14
+	apiBase := config.APIBasePath()
+	path := req.URL.Path
+
+	// Strip .txt extension for routing per AI.md PART 14 content negotiation
+	// The format is determined by httputil.GetAPIResponseFormat() in handlers
+	routePath := httputil.StripTxtExtension(path)
+
+	// Route API requests
+	switch routePath {
 	// Health check per AI.md PART 13
-	case "/api/v1/healthz":
+	case apiBase + "/healthz":
 		err = data.handleHealthz(rw, req)
 	// API v1 endpoints per AI.md PART 14 (noun-based REST routes)
-	case "/api/v1/pastes":
+	case apiBase + "/pastes":
 		// Route by method: POST=create, GET=list or get single
 		err = data.handlePastes(rw, req)
-	case "/api/v1/server/info":
+	case apiBase + "/server/info":
 		err = data.handleServerInfo(rw, req)
+
+	// External API Compatibility endpoints per AI.md "External API Compatibility"
+	// pastebin.com compatibility
+	case "/api/api_post.php":
+		err = data.handleCompat(rw, req)
+	// stikked/stiqued compatibility
+	case "/api/create":
+		err = data.handleCompat(rw, req)
+	// lenpaste compatibility (also handled by apiBase + "/pastes" but adding for clarity)
+	case "/api/v1/new":
+		err = data.handleCompat(rw, req)
+	// sprunge, ix, termbin, etc - root-level compat routes
+	case "/sprunge", "/sprunge/":
+		err = data.handleCompat(rw, req)
+	case "/ix", "/ix/":
+		err = data.handleCompat(rw, req)
+	case "/termbin", "/nc":
+		err = data.handleCompat(rw, req)
+	case "/upload", "/p":
+		err = data.handleCompat(rw, req)
+	case "/compat", "/paste":
+		err = data.handleCompat(rw, req)
+
 	default:
 		err = netshare.ErrNotFound
 	}

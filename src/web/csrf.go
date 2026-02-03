@@ -34,6 +34,10 @@ type CSRFConfig struct {
 	FieldName string
 	// Secure cookie mode: "auto", "true", "false"
 	Secure string
+	// ExemptPaths are paths that skip CSRF validation (API endpoints, etc.)
+	ExemptPaths []string
+	// ExemptPrefixes are path prefixes that skip CSRF validation
+	ExemptPrefixes []string
 }
 
 // csrfTokenStore manages CSRF tokens per session
@@ -176,7 +180,12 @@ func getSessionID(req *http.Request) string {
 		ip = strings.TrimSpace(parts[0])
 	}
 	ua := req.Header.Get("User-Agent")
-	return base64.URLEncoding.EncodeToString([]byte(ip + ua))[:32]
+	encoded := base64.URLEncoding.EncodeToString([]byte(ip + ua))
+	// Ensure at least 32 chars by padding if needed
+	for len(encoded) < 32 {
+		encoded += "0"
+	}
+	return encoded[:32]
 }
 
 // CSRFMiddleware creates middleware that protects against CSRF attacks
@@ -216,6 +225,12 @@ func CSRFMiddleware(config CSRFConfig) func(http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Check if path is exempt from CSRF (API endpoints, compat endpoints)
+			if isCSRFExempt(r.URL.Path, config.ExemptPaths, config.ExemptPrefixes) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			sessionID := getSessionID(r)
 
 			// For safe methods (GET, HEAD, OPTIONS, TRACE), just set the token
@@ -266,6 +281,26 @@ func isSafeMethod(method string) bool {
 	default:
 		return false
 	}
+}
+
+// isCSRFExempt checks if a path should be exempt from CSRF validation
+// API endpoints and compatibility endpoints are exempt since they use tokens, not cookies
+func isCSRFExempt(path string, exemptPaths, exemptPrefixes []string) bool {
+	// Check exact paths
+	for _, exempt := range exemptPaths {
+		if path == exempt {
+			return true
+		}
+	}
+
+	// Check prefixes
+	for _, prefix := range exemptPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // extractCSRFToken extracts the CSRF token from the request

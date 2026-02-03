@@ -7,8 +7,10 @@
 package apiv1
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/casjay-forks/caspaste/src/netshare"
 )
@@ -48,6 +50,17 @@ func (data *Data) listPastes(rw http.ResponseWriter, req *http.Request) error {
 		return err
 	}
 
-	// Return response per AI.md PART 14 (indented JSON with newline)
-	return writeJSON(rw, pastes)
+	// Build text representation for plain text response
+	var textBuilder strings.Builder
+	for _, p := range pastes {
+		title := p.Title
+		if title == "" {
+			title = "(untitled)"
+		}
+		fmt.Fprintf(&textBuilder, "%s\t%s\n", p.ID, title)
+	}
+
+	// Return response with content negotiation per AI.md PART 14, 16
+	msg := fmt.Sprintf("%d pastes found", len(pastes))
+	return writeSuccess(rw, req, pastes, msg, textBuilder.String())
 }

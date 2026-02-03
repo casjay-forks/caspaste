@@ -43,6 +43,7 @@ func (data *Data) getPaste(rw http.ResponseWriter, req *http.Request) error {
 		}
 	}
 
-	// Return response per AI.md PART 14 (indented JSON with newline)
-	return writeJSON(rw, paste)
+	// Return response with content negotiation per AI.md PART 14, 16
+	// For text format, return just the raw paste body (useful for curl/wget)
+	return writeSuccess(rw, req, paste, "Paste retrieved", paste.Body)
 }

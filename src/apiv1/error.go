@@ -9,68 +9,122 @@ package apiv1
 import (
 	"encoding/json"
 	"errors"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/casjay-forks/caspaste/src/httputil"
+	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/casjay-forks/caspaste/src/storage"
 )
 
-type errorType struct {
-	Code  int    `json:"code"`
-	Error string `json:"error"`
+// APIResponse is the unified response format per AI.md PART 16
+type APIResponse struct {
+	OK      bool        `json:"ok"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+}
+
+// ErrorInfo contains error code and message for consistent error handling
+type ErrorInfo struct {
+	Code    int
+	ErrCode string
+	Message string
+}
+
+// getErrorInfo maps errors to their codes and messages per AI.md PART 16
+func getErrorInfo(e error) ErrorInfo {
+	var eTmp429 *netshare.RateLimitError
+
+	switch {
+	case e == netshare.ErrBadRequest:
+		return ErrorInfo{400, "BAD_REQUEST", "Invalid request format"}
+	case e == netshare.ErrUnauthorized:
+		return ErrorInfo{401, "UNAUTHORIZED", "Authentication required"}
+	case e == storage.ErrNotFoundID:
+		return ErrorInfo{404, "NOT_FOUND", "Paste not found"}
+	case e == netshare.ErrNotFound:
+		return ErrorInfo{404, "NOT_FOUND", "Resource not found"}
+	case e == netshare.ErrMethodNotAllowed:
+		return ErrorInfo{405, "METHOD_NOT_ALLOWED", "Method not allowed"}
+	case e == netshare.ErrPayloadTooLarge:
+		return ErrorInfo{413, "BAD_REQUEST", "Payload too large"}
+	case e == netshare.ErrTooManyRequests:
+		return ErrorInfo{429, "RATE_LIMITED", "Too many requests"}
+	case errors.As(e, &eTmp429):
+		return ErrorInfo{429, "RATE_LIMITED", "Too many requests"}
+	default:
+		return ErrorInfo{500, "SERVER_ERROR", "Internal server error"}
+	}
 }
 
 func (data *Data) writeError(rw http.ResponseWriter, req *http.Request, e error) (int, error) {
-	var resp errorType
+	errInfo := getErrorInfo(e)
+
+	// Set special headers for certain errors
+	if e == netshare.ErrUnauthorized {
+		rw.Header().Add("WWW-Authenticate", "Basic")
+	}
 
 	var eTmp429 *netshare.RateLimitError
+	if errors.As(e, &eTmp429) {
+		rw.Header().Set("Retry-After", strconv.FormatInt(eTmp429.RetryAfter, 10))
+	}
 
-	if e == netshare.ErrBadRequest {
-		resp.Code = 400
-		resp.Error = "Bad Request"
+	// Check response format per AI.md PART 14 content negotiation
+	format := httputil.GetAPIResponseFormat(req)
 
-	} else if e == netshare.ErrUnauthorized {
-		rw.Header().Add("WWW-Authenticate", "Basic")
-		resp.Code = 401
-		resp.Error = "Unauthorized"
+	rw.WriteHeader(errInfo.Code)
 
-	} else if e == storage.ErrNotFoundID {
-		resp.Code = 404
-		resp.Error = "Could not find ID"
-
-	} else if e == netshare.ErrNotFound {
-		resp.Code = 404
-		resp.Error = "Not Found"
-
-	} else if e == netshare.ErrMethodNotAllowed {
-		resp.Code = 405
-		resp.Error = "Method Not Allowed"
-
-	} else if e == netshare.ErrPayloadTooLarge {
-		resp.Code = 413
-		resp.Error = "Payload Too Large"
-
-	} else if e == netshare.ErrTooManyRequests || errors.As(e, &eTmp429) {
-		resp.Code = 429
-		resp.Error = "Too Many Requests"
-		if eTmp429 != nil {
-			rw.Header().Set("Retry-After", strconv.FormatInt(eTmp429.RetryAfter, 10))
+	switch format {
+	case httputil.FormatText:
+		// Text response per AI.md PART 16: ERROR: {code}: {message}
+		rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		fmt.Fprintf(rw, "ERROR: %s: %s\n", errInfo.ErrCode, errInfo.Message)
+	default:
+		// JSON response per AI.md PART 16
+		rw.Header().Set("Content-Type", "application/json")
+		resp := APIResponse{
+			OK:      false,
+			Error:   errInfo.ErrCode,
+			Message: errInfo.Message,
 		}
-
-	} else {
-		resp.Code = 500
-		resp.Error = "Internal Server Error"
+		jsonData, _ := json.MarshalIndent(resp, "", "  ")
+		rw.Write(jsonData)
+		rw.Write([]byte("\n"))
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(resp.Code)
+	return errInfo.Code, nil
+}
 
-	err := writeJSON(rw, resp)
-	if err != nil {
-		return 500, err
+// writeSuccess writes a success response with content negotiation per AI.md PART 14, 16
+// For JSON: {"ok": true, "data": {...}}
+// For text: OK: {message}\n{data...}
+func writeSuccess(w http.ResponseWriter, r *http.Request, data interface{}, textMsg string, textData string) error {
+	format := httputil.GetAPIResponseFormat(r)
+
+	switch format {
+	case httputil.FormatText:
+		// Text response per AI.md PART 16
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if textMsg != "" {
+			fmt.Fprintf(w, "OK: %s\n", textMsg)
+		}
+		if textData != "" {
+			fmt.Fprint(w, textData)
+			if textData[len(textData)-1] != '\n' {
+				fmt.Fprint(w, "\n")
+			}
+		}
+		return nil
+	default:
+		// JSON response per AI.md PART 16
+		return writeJSON(w, APIResponse{
+			OK:   true,
+			Data: data,
+		})
 	}
-
-	return resp.Code, nil
 }
 
 // writeJSON writes a JSON response with proper formatting per AI.md PART 14
