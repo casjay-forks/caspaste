@@ -40,6 +40,22 @@ visible in this git history (2026) — could be correct if the project was
 first published elsewhere in 2024, or could be stale. Needs human
 confirmation of the actual first-publication year; not changed in this pass.
 
+## [ ] Fix GHCR push permission denial in Docker Images workflow
+Read: .github/workflows/docker-images.yml
+`docker/build-push-action` fails with `denied: permission_denied:
+write_package` pushing to `ghcr.io/casjay-forks/caspaste`. The workflow
+already declares `permissions: packages: write`, but the org
+`casjay-forks` has "Write permissions for workflows" disabled at the
+org level, which overrides the repo/workflow setting (confirmed via
+`gh api repos/casjay-forks/caspaste/actions/permissions/workflow` →
+`default_workflow_permissions: read`; attempting to PUT `write` returned
+409 "Write permissions for workflows are disabled by the organization").
+Requires org-admin action: either enable write workflow permissions for
+this repo at the org level, or switch the login step to a PAT with
+`write:packages` scope stored as a secret instead of `GITHUB_TOKEN`.
+May resolve naturally if/when the org is renamed casjay-forks ->
+webappsgo per IDEA.md/LICENSE.md (separately flagged, undecided).
+
 ## [ ] Verify src/mode + src/cli + src/tui runtime-mode dispatch against PART 6
 Read: AI.md PART 6
 src/mode/mode.go only implements a Production/Development app-mode toggle
