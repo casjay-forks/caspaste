@@ -8,6 +8,7 @@ package admin
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -29,7 +30,10 @@ func (p *Panel) MaybeGenerateSetupToken() bool {
 	}
 
 	raw := make([]byte, 32)
-	_, _ = rand.Read(raw)
+	if _, err := rand.Read(raw); err != nil {
+		fmt.Println("ERROR [admin] failed to generate setup token:", err)
+		return true
+	}
 	token := hex.EncodeToString(raw)
 
 	p.mu.Lock()
@@ -61,7 +65,8 @@ func (p *Panel) consumeSetupToken(token string) bool {
 	if token == "" || p.setupToken == "" {
 		return false
 	}
-	if p.setupToken != token {
+	// Constant-time comparison to avoid a setup-token timing oracle (AI.md PART 11)
+	if subtle.ConstantTimeCompare([]byte(p.setupToken), []byte(token)) != 1 {
 		return false
 	}
 	if time.Now().After(p.setupExpiry) {
@@ -77,7 +82,7 @@ func (p *Panel) peekSetupToken(token string) bool {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	return token != "" && p.setupToken != "" &&
-		p.setupToken == token &&
+		subtle.ConstantTimeCompare([]byte(p.setupToken), []byte(token)) == 1 &&
 		time.Now().Before(p.setupExpiry)
 }
 
