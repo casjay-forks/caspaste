@@ -70,8 +70,8 @@ RUN chmod 755 /usr/local/bin/*
 # Set environment
 # NOTE: Tor available (binary installed) but server binary controls Tor startup (see PART 32)
 # DATABASE_DIR: SQLite location (binary auto-detects container, but explicit is clearer)
-ENV MODE=development \
-    TZ=America/New_York \
+# MODE is never baked into the image (AI.md PART 27); the binary defaults to production.
+ENV TZ=America/New_York \
     DATABASE_DIR=/data/db/sqlite
 
 # Expose internal port (always 80)
@@ -81,7 +81,7 @@ EXPOSE 80
 STOPSIGNAL SIGRTMIN+3
 
 # Health check (long start period for services that need initialization)
-HEALTHCHECK --start-period=10m --interval=5m --timeout=15s --retries=3 \
+HEALTHCHECK --start-period=90s --interval=10s --timeout=5s --retries=3 \
     CMD /usr/local/bin/caspaste --status || exit 1
 
 # Use tini as init with signal propagation
