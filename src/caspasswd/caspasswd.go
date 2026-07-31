@@ -82,9 +82,24 @@ const (
 	ArgonSaltLen = 16
 )
 
+// dummyArgon2Hash is a valid Argon2id encoding of a random secret, used to
+// keep the failure path for unknown users as expensive as the success path so
+// account existence cannot be inferred from response timing (AI.md PART 11 —
+// enumeration / timing-oracle defense).
+var dummyArgon2Hash = func() string {
+	h, err := HashPassword("caspaste-nonexistent-user-placeholder")
+	if err != nil {
+		return "$argon2id$v=19$m=65536,t=3,p=4$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+	}
+	return h
+}()
+
 func (data Data) Check(user string, pass string) bool {
 	storedPass, exist := data[user]
 	if !exist {
+		// Perform an equivalent-cost Argon2id verification against a dummy
+		// hash so unknown users take the same time as known ones, then reject.
+		verifyArgon2Hash(dummyArgon2Hash, pass)
 		return false
 	}
 
