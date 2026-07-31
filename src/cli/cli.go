@@ -231,8 +231,8 @@ func (c *CLI) printHelp() {
 	}
 
 	fmt.Println()
-	fmt.Println("  -version   Display version and exit.")
-	fmt.Println("  -help      Display this help and exit.")
+	fmt.Println("  --version, -v   Display version and exit.")
+	fmt.Println("  --help, -h      Display this help and exit.")
 
 	os.Exit(0)
 }
@@ -274,10 +274,10 @@ func (c *CLI) Parse() {
 				normalizedArg := normalizeFlag(arg)
 
 				switch normalizedArg {
-				case "-version":
+				case "-version", "-v":
 					c.printVersion()
 
-				case "-help":
+				case "-help", "-h":
 					c.printHelp()
 				}
 

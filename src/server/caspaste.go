@@ -82,8 +82,8 @@ func getVersion() string {
 		}
 	}
 
-	// Default version
-	return "1.0.0"
+	// Default version when no build stamp or release.txt is available
+	return "dev"
 }
 
 func readFile(path string) (string, error) {
@@ -1030,8 +1030,11 @@ func checkStatus(dbDriver, dbSource string, address string) {
 		// Try to ping the database
 		err = db.Close()
 		if err != nil {
+			// A close/ping warning still means the instance is not healthy.
+			// PART 8 defines only exit 0 (healthy) / 1 (unhealthy).
 			fmt.Printf("DEGRADED\n  Warning: %v\n", err)
-			exitCode = 2
+			healthy = false
+			exitCode = 1
 		} else {
 			fmt.Println("OK")
 		}
@@ -1054,9 +1057,6 @@ func checkStatus(dbDriver, dbSource string, address string) {
 	if healthy && exitCode == 0 {
 		fmt.Println("Status: HEALTHY")
 		os.Exit(0)
-	} else if exitCode == 2 {
-		fmt.Println("Status: DEGRADED")
-		os.Exit(2)
 	} else {
 		fmt.Println("Status: UNHEALTHY")
 		os.Exit(1)
@@ -1250,7 +1250,7 @@ func main() {
 	flagMode := c.AddStringVar("mode", "", "Application mode: production or development (default: production)", nil)
 	flagUpdate := c.AddStringVar("update", "", "Update management: check, yes, branch {stable|beta|daily}, --help", nil)
 	// Color output flag per AI.md PART 8
-	flagColor := c.AddStringVar("color", "", "Color output: always, never, or auto (default: auto, respects NO_COLOR)", nil)
+	flagColor := c.AddStringVar("color", "auto", "Color output: auto, yes, no (default: auto, respects NO_COLOR)", nil)
 
 	c.Parse()
 
@@ -1261,14 +1261,14 @@ func main() {
 
 	// Handle --help first
 	if *flagHelp {
-		fmt.Printf("CasPaste v%s - Self-hosted pastebin service\n\n", Version)
+		fmt.Printf("%s %s - Self-hosted pastebin service\n\n", filepath.Base(os.Args[0]), getVersion())
 		fmt.Println("Usage: caspaste [flags]")
 		fmt.Println("\nCommon Flags:")
 		fmt.Println("  --help              Show this help message")
 		fmt.Println("  --version           Show version information")
 		fmt.Println("  --daemon            Start in background (daemon mode)")
 		fmt.Println("  --debug             Enable debug logging")
-		fmt.Println("  --color MODE        Color output: always, never, auto (default: auto, respects NO_COLOR)")
+		fmt.Println("  --color MODE        Color output: auto, yes, no (default: auto, respects NO_COLOR)")
 		fmt.Println("\nServer Configuration:")
 		fmt.Println("  --address ADDR      Listen address (default: :80)")
 		fmt.Println("  --port PORT         Listen port (alternative to --address)")
@@ -1296,10 +1296,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Handle --version
+	// Handle --version (AI.md PART 13: 4-line format, no "v" prefix)
 	if *flagVersion {
-		fmt.Printf("CasPaste v%s\n", Version)
-		fmt.Printf("Built with Go %s on %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
+		fmt.Printf("%s %s\n", filepath.Base(os.Args[0]), getVersion())
+		fmt.Printf("Built: %s\n", BuildDate)
+		fmt.Printf("Go: %s\n", runtime.Version())
+		fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}
 
@@ -2661,8 +2663,8 @@ func main() {
 			exitOnError(fmt.Errorf("invalid server.port in config: %w", err))
 		}
 	} else {
-		// Generate random port
-		httpPort, err = portutil.FindUnusedPort(64000, 65535)
+		// Generate random port (AI.md PART 12: range 64000-64999)
+		httpPort, err = portutil.FindUnusedPort(64000, 64999)
 		if err != nil {
 			exitOnError(fmt.Errorf("failed to find unused port: %w", err))
 		}

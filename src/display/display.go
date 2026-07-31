@@ -266,9 +266,9 @@ var colorOverride ColorMode = ColorAuto
 // SetColorMode sets the color mode from --color flag per AI.md PART 8
 func SetColorMode(mode string) {
 	switch strings.ToLower(mode) {
-	case "always":
+	case "yes", "always", "true", "on":
 		colorOverride = ColorAlways
-	case "never":
+	case "no", "never", "false", "off":
 		colorOverride = ColorNever
 	default:
 		colorOverride = ColorAuto
