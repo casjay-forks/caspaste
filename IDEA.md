@@ -30,6 +30,7 @@ Official site: https://pste.us
 project_name:     caspaste
 project_org:      casapps
 internal_name:    caspaste
+internal_org:     casapps
 app_name:         CasPaste
 app_tagline:      Self-hostable pastebin & code-sharing service
 official_site:    https://pste.us
