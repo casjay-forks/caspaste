@@ -66,3 +66,13 @@ rename commit scoped:
   (`always`/`never`/`auto`; spec requires `auto`/`yes`/`no`)
 - src/server/caspaste.go line ~1253: `--color` flag defaults to empty string;
   must default to `auto`
+
+## [ ] Rebuild stale CI `:build` toolchain image (go1.26.4 -> go1.26.5)
+Read: AI.md PART 28
+CI's `vuln-check` job runs `ghcr.io/{owner}/{repo}:build`, pinned to a Go
+toolchain built before go1.26.5 (which fixes GO-2026-5856, the crypto/tls
+Encrypted Client Hello privacy leak). `casjaysdev/go:latest` already ships
+go1.26.5. Fixing requires triggering the "Build Toolchain Image"
+workflow_dispatch to rebuild and push a fresh `:build` tag — not done here
+since it changes a shared CI artifact outside this repo's normal push flow;
+needs a human OK.
