@@ -23,8 +23,8 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// Timeout for DDL operations during initialization (longer than query timeout)
-const initializationTimeout = 30 * time.Second
+// Timeout for DDL operations during initialization (AI.md PART 10: migrations 5 minutes)
+const initializationTimeout = 5 * time.Minute
 
 var (
 	ErrNotFoundID = errors.New("db: could not find ID")
@@ -56,10 +56,19 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 	db.pool.SetMaxIdleConns(maxIdleConns)
 
 	// Set connection lifetime and idle timeouts to prevent stale connections
-	// 1 hour in nanoseconds
-	db.pool.SetConnMaxLifetime(3600 * 1000000000)
-	// 10 minutes in nanoseconds
-	db.pool.SetConnMaxIdleTime(600 * 1000000000)
+	db.pool.SetConnMaxLifetime(5 * time.Minute)
+	db.pool.SetConnMaxIdleTime(1 * time.Minute)
+
+	// Verify the connection is actually usable (AI.md PART 10)
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := db.pool.PingContext(ctx); err != nil {
+			cancel()
+			db.pool.Close()
+			return db, fmt.Errorf("database ping failed: %w", err)
+		}
+		cancel()
+	}
 
 	// If using a remote driver, also open SQLite backup/cache for local operations
 	if driverName == "postgres" || driverName == "mysql" || driverName == "mariadb" || driverName == "libsql" {
@@ -78,8 +87,8 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 		} else {
 			db.backupPool.SetMaxOpenConns(10)
 			db.backupPool.SetMaxIdleConns(2)
-			db.backupPool.SetConnMaxLifetime(3600 * 1000000000)
-			db.backupPool.SetConnMaxIdleTime(600 * 1000000000)
+			db.backupPool.SetConnMaxLifetime(5 * time.Minute)
+			db.backupPool.SetConnMaxIdleTime(1 * time.Minute)
 			// Initialize backup database schema
 			InitDB("sqlite", backupPath)
 		}

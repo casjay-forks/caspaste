@@ -14,13 +14,16 @@ import (
 )
 
 // Default query timeouts per AI.md PART 10
+// Query timeouts per AI.md PART 10 (Query Timeouts table).
 const (
-	// Simple queries (SELECT single row, INSERT, UPDATE, DELETE)
+	// Simple SELECT single row
 	defaultQueryTimeout = 5 * time.Second
-	// List queries (SELECT multiple rows)
-	defaultListTimeout = 10 * time.Second
-	// Batch operations (DELETE expired, migrations)
-	defaultBatchTimeout = 30 * time.Second
+	// INSERT/UPDATE/DELETE write operations
+	defaultWriteTimeout = 10 * time.Second
+	// List queries (SELECT multiple rows / complex SELECT)
+	defaultListTimeout = 15 * time.Second
+	// Bulk operations (DELETE expired, batch cleanup)
+	defaultBatchTimeout = 60 * time.Second
 )
 
 type Paste struct {
@@ -72,8 +75,8 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 		paste.DeleteTime = 0
 	}
 
-	// Query timeout per AI.md PART 10
-	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	// Write timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 	defer cancel()
 
 	// Add to primary database
@@ -91,7 +94,7 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 	// Also add to SQLite backup/cache if available
 	if db.backupPool != nil {
 		// Backup uses separate context
-		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 		defer backupCancel()
 		_, backupErr := db.backupPool.ExecContext(backupCtx,
 			`INSERT OR REPLACE INTO pastes (id, title, body, syntax, create_time, delete_time, one_use, author, author_email, author_url, is_file, file_name, mime_type, is_editable, is_private, is_url, original_url)
@@ -111,8 +114,8 @@ func (db DB) PasteAdd(paste Paste) (string, int64, int64, error) {
 }
 
 func (db DB) PasteUpdate(paste Paste) error {
-	// Query timeout per AI.md PART 10
-	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	// Write timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 	defer cancel()
 
 	// Update in primary database
@@ -141,7 +144,7 @@ func (db DB) PasteUpdate(paste Paste) error {
 
 	// Also update in SQLite backup/cache if available
 	if db.backupPool != nil {
-		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 		defer backupCancel()
 		_, backupErr := db.backupPool.ExecContext(backupCtx,
 			`UPDATE pastes SET title = ?, body = ?, syntax = ?, delete_time = ?, one_use = ?,
@@ -163,8 +166,8 @@ func (db DB) PasteUpdate(paste Paste) error {
 }
 
 func (db DB) PasteDelete(id string) error {
-	// Query timeout per AI.md PART 10
-	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	// Write timeout per AI.md PART 10
+	ctx, cancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 	defer cancel()
 
 	// Delete from primary database
@@ -188,7 +191,7 @@ func (db DB) PasteDelete(id string) error {
 
 	// Also delete from SQLite backup/cache if available
 	if db.backupPool != nil {
-		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 		defer backupCancel()
 		_, backupErr := db.backupPool.ExecContext(backupCtx, `DELETE FROM pastes WHERE id = ?`, id)
 		// Log backup errors but don't fail primary operation
@@ -204,7 +207,7 @@ func (db DB) PasteDelete(id string) error {
 // Returns (true, nil) if this caller successfully deleted it.
 // Returns (false, nil) if another concurrent request already consumed it.
 func (db DB) PasteDeleteIfOneUse(id string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 	defer cancel()
 
 	result, err := db.execSQL(ctx,
@@ -221,7 +224,7 @@ func (db DB) PasteDeleteIfOneUse(id string) (bool, error) {
 	}
 
 	if rowsAffected > 0 && db.backupPool != nil {
-		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		backupCtx, backupCancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 		defer backupCancel()
 		_, _ = db.backupPool.ExecContext(backupCtx, `DELETE FROM pastes WHERE id = ?`, id)
 	}
@@ -258,8 +261,8 @@ func (db DB) PasteGet(id string) (Paste, error) {
 
 	// Check paste expiration
 	if paste.DeleteTime < time.Now().Unix() && paste.DeleteTime > 0 {
-		// Delete expired paste with timeout
-		delCtx, delCancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		// Delete expired paste with write timeout
+		delCtx, delCancel := context.WithTimeout(context.Background(), defaultWriteTimeout)
 		defer delCancel()
 		_, err = db.execSQL(delCtx,
 			`DELETE FROM pastes WHERE id = $1`,
