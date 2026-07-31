@@ -52,8 +52,10 @@ func SecurityHeadersMiddleware(cfg SecurityHeadersConfig) func(http.Handler) htt
 				w.Header().Set("Permissions-Policy", cfg.PermissionsPolicy)
 			}
 
-			// HSTS (only if HTTPS)
-			if r.TLS != nil && cfg.StrictTransportSecurity != "" {
+			// HSTS: emit when the connection is HTTPS either directly or via a
+			// terminating reverse proxy (X-Forwarded-Proto=https) per AI.md PART 11
+			if cfg.StrictTransportSecurity != "" &&
+				(r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https") {
 				w.Header().Set("Strict-Transport-Security", cfg.StrictTransportSecurity)
 			}
 
