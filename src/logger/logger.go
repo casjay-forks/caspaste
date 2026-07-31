@@ -12,11 +12,44 @@ import (
 	"github.com/webappsgo/caspaste/src/netshare"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// sensitiveQueryParams lists query parameter names whose values must never be
+// written to logs or reports, matched case-insensitively (AI.md PART 11 —
+// Output Sanitization Pipeline stage 2).
+var sensitiveQueryParams = map[string]struct{}{
+	"token": {}, "session": {}, "code": {}, "key": {}, "password": {},
+	"secret": {}, "auth": {}, "pwd": {}, "api_key": {}, "apikey": {},
+	"access_token": {}, "refresh_token": {},
+}
+
+// redactRequestPath returns the request path with any known-sensitive query
+// parameter values replaced by "[redacted]" before the URL is logged.
+func redactRequestPath(u *url.URL) string {
+	if u.RawQuery == "" {
+		return u.Path
+	}
+	values := u.Query()
+	redacted := false
+	for k := range values {
+		if _, bad := sensitiveQueryParams[strings.ToLower(k)]; bad {
+			for i := range values[k] {
+				values[k][i] = "[redacted]"
+			}
+			redacted = true
+		}
+	}
+	if !redacted {
+		return u.Path + "?" + u.RawQuery
+	}
+	return u.Path + "?" + values.Encode()
+}
 
 type LogFormat struct {
 	// Access log format: apache, nginx, text, json
@@ -238,10 +271,7 @@ func (cfg Logger) Error(e error) {
 func (cfg Logger) HttpRequest(req *http.Request, code int) {
 	clientIP := netshare.GetClientAddr(req).String()
 	method := req.Method
-	path := req.URL.Path
-	if req.URL.RawQuery != "" {
-		path = path + "?" + req.URL.RawQuery
-	}
+	path := redactRequestPath(req.URL)
 	referer := req.Referer()
 	if referer == "" {
 		referer = "-"
@@ -292,10 +322,7 @@ func (cfg Logger) HttpRequest(req *http.Request, code int) {
 
 func (cfg Logger) HttpError(req *http.Request, e error) {
 	clientIP := netshare.GetClientAddr(req).String()
-	path := req.URL.Path
-	if req.URL.RawQuery != "" {
-		path = path + "?" + req.URL.RawQuery
-	}
+	path := redactRequestPath(req.URL)
 
 	// Format the message
 	var output string
