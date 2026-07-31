@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/validation"
 )
 
 var (

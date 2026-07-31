@@ -6,8 +6,8 @@
 package web
 
 import (
-	"github.com/casjay-forks/caspaste/src/caspasswd"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/caspasswd"
+	"github.com/webappsgo/caspaste/src/netshare"
 	"html/template"
 	"net/http"
 )

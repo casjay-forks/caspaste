@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // handleLenpaste intercepts Lenpaste API paths and returns true if it handled

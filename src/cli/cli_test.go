@@ -13,8 +13,8 @@ import (
 )
 
 func TestGetEnvVar_Found(t *testing.T) {
-	os.Setenv("CASPB_DB_DRIVER", "sqlite")
-	defer os.Unsetenv("CASPB_DB_DRIVER")
+	os.Setenv("CASPASTE_DB_DRIVER", "sqlite")
+	defer os.Unsetenv("CASPASTE_DB_DRIVER")
 
 	val, found := getEnvVar("db-driver")
 	if !found {
@@ -26,7 +26,7 @@ func TestGetEnvVar_Found(t *testing.T) {
 }
 
 func TestGetEnvVar_NotFound(t *testing.T) {
-	os.Unsetenv("CASPB_MISSING_TEST_CLI_VAR")
+	os.Unsetenv("CASPASTE_MISSING_TEST_CLI_VAR")
 
 	val, found := getEnvVar("missing-test-cli-var")
 	if found {
@@ -38,8 +38,8 @@ func TestGetEnvVar_NotFound(t *testing.T) {
 }
 
 func TestGetEnvVar_UnderscoreConversion(t *testing.T) {
-	os.Setenv("CASPB_SOME_TEST_FLAG", "flagvalue")
-	defer os.Unsetenv("CASPB_SOME_TEST_FLAG")
+	os.Setenv("CASPASTE_SOME_TEST_FLAG", "flagvalue")
+	defer os.Unsetenv("CASPASTE_SOME_TEST_FLAG")
 
 	val, found := getEnvVar("some-test-flag")
 	if !found {
@@ -389,8 +389,8 @@ func TestParse_DurationFlag(t *testing.T) {
 }
 
 func TestParse_EnvVarRead(t *testing.T) {
-	os.Setenv("CASPB_CLITT_ENVHOST", "fromenv")
-	defer os.Unsetenv("CASPB_CLITT_ENVHOST")
+	os.Setenv("CASPASTE_CLITT_ENVHOST", "fromenv")
+	defer os.Unsetenv("CASPASTE_CLITT_ENVHOST")
 
 	c := New("1.0.0")
 	host := c.AddStringVar("clitt-envhost", "default", "env var host", nil)
@@ -407,8 +407,8 @@ func TestParse_EnvVarRead(t *testing.T) {
 }
 
 func TestParse_CLIOverridesEnv(t *testing.T) {
-	os.Setenv("CASPB_CLITT_OVERRIDE", "envvalue")
-	defer os.Unsetenv("CASPB_CLITT_OVERRIDE")
+	os.Setenv("CASPASTE_CLITT_OVERRIDE", "envvalue")
+	defer os.Unsetenv("CASPASTE_CLITT_OVERRIDE")
 
 	c := New("1.0.0")
 	val := c.AddStringVar("clitt-override", "default", "overridable flag", nil)

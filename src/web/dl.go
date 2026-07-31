@@ -13,7 +13,7 @@ import (
 
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // Pattern: /dl/

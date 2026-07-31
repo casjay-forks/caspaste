@@ -11,7 +11,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // Pattern: /raw/

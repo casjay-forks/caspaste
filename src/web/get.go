@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/lineend"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/lineend"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // File type detection helpers

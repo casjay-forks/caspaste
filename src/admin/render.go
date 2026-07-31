@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/web"
+	"github.com/webappsgo/caspaste/src/web"
 )
 
 // pageData holds the data needed to render any admin page
@@ -294,7 +294,7 @@ func (p *Panel) buildLayout(pd pageData, content template.HTML) string {
 	// Build sidebar nav links with active-state marker
 	nav := p.buildSidebarNav(pd.Page, base, pd.AdminUsername)
 
-	serverTitle := "CasPb"
+	serverTitle := "CasPaste"
 	if p.cfg.AppCfg != nil && p.cfg.AppCfg.ServerTitle != "" {
 		serverTitle = p.cfg.AppCfg.ServerTitle
 	}
@@ -473,9 +473,9 @@ tr:hover td{background:rgba(255,255,255,.02);}
       %s
     </main>
     <footer class="footer">
-      <span>CasPb %s</span>
+      <span>CasPaste %s</span>
       <a href="/docs">Documentation</a>
-      <span>© casjay-forks</span>
+      <span>© webappsgo</span>
     </footer>
   </div>
 </div>

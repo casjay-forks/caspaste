@@ -12,7 +12,7 @@ Guide for contributing to CasPaste.
 
 ```bash
 # Clone the repository
-git clone https://github.com/casjay-forks/caspaste.git
+git clone https://github.com/webappsgo/caspaste.git
 cd caspaste
 
 # Build for current platform
@@ -75,8 +75,8 @@ import (
     "github.com/alecthomas/chroma/v2/lexers"
 
     // Internal packages
-    "github.com/casjay-forks/caspaste/src/config"
-    "github.com/casjay-forks/caspaste/src/storage"
+    "github.com/webappsgo/caspaste/src/config"
+    "github.com/webappsgo/caspaste/src/storage"
 )
 ```
 
@@ -209,5 +209,5 @@ db, err := storage.NewPool(driverName, dataSourceName, maxOpen, maxIdle, dataDir
 
 ## Getting Help
 
-- **Issues:** [GitHub Issues](https://github.com/casjay-forks/caspaste/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/casjay-forks/caspaste/discussions)
+- **Issues:** [GitHub Issues](https://github.com/webappsgo/caspaste/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/webappsgo/caspaste/discussions)

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // pasteListViewItem is the template-facing representation of a paste list row.

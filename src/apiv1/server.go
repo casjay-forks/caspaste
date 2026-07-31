@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 type serverInfoType struct {
@@ -39,7 +39,7 @@ func (data *Data) handleServerInfo(rw http.ResponseWriter, req *http.Request) er
 
 	// Prepare data
 	serverInfo := serverInfoType{
-		Software:          "CasPb",
+		Software:          "CasPaste",
 		Version:           data.Version,
 		TitleMaxLen:       data.TitleMaxLen,
 		BodyMaxLen:        data.BodyMaxLen,

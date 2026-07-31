@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         PROJECTNAME = 'caspaste'
-        PROJECTORG = 'casjay-forks'
+        PROJECTORG = 'webappsgo'
         BINDIR = 'binaries'
         RELDIR = 'releases'
         GODIR = "/tmp/${PROJECTORG}/go"

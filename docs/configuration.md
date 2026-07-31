@@ -4,8 +4,8 @@ CasPaste auto-generates configuration on first run. The config file is the sourc
 
 ## Config File Location
 
-- **Linux (root):** `/etc/casjay-forks/caspaste/server.yml`
-- **Linux (user):** `~/.config/casjay-forks/caspaste/server.yml`
+- **Linux (root):** `/etc/webappsgo/caspaste/server.yml`
+- **Linux (user):** `~/.config/webappsgo/caspaste/server.yml`
 - **macOS:** `~/Library/Application Support/CasPaste/Config/server.yml`
 - **Windows:** `%LOCALAPPDATA%\CasPaste\Config\server.yml`
 - **Docker:** `/config/caspaste/server.yml`
@@ -82,11 +82,11 @@ web:
       name: Security Team
 
 directories:
-  data: /var/lib/casjay-forks/caspaste
-  config: /etc/casjay-forks/caspaste
-  db: /var/lib/casjay-forks/caspaste/db
-  cache: /var/cache/casjay-forks/caspaste
-  logs: /var/log/casjay-forks/caspaste
+  data: /var/lib/webappsgo/caspaste
+  config: /etc/webappsgo/caspaste
+  db: /var/lib/webappsgo/caspaste/db
+  cache: /var/cache/webappsgo/caspaste
+  logs: /var/log/webappsgo/caspaste
 
 logging:
   level: info                     # info, warn, error
@@ -112,8 +112,8 @@ logging:
 ### SQLite (Default)
 
 ```bash
-caspaste --data /var/lib/casjay-forks/caspaste
-# Database: /var/lib/casjay-forks/caspaste/db/caspaste.db
+caspaste --data /var/lib/webappsgo/caspaste
+# Database: /var/lib/webappsgo/caspaste/db/caspaste.db
 ```
 
 ### PostgreSQL
@@ -138,7 +138,7 @@ To require authentication:
 
 ```bash
 # Via environment
-docker run -d -e CASPASTE_PUBLIC=false ghcr.io/casjay-forks/caspaste:latest
+docker run -d -e CASPASTE_PUBLIC=false ghcr.io/webappsgo/caspaste:latest
 
 # Via config file
 # server:

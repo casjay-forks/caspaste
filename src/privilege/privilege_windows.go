@@ -10,8 +10,8 @@
 package privilege
 
 const (
-	CasPbUser  = "CasPb"
-	CasPbGroup = "CasPb"
+	CasPasteUser  = "CasPaste"
+	CasPasteGroup = "CasPaste"
 )
 
 // EnsureUser - Windows doesn't support privilege dropping in the same way

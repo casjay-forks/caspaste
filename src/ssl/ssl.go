@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	pathutil "github.com/casjay-forks/caspaste/src/path"
+	pathutil "github.com/webappsgo/caspaste/src/path"
 )
 
 // CertSource indicates where a certificate came from

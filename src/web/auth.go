@@ -16,13 +16,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/caspasswd"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/caspasswd"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // Session cookie name and settings
 const (
-	sessionCookieName = "caspb_session"
+	sessionCookieName = "caspaste_session"
 	sessionDuration   = 24 * time.Hour
 )
 

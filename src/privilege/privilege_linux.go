@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	CasPbUser  = "caspb"
-	CasPbGroup = "caspb"
+	CasPasteUser  = "caspaste"
+	CasPasteGroup = "caspaste"
 )
 
 // findAvailableUID finds first available UID in range 200-900
@@ -64,7 +64,7 @@ func isUIDInUse(uid int) bool {
 // Returns UID and GID
 func EnsureUser() (int, int, error) {
 	// Check if user already exists
-	u, err := user.Lookup(CasPbUser)
+	u, err := user.Lookup(CasPasteUser)
 	if err == nil {
 		// User exists, return their UID/GID
 		uid, _ := strconv.Atoi(u.Uid)
@@ -75,7 +75,7 @@ func EnsureUser() (int, int, error) {
 	// User doesn't exist, need to create
 	// This requires root privileges
 	if os.Geteuid() != 0 {
-		return 0, 0, fmt.Errorf("cannot create user %s: not running as root", CasPbUser)
+		return 0, 0, fmt.Errorf("cannot create user %s: not running as root", CasPasteUser)
 	}
 
 	// Find available UID
@@ -87,10 +87,10 @@ func EnsureUser() (int, int, error) {
 	gid := uid
 
 	// Try groupadd first (standard Linux)
-	cmd := exec.Command("groupadd", "--gid", strconv.Itoa(gid), "--system", CasPbGroup)
+	cmd := exec.Command("groupadd", "--gid", strconv.Itoa(gid), "--system", CasPasteGroup)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		// groupadd might not exist (Alpine), try addgroup
-		cmd = exec.Command("addgroup", "-g", strconv.Itoa(gid), "-S", CasPbGroup)
+		cmd = exec.Command("addgroup", "-g", strconv.Itoa(gid), "-S", CasPasteGroup)
 		if output2, err2 := cmd.CombinedOutput(); err2 != nil {
 			if !strings.Contains(string(output2), "already exists") && !strings.Contains(string(output2), "in use") {
 				return 0, 0, fmt.Errorf("failed to create group: %w\nOutput: %s", err2, string(output2))
@@ -105,20 +105,20 @@ func EnsureUser() (int, int, error) {
 		"--system",
 		"--no-create-home",
 		"--shell", "/sbin/nologin",
-		"--comment", "CasPb Service User",
-		CasPbUser,
+		"--comment", "CasPaste Service User",
+		CasPasteUser,
 	)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		// useradd might not exist (Alpine), try adduser
 		cmd = exec.Command("adduser",
 			"-u", strconv.Itoa(uid),
-			"-G", CasPbGroup,
+			"-G", CasPasteGroup,
 			"-S",
 			"-D",
 			"-H",
 			"-s", "/sbin/nologin",
-			"-g", "CasPb Service User",
-			CasPbUser,
+			"-g", "CasPaste Service User",
+			CasPasteUser,
 		)
 		if output2, err2 := cmd.CombinedOutput(); err2 != nil {
 			if !strings.Contains(string(output2), "already exists") {

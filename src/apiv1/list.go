@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // GET /api/v1/pastes - list pastes per AI.md PART 14

@@ -7,11 +7,11 @@
 package config
 
 import (
-	"github.com/casjay-forks/caspaste/src/logger"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/logger"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
-const Software = "CasPb"
+const Software = "CasPaste"
 
 // Default API and admin path values
 const (

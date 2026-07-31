@@ -14,7 +14,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/caspasswd"
+	"github.com/webappsgo/caspaste/src/caspasswd"
 )
 
 const dbTimeout = 10 * time.Second

@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/validation"
 )
 
 func GetHost(req *http.Request) string {

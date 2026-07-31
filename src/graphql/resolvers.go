@@ -10,7 +10,7 @@ package graphql
 import (
 	"errors"
 
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // Resolvers provides data resolution for GraphQL queries

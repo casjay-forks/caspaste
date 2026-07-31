@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	projectOrg  = "casjay-forks"
-	projectName = "caspb"
+	projectOrg  = "webappsgo"
+	projectName = "caspaste"
 )
 
 // IsRoot returns true if running as root/Administrator

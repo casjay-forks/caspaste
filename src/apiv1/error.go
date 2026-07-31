@@ -13,9 +13,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/casjay-forks/caspaste/src/httputil"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/httputil"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // APIResponse is the unified response format per AI.md PART 16

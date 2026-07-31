@@ -8,8 +8,8 @@ package web
 import (
 	"net/http"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // POST /edit/{id} - Edit an editable paste

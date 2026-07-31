@@ -28,14 +28,14 @@ docker run -d \
   -p 8080:80 \
   -v ./rootfs/config:/config \
   -v ./rootfs/data:/data \
-  ghcr.io/casjay-forks/caspaste:latest
+  ghcr.io/webappsgo/caspaste:latest
 ```
 
 ### Binary
 
 ```bash
 # Download latest release
-wget https://github.com/casjay-forks/caspaste/releases/latest/download/caspaste-linux-amd64
+wget https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-linux-amd64
 chmod +x caspaste-linux-amd64
 ./caspaste-linux-amd64
 ```
@@ -52,9 +52,9 @@ chmod +x caspaste-linux-amd64
 ## Links
 
 - **Demo:** [https://lp.pste.us](https://lp.pste.us)
-- **Source:** [GitHub](https://github.com/casjay-forks/caspaste)
-- **Issues:** [GitHub Issues](https://github.com/casjay-forks/caspaste/issues)
+- **Source:** [GitHub](https://github.com/webappsgo/caspaste)
+- **Issues:** [GitHub Issues](https://github.com/webappsgo/caspaste/issues)
 
 ## License
 
-MIT License - see [LICENSE.md](https://github.com/casjay-forks/caspaste/blob/main/LICENSE.md)
+MIT License - see [LICENSE.md](https://github.com/webappsgo/caspaste/blob/main/LICENSE.md)

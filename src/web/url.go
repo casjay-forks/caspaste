@@ -8,7 +8,7 @@ package web
 import (
 	"net/http"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // GET /u/{id} - URL shortener redirect

@@ -23,11 +23,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/httputil"
-	"github.com/casjay-forks/caspaste/src/lineend"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
-	"github.com/casjay-forks/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/httputil"
+	"github.com/webappsgo/caspaste/src/lineend"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/validation"
 )
 
 // lenpasteResponse matches the lenpaste /api/v1/new response exactly (flat, no envelope).

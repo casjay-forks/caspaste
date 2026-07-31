@@ -7,10 +7,10 @@
 package raw
 
 import (
-	"github.com/casjay-forks/caspaste/src/config"
-	"github.com/casjay-forks/caspaste/src/logger"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/config"
+	"github.com/webappsgo/caspaste/src/logger"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
 	"net/http"
 )
 

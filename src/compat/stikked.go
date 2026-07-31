@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // handleStikked intercepts Stikked API paths and returns true if handled.

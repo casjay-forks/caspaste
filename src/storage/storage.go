@@ -89,15 +89,15 @@ func NewPool(driverName string, dataSourceName string, maxOpenConns int, maxIdle
 }
 
 // getSQLiteCachePath determines the SQLite cache database path
-// Priority: CASPB_DB_DIR env var > dataDir/db/ > platform-specific default
+// Priority: CASPASTE_DB_DIR env var > dataDir/db/ > platform-specific default
 func getSQLiteCachePath(dataDir string) string {
 	// Check environment variable first
-	if envDbDir := os.Getenv("CASPB_DB_DIR"); envDbDir != "" {
-		return envDbDir + "/caspb.db"
+	if envDbDir := os.Getenv("CASPASTE_DB_DIR"); envDbDir != "" {
+		return envDbDir + "/caspaste.db"
 	}
 	// Use data directory if provided
 	if dataDir != "" {
-		return dataDir + "/db/caspb.db"
+		return dataDir + "/db/caspaste.db"
 	}
 	// Fallback to platform-specific default
 	return getDefaultDbPath()
@@ -108,26 +108,26 @@ func getDefaultDbPath() string {
 	switch runtime.GOOS {
 	case "windows":
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return localAppData + "\\CasPb\\Data\\db\\caspb.db"
+			return localAppData + "\\CasPaste\\Data\\db\\caspaste.db"
 		}
-		return os.Getenv("PROGRAMDATA") + "\\CasPb\\Data\\db\\caspb.db"
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Data\\db\\caspaste.db"
 	case "darwin":
 		if isRunningAsRoot() {
-			return "/var/lib/casapps/caspb/db/caspb.db"
+			return "/var/lib/casapps/caspaste/db/caspaste.db"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/Library/Application Support/CasPaste/db/caspb.db"
+			return home + "/Library/Application Support/CasPaste/db/caspaste.db"
 		}
-		return "/var/lib/casapps/caspb/db/caspb.db"
+		return "/var/lib/casapps/caspaste/db/caspaste.db"
 	// Linux, BSD, etc.
 	default:
 		if isRunningAsRoot() {
-			return "/var/lib/casapps/caspb/db/caspb.db"
+			return "/var/lib/casapps/caspaste/db/caspaste.db"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/.local/share/casapps/caspb/db/caspb.db"
+			return home + "/.local/share/casapps/caspaste/db/caspaste.db"
 		}
-		return "/var/lib/casapps/caspb/db/caspb.db"
+		return "/var/lib/casapps/caspaste/db/caspaste.db"
 	}
 }
 

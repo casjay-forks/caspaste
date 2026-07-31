@@ -1,4 +1,4 @@
-module github.com/casjay-forks/caspaste
+module github.com/webappsgo/caspaste
 
 go 1.25.0
 

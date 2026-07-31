@@ -11,7 +11,7 @@ docker run -d \
   -v ./rootfs/config:/config \
   -v ./rootfs/data:/data \
   -v ./rootfs/backups:/data/backups \
-  ghcr.io/casjay-forks/caspaste:latest
+  ghcr.io/webappsgo/caspaste:latest
 ```
 
 ### Docker Compose
@@ -20,7 +20,7 @@ docker run -d \
 version: "3.8"
 services:
   caspaste:
-    image: ghcr.io/casjay-forks/caspaste:latest
+    image: ghcr.io/webappsgo/caspaste:latest
     ports:
       - "172.17.0.1:59093:80"
     volumes:
@@ -37,7 +37,7 @@ services:
 version: "3.8"
 services:
   caspaste:
-    image: ghcr.io/casjay-forks/caspaste:latest
+    image: ghcr.io/webappsgo/caspaste:latest
     ports:
       - "172.17.0.1:59093:80"
     volumes:
@@ -68,12 +68,12 @@ volumes:
 
 ```bash
 # Linux (amd64)
-wget https://github.com/casjay-forks/caspaste/releases/latest/download/caspaste-linux-amd64
+wget https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-linux-amd64
 chmod +x caspaste-linux-amd64
 sudo mv caspaste-linux-amd64 /usr/local/bin/caspaste
 
 # macOS (arm64)
-wget https://github.com/casjay-forks/caspaste/releases/latest/download/caspaste-darwin-arm64
+wget https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-darwin-arm64
 chmod +x caspaste-darwin-arm64
 sudo mv caspaste-darwin-arm64 /usr/local/bin/caspaste
 ```
@@ -85,7 +85,7 @@ sudo mv caspaste-darwin-arm64 /usr/local/bin/caspaste
 caspaste
 
 # Or specify directories
-caspaste --port 8080 --data /var/lib/casjay-forks/caspaste --config /etc/casjay-forks/caspaste
+caspaste --port 8080 --data /var/lib/webappsgo/caspaste --config /etc/webappsgo/caspaste
 ```
 
 ## Service Management
@@ -125,9 +125,9 @@ sudo caspaste --service uninstall
 
 | Directory | Linux (root) | Linux (user) | macOS | Windows |
 |-----------|--------------|--------------|-------|---------|
-| **Config** | `/etc/casjay-forks/caspaste` | `~/.config/casjay-forks/caspaste` | `~/Library/Application Support/CasPaste/Config` | `%LOCALAPPDATA%\CasPaste\Config` |
-| **Data** | `/var/lib/casjay-forks/caspaste` | `~/.local/share/casjay-forks/caspaste` | `~/Library/Application Support/CasPaste` | `%LOCALAPPDATA%\CasPaste\Data` |
-| **Logs** | `/var/log/casjay-forks/caspaste` | `~/.local/log/casjay-forks/caspaste` | `~/Library/Logs/CasPaste` | `%LOCALAPPDATA%\CasPaste\Logs` |
+| **Config** | `/etc/webappsgo/caspaste` | `~/.config/webappsgo/caspaste` | `~/Library/Application Support/CasPaste/Config` | `%LOCALAPPDATA%\CasPaste\Config` |
+| **Data** | `/var/lib/webappsgo/caspaste` | `~/.local/share/webappsgo/caspaste` | `~/Library/Application Support/CasPaste` | `%LOCALAPPDATA%\CasPaste\Data` |
+| **Logs** | `/var/log/webappsgo/caspaste` | `~/.local/log/webappsgo/caspaste` | `~/Library/Logs/CasPaste` | `%LOCALAPPDATA%\CasPaste\Logs` |
 
 ## Health Check
 

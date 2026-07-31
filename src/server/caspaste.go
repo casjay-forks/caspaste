@@ -29,33 +29,33 @@ import (
 
 	chromaLexers "github.com/alecthomas/chroma/v2/lexers"
 
-	"github.com/casjay-forks/caspaste/src/admin"
-	"github.com/casjay-forks/caspaste/src/apiv1"
-	"github.com/casjay-forks/caspaste/src/compat"
-	"github.com/casjay-forks/caspaste/src/audit"
-	"github.com/casjay-forks/caspaste/src/caspasswd"
-	"github.com/casjay-forks/caspaste/src/cli"
-	"github.com/casjay-forks/caspaste/src/completion"
-	"github.com/casjay-forks/caspaste/src/config"
-	"github.com/casjay-forks/caspaste/src/display"
-	"github.com/casjay-forks/caspaste/src/graphql"
-	"github.com/casjay-forks/caspaste/src/logger"
-	"github.com/casjay-forks/caspaste/src/metric"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/portutil"
-	"github.com/casjay-forks/caspaste/src/privilege"
-	"github.com/casjay-forks/caspaste/src/raw"
-	"github.com/casjay-forks/caspaste/src/scheduler"
-	"github.com/casjay-forks/caspaste/src/service"
-	"github.com/casjay-forks/caspaste/src/session"
-	"github.com/casjay-forks/caspaste/src/token"
-	"github.com/casjay-forks/caspaste/src/storage"
-	"github.com/casjay-forks/caspaste/src/swagger"
-	"github.com/casjay-forks/caspaste/src/template"
-	"github.com/casjay-forks/caspaste/src/tor"
-	"github.com/casjay-forks/caspaste/src/updater"
-	"github.com/casjay-forks/caspaste/src/validation"
-	"github.com/casjay-forks/caspaste/src/web"
+	"github.com/webappsgo/caspaste/src/admin"
+	"github.com/webappsgo/caspaste/src/apiv1"
+	"github.com/webappsgo/caspaste/src/compat"
+	"github.com/webappsgo/caspaste/src/audit"
+	"github.com/webappsgo/caspaste/src/caspasswd"
+	"github.com/webappsgo/caspaste/src/cli"
+	"github.com/webappsgo/caspaste/src/completion"
+	"github.com/webappsgo/caspaste/src/config"
+	"github.com/webappsgo/caspaste/src/display"
+	"github.com/webappsgo/caspaste/src/graphql"
+	"github.com/webappsgo/caspaste/src/logger"
+	"github.com/webappsgo/caspaste/src/metric"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/portutil"
+	"github.com/webappsgo/caspaste/src/privilege"
+	"github.com/webappsgo/caspaste/src/raw"
+	"github.com/webappsgo/caspaste/src/scheduler"
+	"github.com/webappsgo/caspaste/src/service"
+	"github.com/webappsgo/caspaste/src/session"
+	"github.com/webappsgo/caspaste/src/token"
+	"github.com/webappsgo/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/swagger"
+	"github.com/webappsgo/caspaste/src/template"
+	"github.com/webappsgo/caspaste/src/tor"
+	"github.com/webappsgo/caspaste/src/updater"
+	"github.com/webappsgo/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/web"
 )
 
 // Build info - set via -ldflags at build time
@@ -150,7 +150,7 @@ func isRunningAsRoot() bool {
 	case "windows":
 		// On Windows, check if running as administrator
 		// Simple heuristic: try to create a file in Windows system directory
-		testPath := os.Getenv("WINDIR") + "\\Temp\\.caspb-test"
+		testPath := os.Getenv("WINDIR") + "\\Temp\\.caspaste-test"
 		if f, err := os.Create(testPath); err == nil {
 			f.Close()
 			os.Remove(testPath)
@@ -166,103 +166,103 @@ func isRunningAsRoot() bool {
 // getDefaultDataDir returns the platform-specific default data directory
 func getDefaultDataDir() string {
 	// Check env var first
-	if dir := os.Getenv("CASPB_DATA_DIR"); dir != "" {
+	if dir := os.Getenv("CASPASTE_DATA_DIR"); dir != "" {
 		return dir
 	}
 	switch runtime.GOOS {
 	case "windows":
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return localAppData + "\\CasPb\\Data"
+			return localAppData + "\\CasPaste\\Data"
 		}
-		return os.Getenv("PROGRAMDATA") + "\\CasPb\\Data"
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Data"
 	case "darwin":
 		if isRunningAsRoot() {
-			return "/var/lib/casapps/caspb"
+			return "/var/lib/casapps/caspaste"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/Library/Application Support/CasPb"
+			return home + "/Library/Application Support/CasPaste"
 		}
-		return "/var/lib/casapps/caspb"
+		return "/var/lib/casapps/caspaste"
 	// Linux, BSD, etc.
 	default:
 		if isRunningAsRoot() {
-			return "/var/lib/casapps/caspb"
+			return "/var/lib/casapps/caspaste"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/.local/share/casapps/caspb"
+			return home + "/.local/share/casapps/caspaste"
 		}
-		return "/var/lib/casapps/caspb"
+		return "/var/lib/casapps/caspaste"
 	}
 }
 
 // getDefaultConfigDir returns the platform-specific default config directory
 func getDefaultConfigDir() string {
 	// Check env var first
-	if dir := os.Getenv("CASPB_CONFIG_DIR"); dir != "" {
+	if dir := os.Getenv("CASPASTE_CONFIG_DIR"); dir != "" {
 		return dir
 	}
 	switch runtime.GOOS {
 	case "windows":
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return localAppData + "\\CasPb\\Config"
+			return localAppData + "\\CasPaste\\Config"
 		}
-		return os.Getenv("PROGRAMDATA") + "\\CasPb\\Config"
+		return os.Getenv("PROGRAMDATA") + "\\CasPaste\\Config"
 	case "darwin":
 		if isRunningAsRoot() {
-			return "/etc/casapps/caspb"
+			return "/etc/casapps/caspaste"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/Library/Application Support/CasPb/Config"
+			return home + "/Library/Application Support/CasPaste/Config"
 		}
-		return "/etc/casapps/caspb"
+		return "/etc/casapps/caspaste"
 	// Linux, BSD, etc.
 	default:
 		if isRunningAsRoot() {
-			return "/etc/casapps/caspb"
+			return "/etc/casapps/caspaste"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/.config/casapps/caspb"
+			return home + "/.config/casapps/caspaste"
 		}
-		return "/etc/casapps/caspb"
+		return "/etc/casapps/caspaste"
 	}
 }
 
 // getPIDFilePath returns the platform-specific PID file path per AI.md PART 8
-// Default: /var/run/casapps/caspb.pid (root) or ~/.local/share/casapps/caspb/caspb.pid (user)
+// Default: /var/run/casapps/caspaste.pid (root) or ~/.local/share/casapps/caspaste/caspaste.pid (user)
 func getPIDFilePath(dataDir string) string {
 	switch runtime.GOOS {
 	case "windows":
 		// Windows doesn't have standard PID file location, use data dir
 		if dataDir != "" {
-			return filepath.Join(dataDir, "caspb.pid")
+			return filepath.Join(dataDir, "caspaste.pid")
 		}
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return localAppData + "\\CasPb\\caspb.pid"
+			return localAppData + "\\CasPaste\\caspaste.pid"
 		}
-		return "C:\\ProgramData\\CasPb\\caspb.pid"
+		return "C:\\ProgramData\\CasPaste\\caspaste.pid"
 	case "darwin":
 		if isRunningAsRoot() {
-			return "/var/run/caspb.pid"
+			return "/var/run/caspaste.pid"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/Library/Application Support/CasPb/caspb.pid"
+			return home + "/Library/Application Support/CasPaste/caspaste.pid"
 		}
 		if dataDir != "" {
-			return filepath.Join(dataDir, "caspb.pid")
+			return filepath.Join(dataDir, "caspaste.pid")
 		}
-		return "/tmp/caspb.pid"
+		return "/tmp/caspaste.pid"
 	// Linux, BSD, etc.
 	default:
 		if isRunningAsRoot() {
-			return "/var/run/casapps/caspb.pid"
+			return "/var/run/casapps/caspaste.pid"
 		}
 		if home := os.Getenv("HOME"); home != "" {
-			return home + "/.local/share/casapps/caspb/caspb.pid"
+			return home + "/.local/share/casapps/caspaste/caspaste.pid"
 		}
 		if dataDir != "" {
-			return filepath.Join(dataDir, "caspb.pid")
+			return filepath.Join(dataDir, "caspaste.pid")
 		}
-		return "/tmp/caspb.pid"
+		return "/tmp/caspaste.pid"
 	}
 }
 
@@ -406,7 +406,7 @@ func printStartupBanner(version, fqdn, title, configFile, database string, httpP
 		fmt.Printf("║  IP:          %-45s║\n", globalIP)
 	}
 	fmt.Println("╠════════════════════════════════════════════════════════════╣")
-	fmt.Println("║  User:        caspb (UID:GID 642:642)                   ║")
+	fmt.Println("║  User:        caspaste (UID:GID 642:642)                   ║")
 	fmt.Printf("║  Config:      %-45s║\n", configFile)
 	fmt.Printf("║  Database:    %-45s║\n", database)
 	fmt.Println("║  Status:      Ready                                        ║")
@@ -450,7 +450,7 @@ func handleUpdateCommand(command, currentVersion string) {
 
 	// Handle --help
 	if cmd == "--help" || cmd == "-help" || cmd == "help" {
-		updater.PrintHelp("caspb")
+		updater.PrintHelp("caspaste")
 		os.Exit(0)
 	}
 
@@ -459,9 +459,9 @@ func handleUpdateCommand(command, currentVersion string) {
 		CurrentVersion: currentVersion,
 		// Default branch
 		Branch:         "stable",
-		GithubOwner:    "casjay-forks",
-		GithubRepo:     "caspb",
-		BinaryName:     "caspb",
+		GithubOwner:    "webappsgo",
+		GithubRepo:     "caspaste",
+		BinaryName:     "caspaste",
 	}
 
 	switch cmd {
@@ -473,11 +473,11 @@ func handleUpdateCommand(command, currentVersion string) {
 			os.Exit(1)
 		}
 		if result == nil || result.Release == nil {
-			fmt.Printf("CasPb v%s is up to date\n", currentVersion)
+			fmt.Printf("CasPaste v%s is up to date\n", currentVersion)
 			os.Exit(0)
 		}
 		fmt.Printf("Update available: %s -> %s\n", currentVersion, result.Release.TagName)
-		fmt.Printf("Run 'caspb --update yes' to install\n")
+		fmt.Printf("Run 'caspaste --update yes' to install\n")
 		os.Exit(0)
 
 	case "yes", "":
@@ -488,11 +488,11 @@ func handleUpdateCommand(command, currentVersion string) {
 			os.Exit(1)
 		}
 		if result == nil || result.Release == nil {
-			fmt.Printf("CasPb v%s is already up to date\n", currentVersion)
+			fmt.Printf("CasPaste v%s is already up to date\n", currentVersion)
 			os.Exit(0)
 		}
 
-		fmt.Printf("Updating CasPb %s -> %s...\n", currentVersion, result.Release.TagName)
+		fmt.Printf("Updating CasPaste %s -> %s...\n", currentVersion, result.Release.TagName)
 		if err := updater.DoUpdate(ctx, cfg, result.Release); err != nil {
 			fmt.Fprintf(os.Stderr, "Update failed: %v\n", err)
 			os.Exit(1)
@@ -502,7 +502,7 @@ func handleUpdateCommand(command, currentVersion string) {
 		fmt.Println("Restarting...")
 
 		// Try to restart service, fallback to self restart
-		if err := updater.RestartService("caspb"); err != nil {
+		if err := updater.RestartService("caspaste"); err != nil {
 			if err := updater.RestartSelf(); err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: restart failed: %v\n", err)
 				fmt.Println("Please restart the service manually.")
@@ -514,7 +514,7 @@ func handleUpdateCommand(command, currentVersion string) {
 		// Switch update branch
 		if len(parts) < 2 {
 			fmt.Fprintln(os.Stderr, "Error: branch name required")
-			fmt.Fprintln(os.Stderr, "Usage: caspb --update branch {stable|beta|daily}")
+			fmt.Fprintln(os.Stderr, "Usage: caspaste --update branch {stable|beta|daily}")
 			os.Exit(1)
 		}
 		branch := strings.ToLower(parts[1])
@@ -531,7 +531,7 @@ func handleUpdateCommand(command, currentVersion string) {
 
 	default:
 		fmt.Fprintf(os.Stderr, "Error: unknown update command '%s'\n", cmd)
-		fmt.Fprintln(os.Stderr, "Usage: caspb --update {check|yes|branch <name>|--help}")
+		fmt.Fprintln(os.Stderr, "Usage: caspaste --update {check|yes|branch <name>|--help}")
 		os.Exit(1)
 	}
 }
@@ -547,13 +547,13 @@ func handleServiceCommand(command, address, dbSource, dataDir, configDir string)
 
 	// Build service config
 	svcConfig := service.ServiceConfig{
-		Name:        "caspb",
-		DisplayName: "CasPb Pastebin Service",
+		Name:        "caspaste",
+		DisplayName: "CasPaste Pastebin Service",
 		Description: "Self-hosted pastebin service",
 		Executable:  executable,
 		Args:        buildServiceArgs(address, dbSource, dataDir, configDir),
 		WorkingDir:  dataDir,
-		User:        "caspb",
+		User:        "caspaste",
 	}
 
 	mgr := service.New(svcConfig)
@@ -612,10 +612,10 @@ func buildServiceArgs(address, dbSource, dataDir, configDir string) []string {
 
 // printServiceHelp shows service command help
 func printServiceHelp() {
-	fmt.Println("CasPb Service Management")
+	fmt.Println("CasPaste Service Management")
 	fmt.Println("===========================")
 	fmt.Println()
-	fmt.Println("Usage: caspb --service COMMAND")
+	fmt.Println("Usage: caspaste --service COMMAND")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  start        - Start the service")
@@ -682,10 +682,10 @@ func handleMaintenanceCommand(command, dbDriver, dbSource, dataDir, configDir, b
 
 // printMaintenanceHelp shows maintenance command help
 func printMaintenanceHelp() {
-	fmt.Println("CasPb Maintenance Mode")
+	fmt.Println("CasPaste Maintenance Mode")
 	fmt.Println("=========================")
 	fmt.Println()
-	fmt.Println("Usage: caspb --maintenance COMMAND [args]")
+	fmt.Println("Usage: caspaste --maintenance COMMAND [args]")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  backup [filename]         - Full disaster recovery backup (default: backup-YYYYMMDD-HHMMSS.tar.gz)")
@@ -694,10 +694,10 @@ func printMaintenanceHelp() {
 	fmt.Println()
 	fmt.Println("Backup includes:")
 	fmt.Println("  - Config directory (server.yml and all config files)")
-	fmt.Println("  - Data directory (db/caspb.db and all data)")
+	fmt.Println("  - Data directory (db/caspaste.db and all data)")
 	fmt.Println("  - External SQLite database (if located outside data_dir/db/)")
 	fmt.Println()
-	fmt.Println("Note: When using PostgreSQL/MariaDB, db/caspb.db is a synchronized cache")
+	fmt.Println("Note: When using PostgreSQL/MariaDB, db/caspaste.db is a synchronized cache")
 	fmt.Println("      that's included in backups for instant disaster recovery.")
 	fmt.Println()
 }
@@ -747,7 +747,7 @@ func checkAndMigrateDatabase(dataDir, configDir, backupDir, newDriver, newSource
 			fmt.Printf("Error: %v\n", err)
 			fmt.Println()
 			fmt.Println("Your old database is still intact. To restore:")
-			fmt.Printf("  caspb --maintenance \"restore %s\" --data %s\n", backupFilename, dataDir)
+			fmt.Printf("  caspaste --maintenance \"restore %s\" --data %s\n", backupFilename, dataDir)
 			return fmt.Errorf("automatic migration failed")
 		}
 
@@ -835,7 +835,7 @@ func performBackup(dbDriver, dbSource, dataDir, configDir, backupDir, filename s
 	// Copy external database if needed
 	if dbIsExternal {
 		os.MkdirAll(tempDir+"/external-db", 0755)
-		cmd = exec.Command("cp", dbSource, tempDir+"/external-db/caspb.db")
+		cmd = exec.Command("cp", dbSource, tempDir+"/external-db/caspaste.db")
 		cmd.Run()
 	}
 
@@ -948,10 +948,10 @@ func performRestore(dbDriver, dbSource, dataDir, configDir, backupDir, filename 
 	}
 
 	// Restore external database if exists
-	if _, err := os.Stat(tempDir + "/external-db/caspb.db"); err == nil {
+	if _, err := os.Stat(tempDir + "/external-db/caspaste.db"); err == nil {
 		fmt.Println("Restoring external database...")
 		if dbDriver == "sqlite3" || dbDriver == "sqlite" {
-			cmd = exec.Command("cp", tempDir+"/external-db/caspb.db", dbSource)
+			cmd = exec.Command("cp", tempDir+"/external-db/caspaste.db", dbSource)
 			if err := cmd.Run(); err != nil {
 				return fmt.Errorf("failed to restore external database: %w", err)
 			}
@@ -1009,7 +1009,7 @@ func setMaintenanceMode(dataDir, mode string) error {
 // checkStatus performs health check on database and returns exit code
 // Exit codes: 0 = healthy, 1 = unhealthy, 2 = error
 func checkStatus(dbDriver, dbSource string, address string) {
-	fmt.Println("CasPb Health Check")
+	fmt.Println("CasPaste Health Check")
 	fmt.Println("=====================")
 	fmt.Printf("Version: %s\n", Version)
 	fmt.Printf("Listen Address: %s\n", address)
@@ -1238,15 +1238,15 @@ func main() {
 
 	// Directory flags
 	flagPort := c.AddStringVar("port", "", "Port to listen on (alternative to specifying in --address). Examples: 80, 8080, 443.", nil)
-	flagLog := c.AddStringVar("log", "", "Log directory for access.log and debug.log. Default: /var/log/casapps/caspb", nil)
-	flagDataDir := c.AddStringVar("data", "", "Data directory. Examples: /var/lib/casapps/caspb, ~/.local/share/casapps/caspb", nil)
-	flagConfigDir := c.AddStringVar("config", "", "Configuration directory. Examples: /etc/casapps/caspb, ~/.config/casapps/caspb", nil)
-	flagCacheDir := c.AddStringVar("cache", "", "Cache directory. Examples: /var/cache/caspb, ~/.cache/caspb", nil)
-	flagLogsDir := c.AddStringVar("logs", "", "Logs directory (alias for --log). Examples: /var/log/casapps/caspb, ~/.local/log/casapps/caspb", nil)
+	flagLog := c.AddStringVar("log", "", "Log directory for access.log and debug.log. Default: /var/log/casapps/caspaste", nil)
+	flagDataDir := c.AddStringVar("data", "", "Data directory. Examples: /var/lib/casapps/caspaste, ~/.local/share/casapps/caspaste", nil)
+	flagConfigDir := c.AddStringVar("config", "", "Configuration directory. Examples: /etc/casapps/caspaste, ~/.config/casapps/caspaste", nil)
+	flagCacheDir := c.AddStringVar("cache", "", "Cache directory. Examples: /var/cache/caspaste, ~/.cache/caspaste", nil)
+	flagLogsDir := c.AddStringVar("logs", "", "Logs directory (alias for --log). Examples: /var/log/casapps/caspaste, ~/.local/log/casapps/caspaste", nil)
 
 	// Additional flags per AI.md PART 8
-	flagBackupDir := c.AddStringVar("backup", "", "Backup directory. Default: /mnt/Backups/casapps/caspb or ~/.local/share/Backups/casapps/caspb", nil)
-	flagPidFile := c.AddStringVar("pid", "", "PID file path. Default: /var/run/casapps/caspb.pid or ~/.local/share/casapps/caspb/caspb.pid", nil)
+	flagBackupDir := c.AddStringVar("backup", "", "Backup directory. Default: /mnt/Backups/casapps/caspaste or ~/.local/share/Backups/casapps/caspaste", nil)
+	flagPidFile := c.AddStringVar("pid", "", "PID file path. Default: /var/run/casapps/caspaste.pid or ~/.local/share/casapps/caspaste/caspaste.pid", nil)
 	flagMode := c.AddStringVar("mode", "", "Application mode: production or development (default: production)", nil)
 	flagUpdate := c.AddStringVar("update", "", "Update management: check, yes, branch {stable|beta|daily}, --help", nil)
 	// Color output flag per AI.md PART 8
@@ -1261,8 +1261,8 @@ func main() {
 
 	// Handle --help first
 	if *flagHelp {
-		fmt.Printf("CasPb v%s - Self-hosted pastebin service\n\n", Version)
-		fmt.Println("Usage: caspb [flags]")
+		fmt.Printf("CasPaste v%s - Self-hosted pastebin service\n\n", Version)
+		fmt.Println("Usage: caspaste [flags]")
 		fmt.Println("\nCommon Flags:")
 		fmt.Println("  --help              Show this help message")
 		fmt.Println("  --version           Show version information")
@@ -1292,13 +1292,13 @@ func main() {
 		fmt.Println("")
 		fmt.Println("  Supported: bash, zsh, fish, sh, dash, ksh, powershell, pwsh")
 		fmt.Println("  Example: eval \"$(caspaste --shell init)\"")
-		fmt.Println("\nFor more information: https://github.com/casjay-forks/caspaste")
+		fmt.Println("\nFor more information: https://github.com/webappsgo/caspaste")
 		os.Exit(0)
 	}
 
 	// Handle --version
 	if *flagVersion {
-		fmt.Printf("CasPb v%s\n", Version)
+		fmt.Printf("CasPaste v%s\n", Version)
 		fmt.Printf("Built with Go %s on %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}
@@ -1323,14 +1323,14 @@ func main() {
 		*flagLog = *flagLogsDir
 	}
 	if *flagLog == "" {
-		*flagLog = "/var/log/casapps/caspb"
+		*flagLog = "/var/log/casapps/caspaste"
 	}
 	os.MkdirAll(*flagLog, 0755)
 
 	// Handle --daemon mode (fork process and exit)
 	if *flagDaemon {
 		if *flagDataDir == "" {
-			*flagDataDir = "/var/lib/casapps/caspb"
+			*flagDataDir = "/var/lib/casapps/caspaste"
 		}
 		os.MkdirAll(*flagDataDir, 0755)
 		
@@ -1365,7 +1365,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Warning: failed to write PID file: %v\n", err)
 		}
 		
-		fmt.Printf("CasPb started in background (PID: %d)\n", cmd.Process.Pid)
+		fmt.Printf("CasPaste started in background (PID: %d)\n", cmd.Process.Pid)
 		fmt.Printf("Logs: %s/access.log\n", *flagLog)
 		if *flagDebug {
 			fmt.Printf("Debug: %s/debug.log\n", *flagLog)
@@ -1409,11 +1409,11 @@ func main() {
 			dataDir = getDefaultDataDir()
 		}
 		if cfg.Database.Driver == "sqlite" && !strings.HasPrefix(cfg.Database.Source, "/") {
-			dbDir := os.Getenv("CASPB_DB_DIR")
+			dbDir := os.Getenv("CASPASTE_DB_DIR")
 			if dbDir == "" {
 				dbDir = dataDir + "/db"
 			}
-			cfg.Database.Source = dbDir + "/caspb.db"
+			cfg.Database.Source = dbDir + "/caspaste.db"
 		}
 
 		// Run health check and exit
@@ -1464,7 +1464,7 @@ func main() {
 		defaultConfigDir := getDefaultConfigDir()
 		configPaths = append(configPaths,
 			defaultConfigDir+"/server.yml",
-			"/etc/casapps/caspb/server.yml",
+			"/etc/casapps/caspaste/server.yml",
 			"/config/server.yml",
 		)
 	}
@@ -1626,13 +1626,13 @@ func main() {
 		if !strings.HasPrefix(dbSource, "/") && dataDir != "" {
 			// Check for environment variable ONLY on first run
 			if isFirstRun {
-				dbDir = os.Getenv("CASPB_DB_DIR")
+				dbDir = os.Getenv("CASPASTE_DB_DIR")
 			}
 			if dbDir == "" {
 				// Default: {dataDir}/db
 				dbDir = dataDir + "/db"
 			}
-			yamlCfg.Database.Source = dbDir + "/caspb.db"
+			yamlCfg.Database.Source = dbDir + "/caspaste.db"
 			dbSource = yamlCfg.Database.Source
 		}
 
@@ -1651,7 +1651,7 @@ func main() {
 	if *flagBackupDir != "" {
 		backupDir = *flagBackupDir
 	} else if isFirstRun {
-		backupDir = os.Getenv("CASPB_BACKUP_DIR")
+		backupDir = os.Getenv("CASPASTE_BACKUP_DIR")
 	}
 	if backupDir == "" && dataDir != "" {
 		// Platform-specific defaults
@@ -1659,20 +1659,20 @@ func main() {
 		switch runtime.GOOS {
 		case "linux":
 			if isRoot {
-				backupDir = "/var/backups/caspb"
+				backupDir = "/var/backups/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					backupDir = home + "/.local/share/casapps/caspb/backups"
+					backupDir = home + "/.local/share/casapps/caspaste/backups"
 				} else {
 					backupDir = dataDir + "/backups"
 				}
 			}
 		case "darwin":
 			if isRoot {
-				backupDir = "/var/backups/caspb"
+				backupDir = "/var/backups/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					backupDir = home + "/Library/Application Support/CasPb/Backups"
+					backupDir = home + "/Library/Application Support/CasPaste/Backups"
 				} else {
 					backupDir = dataDir + "/backups"
 				}
@@ -1680,23 +1680,23 @@ func main() {
 		case "windows":
 			if isRoot {
 				if programData := os.Getenv("ProgramData"); programData != "" {
-					backupDir = programData + "\\CasPb\\Backups"
+					backupDir = programData + "\\CasPaste\\Backups"
 				} else {
-					backupDir = "C:\\ProgramData\\CasPb\\Backups"
+					backupDir = "C:\\ProgramData\\CasPaste\\Backups"
 				}
 			} else {
 				if appdata := os.Getenv("APPDATA"); appdata != "" {
-					backupDir = appdata + "\\CasPb\\Backups"
+					backupDir = appdata + "\\CasPaste\\Backups"
 				} else {
 					backupDir = dataDir + "/backups"
 				}
 			}
 		case "freebsd", "openbsd":
 			if isRoot {
-				backupDir = "/var/backups/caspb"
+				backupDir = "/var/backups/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					backupDir = home + "/.caspb/backups"
+					backupDir = home + "/.caspaste/backups"
 				} else {
 					backupDir = dataDir + "/backups"
 				}
@@ -1713,40 +1713,40 @@ func main() {
 		switch runtime.GOOS {
 		case "linux":
 			if isRoot {
-				cacheDir = "/var/cache/caspb"
+				cacheDir = "/var/cache/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					cacheDir = home + "/.cache/caspb"
+					cacheDir = home + "/.cache/caspaste"
 				} else {
 					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "darwin":
 			if isRoot {
-				cacheDir = "/var/cache/caspb"
+				cacheDir = "/var/cache/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					cacheDir = home + "/Library/Caches/CasPb"
+					cacheDir = home + "/Library/Caches/CasPaste"
 				} else {
 					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "windows":
 			if isRoot {
-				cacheDir = "C:\\ProgramData\\CasPb\\Cache"
+				cacheDir = "C:\\ProgramData\\CasPaste\\Cache"
 			} else {
 				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-					cacheDir = localAppData + "\\CasPb\\Cache"
+					cacheDir = localAppData + "\\CasPaste\\Cache"
 				} else {
 					cacheDir = dataDir + "/cache"
 				}
 			}
 		case "freebsd", "openbsd":
 			if isRoot {
-				cacheDir = "/var/cache/caspb"
+				cacheDir = "/var/cache/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					cacheDir = home + "/.cache/caspb"
+					cacheDir = home + "/.cache/caspaste"
 				} else {
 					cacheDir = dataDir + "/cache"
 				}
@@ -1759,24 +1759,24 @@ func main() {
 	// Determine logs directory
 	logsDir := yamlCfg.Directories.Logs
 	if logsDir == "" && isFirstRun {
-		logsDir = os.Getenv("CASPB_LOGS_DIR")
+		logsDir = os.Getenv("CASPASTE_LOGS_DIR")
 	}
 	if logsDir == "" && dataDir != "" {
 		isRoot := isRunningAsRoot()
 		switch runtime.GOOS {
 		case "linux":
 			if isRoot {
-				logsDir = "/var/log/casapps/caspb"
+				logsDir = "/var/log/casapps/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					logsDir = home + "/.local/log/casapps/caspb"
+					logsDir = home + "/.local/log/casapps/caspaste"
 				} else {
 					logsDir = dataDir + "/logs"
 				}
 			}
 		case "darwin":
 			if isRoot {
-				logsDir = "/var/log/casapps/caspb"
+				logsDir = "/var/log/casapps/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
 					logsDir = home + "/Library/Logs/CasPaste"
@@ -1786,20 +1786,20 @@ func main() {
 			}
 		case "windows":
 			if isRoot {
-				logsDir = "C:\\ProgramData\\CasPb\\Logs"
+				logsDir = "C:\\ProgramData\\CasPaste\\Logs"
 			} else {
 				if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-					logsDir = localAppData + "\\CasPb\\Logs"
+					logsDir = localAppData + "\\CasPaste\\Logs"
 				} else {
 					logsDir = dataDir + "/logs"
 				}
 			}
 		case "freebsd", "openbsd":
 			if isRoot {
-				logsDir = "/var/log/casapps/caspb"
+				logsDir = "/var/log/casapps/caspaste"
 			} else {
 				if home := os.Getenv("HOME"); home != "" {
-					logsDir = home + "/.local/log/casapps/caspb"
+					logsDir = home + "/.local/log/casapps/caspaste"
 				} else {
 					logsDir = dataDir + "/logs"
 				}
@@ -1868,8 +1868,8 @@ func main() {
 			configPath = *flagConfigDir + "/server.yml"
 		} else {
 			// Try to find config in standard locations
-			if _, err := os.Stat("/etc/casapps/caspb/server.yml"); err == nil {
-				configPath = "/etc/casapps/caspb/server.yml"
+			if _, err := os.Stat("/etc/casapps/caspaste/server.yml"); err == nil {
+				configPath = "/etc/casapps/caspaste/server.yml"
 			} else if _, err := os.Stat("/config/server.yml"); err == nil {
 				configPath = "/config/server.yml"
 			}
@@ -1886,7 +1886,7 @@ func main() {
 		// Determine directories from config
 		dataDir := *flagDataDir
 		if dataDir == "" {
-			dataDir = "/var/lib/casapps/caspb"
+			dataDir = "/var/lib/casapps/caspaste"
 		}
 		
 		cfgDir := *flagConfigDir
@@ -2034,7 +2034,7 @@ func main() {
 	}
 	serverLogFile := yamlCfg.Logging.Server.File
 	if serverLogFile == "" {
-		serverLogFile = "caspb.log"
+		serverLogFile = "caspaste.log"
 	}
 	debugLogFile := yamlCfg.Logging.Debug.File
 	if debugLogFile == "" {
@@ -2055,7 +2055,7 @@ func main() {
 		exitOnError(fmt.Errorf("failed to open %s: %w", errorLogFile, err))
 	}
 	
-	// Open caspb.log - Application log (INFO messages)
+	// Open caspaste.log - Application log (INFO messages)
 	serverLogPath := filepath.Join(logsDir, serverLogFile)
 	serverLogFd, err := os.OpenFile(serverLogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
@@ -2645,7 +2645,7 @@ func main() {
 	// Check for PORT environment variable override
 	portEnv := os.Getenv("PORT")
 	if portEnv == "" {
-		portEnv = os.Getenv("CASPB_PORT")
+		portEnv = os.Getenv("CASPASTE_PORT")
 	}
 
 	if portEnv != "" {

@@ -91,7 +91,7 @@ caspaste-cli login
 
 This creates a config file at:
 
-- **Linux:** `~/.config/casjay-forks/caspaste/cli.yml`
+- **Linux:** `~/.config/webappsgo/caspaste/cli.yml`
 - **macOS:** `~/Library/Application Support/CasPaste/cli.yml`
 - **Windows:** `%LOCALAPPDATA%\CasPaste\cli.yml`
 
@@ -149,7 +149,7 @@ caspaste-cli shorten https://example.com/very/long/url
 ### Configuration File
 
 ```yaml
-# ~/.config/casjay-forks/caspaste/cli.yml
+# ~/.config/webappsgo/caspaste/cli.yml
 server: https://paste.example.com
 token: your-api-token
 default_syntax: plaintext

@@ -1,4 +1,4 @@
-# CasPb Makefile - Local Development Only
+# CasPaste Makefile - Local Development Only
 # Targets: dev, local, build, test, release, docker (exactly 6 per AI.md PART 26)
 # All Go builds/tests run inside Docker (casjaysdev/go:latest)
 # DO NOT ADD MORE TARGETS per AI.md PART 26
@@ -152,7 +152,7 @@ test:
 	@echo "Running tests with coverage..."
 	@$(GO_DOCKER) sh -c '\
 		go mod download && \
-		TESTPKGS=$$(find . -name "*_test.go" ! -path "./.go-cache/*" ! -path "./vendor/*" | xargs -I{} dirname {} | sort -u | sed "s|^\./||" | sed "s|^|github.com/casjay-forks/caspaste/|" | tr "\n" " ") && \
+		TESTPKGS=$$(find . -name "*_test.go" ! -path "./.go-cache/*" ! -path "./vendor/*" | xargs -I{} dirname {} | sort -u | sed "s|^\./||" | sed "s|^|github.com/webappsgo/caspaste/|" | tr "\n" " ") && \
 		if [ -z "$$TESTPKGS" ]; then echo "No test files found — skipping"; exit 0; fi && \
 		go test -buildvcs=false -v -cover -coverprofile=/tmp/coverage.out $$TESTPKGS && \
 		COVERAGE=$$(go tool cover -func=/tmp/coverage.out | awk "/^total:/ {gsub(\"%\",\"\",\$$3); print int(\$$3)}") && \

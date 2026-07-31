@@ -42,8 +42,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/config"
-	"github.com/casjay-forks/caspaste/src/scheduler"
+	"github.com/webappsgo/caspaste/src/config"
+	"github.com/webappsgo/caspaste/src/scheduler"
 )
 
 // Panel represents the fully-initialized admin panel

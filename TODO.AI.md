@@ -1,15 +1,3 @@
-## [ ] Resolve caspaste vs caspb naming conflict across the codebase
-Read: AI.md PART 3
-IDEA.md declares project_name=caspaste, binary_name=caspaste,
-cli_binary_name=caspaste-cli, internal_name=caspaste. The actual
-codebase (README.md, go.mod module path is github.com/casjay-forks/caspaste,
-but internal identifiers use "caspb": src/path/path.go projectName="caspb",
-src/config/env.go CASPB_* env prefix, src/server/caspb.go, src/client/main.go,
-docker-compose.yml CASPB_* vars, README binary names caspb/caspb-cli) uses
-"caspb" as the frozen internal_name/binary identity instead. This is a
-project-wide inconsistency, not a small fix — needs a human decision on
-which name is authoritative before any rename work proceeds.
-
 ## [ ] Create .claude/rules/*.md cheatsheet files (14 files)
 Read: AI.md PART 0
 PART 0 "Session Initialization" mandates creating
@@ -45,10 +33,11 @@ out of scope for this pass (line range cutoff at PART 6).
 ## [ ] Verify LICENSE.md copyright year
 Read: AI.md PART 2
 PART 2 requires copyright year = "current year or year of first publication".
-LICENSE.md currently states "Copyright (c) 2024 casapps". Copyright holder
-(casapps = project_org) is correct per spec. The year 2024 predates the first
-commit visible in this git history (2026) — could be correct if the project
-was first published elsewhere in 2024, or could be stale. Needs human
+Copyright holder updated to "webappsgo" (= project_org) as part of the
+caspaste/webappsgo naming-conflict resolution. LICENSE.md currently states
+"Copyright (c) 2024 webappsgo". The year 2024 predates the first commit
+visible in this git history (2026) — could be correct if the project was
+first published elsewhere in 2024, or could be stale. Needs human
 confirmation of the actual first-publication year; not changed in this pass.
 
 ## [ ] Verify src/mode + src/cli + src/tui runtime-mode dispatch against PART 6
@@ -58,3 +47,22 @@ src/mode/mode.go only implements a Production/Development app-mode toggle
 on TTY/args/flags) described in PART 6. Need to check src/cli and src/tui
 entry points and src/main.go against the exact PART 6 dispatch rules — not
 completed in this pass due to time/scope; flag only, do not implement.
+
+## [ ] Fix go-lint findings (14 issues, pre-existing, found during naming rename)
+Read: AI.md PART 26 (Makefile), PART 8 (Server binary CLI)
+go-lint agent found 14 violations unrelated to the caspaste/webappsgo rename
+that landed in the same working tree; logged rather than fixed to keep the
+rename commit scoped:
+- Makefile line 37 (GO_DOCKER): missing `-e GOFLAGS=-buildvcs=false` for
+  mounted .git directory safety
+- Makefile lines 63, 66, 75, 81, 97, 100, 175, 178: `go build` calls missing
+  `-buildvcs=false` flag
+- Makefile line 25: LDFLAGS missing `-trimpath` (required for build, release,
+  docker targets)
+- Makefile: missing required `clean` target
+- src/cli/cli.go: missing `-h`/`-v` short flag forms (only `--help`/
+  `--version` work; both forms required)
+- src/server/caspaste.go line ~1253: `--color` flag accepts wrong values
+  (`always`/`never`/`auto`; spec requires `auto`/`yes`/`no`)
+- src/server/caspaste.go line ~1253: `--color` flag defaults to empty string;
+  must default to `auto`

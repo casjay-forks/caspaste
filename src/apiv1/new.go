@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/caspasswd"
-	"github.com/casjay-forks/caspaste/src/config"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/caspasswd"
+	"github.com/webappsgo/caspaste/src/config"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 type newPasteAnswer struct {

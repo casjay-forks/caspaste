@@ -9,7 +9,7 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 	"io"
 	"net/http"
 	"os"

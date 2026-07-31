@@ -17,9 +17,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/casjay-forks/caspaste/src/lineend"
-	"github.com/casjay-forks/caspaste/src/storage"
-	"github.com/casjay-forks/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/lineend"
+	"github.com/webappsgo/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/validation"
 )
 
 func PasteAddFromForm(req *http.Request, db storage.DB, rateSys *RateLimitSystem, titleMaxLen int, bodyMaxLen int, maxLifeTime int64, lexerNames []string) (string, int64, int64, error) {

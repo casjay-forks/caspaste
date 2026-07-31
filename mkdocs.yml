@@ -1,10 +1,10 @@
 site_name: CasPaste
-site_url: https://casjay-forks-caspaste.readthedocs.io
+site_url: https://webappsgo-caspaste.readthedocs.io
 site_description: "A self-hosted, privacy-focused pastebin service"
-site_author: casjay-forks
+site_author: webappsgo
 
-repo_name: casjay-forks/caspaste
-repo_url: https://github.com/casjay-forks/caspaste
+repo_name: webappsgo/caspaste
+repo_url: https://github.com/webappsgo/caspaste
 edit_uri: edit/main/docs/
 
 theme:

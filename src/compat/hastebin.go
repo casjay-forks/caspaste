@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // handleHastebin intercepts Hastebin API paths and returns true if handled.

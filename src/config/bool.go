@@ -6,7 +6,7 @@
 package config
 
 import (
-	"github.com/casjay-forks/caspaste/src/validation"
+	"github.com/webappsgo/caspaste/src/validation"
 )
 
 // ParseBool parses a boolean value with support for 40+ truthy/falsey strings

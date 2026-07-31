@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/storage"
 )
 
 // handleTermbin intercepts termbin/netcat-style HTTP paths and returns true if handled.

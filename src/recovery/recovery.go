@@ -12,7 +12,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/casjay-forks/caspaste/src/totp"
+	"github.com/webappsgo/caspaste/src/totp"
 )
 
 // Database query timeout

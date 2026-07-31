@@ -42,9 +42,9 @@ func DefaultConfig(version string) Config {
 	return Config{
 		CurrentVersion: version,
 		Branch:         "stable",
-		GithubOwner:    "casjay-forks",
-		GithubRepo:     "caspb",
-		BinaryName:     "caspb",
+		GithubOwner:    "webappsgo",
+		GithubRepo:     "caspaste",
+		BinaryName:     "caspaste",
 	}
 }
 

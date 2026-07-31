@@ -13,8 +13,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/audit"
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/audit"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 // csrfContextKey is the request context key used to pass the CSRF token

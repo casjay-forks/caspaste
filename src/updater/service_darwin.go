@@ -16,7 +16,7 @@ import (
 // Per AI.md PART 23: Service-aware update coordination
 func RestartService(serviceName string) error {
 	// macOS uses launchd
-	label := "casjay-forks." + serviceName
+	label := "webappsgo." + serviceName
 
 	// Try user-level service first
 	cmd := exec.Command("launchctl", "kickstart", "-k", "gui/"+label)

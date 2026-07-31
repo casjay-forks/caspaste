@@ -9,7 +9,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/casjay-forks/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/netshare"
 )
 
 type docsTmpl struct {

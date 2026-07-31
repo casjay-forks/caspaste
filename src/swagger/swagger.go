@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/casjay-forks/caspaste/src/config"
+	"github.com/webappsgo/caspaste/src/config"
 )
 
 // Config holds swagger configuration

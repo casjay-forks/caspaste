@@ -8,8 +8,8 @@ package raw
 
 import (
 	"errors"
-	"github.com/casjay-forks/caspaste/src/netshare"
-	"github.com/casjay-forks/caspaste/src/storage"
+	"github.com/webappsgo/caspaste/src/netshare"
+	"github.com/webappsgo/caspaste/src/storage"
 	"io"
 	"net/http"
 	"strconv"
