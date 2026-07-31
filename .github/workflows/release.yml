@@ -17,35 +17,10 @@ env:
   PROJECTNAME: caspaste
 
 jobs:
-  ensure-build-image:
-    runs-on: ubuntu-latest
-    permissions:
-      packages: read
-    outputs:
-      image: ${{ steps.pull.outputs.image }}
-    steps:
-      - uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121  # v4.1.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: pull
-        name: Pull build image (fail fast if missing)
-        run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:build"
-          if ! docker pull "$IMAGE"; then
-            echo "::error::Build image $IMAGE not found."
-            echo "::error::Trigger the 'Build Toolchain Image' workflow (workflow_dispatch) to create it."
-            exit 1
-          fi
-          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
-
   build:
-    needs: ensure-build-image
     runs-on: ubuntu-latest
     container:
-      image: ${{ needs.ensure-build-image.outputs.image }}
+      image: casjaysdev/go:latest
     strategy:
       matrix:
         include:
