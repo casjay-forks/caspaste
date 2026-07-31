@@ -89,14 +89,18 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 0
+      - name: Install truffleHog v3.96.0
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+            | sh -s -- -b /usr/local/bin v3.96.0
       - name: Scan for secrets (truffleHog)
         run: |
           BEFORE="${{ github.event.before }}"
           AFTER="${{ github.event.after }}"
           if [ -n "$BEFORE" ] && [ -n "$AFTER" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
-            trufflehog git --since-commit "$BEFORE" --branch "$AFTER" --fail file://. 2>&1 || true
+            trufflehog git --since-commit "$BEFORE" --branch "$AFTER" --fail file://.
           else
-            trufflehog git --depth 1 --fail file://. 2>&1 || true
+            trufflehog git --depth 1 --fail file://.
           fi
 
   workflow-policy:
@@ -132,6 +136,10 @@ jobs:
       image: casjaysdev/go:latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Install Trivy v0.72.0
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin v0.72.0
       - name: Trivy filesystem vulnerability scan
         run: |
           trivy fs \
