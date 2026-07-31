@@ -192,6 +192,12 @@ func DoUpdate(ctx context.Context, cfg Config, release *Release) error {
 			runtime.GOOS, runtime.GOARCH, assetName)
 	}
 
+	// Checksum verification is MANDATORY (AI.md PART 23) - refuse to update
+	// without a checksum asset rather than installing an unverified binary.
+	if checksumURL == "" {
+		return fmt.Errorf("no checksum asset found for %s - refusing unverified update", assetName)
+	}
+
 	fmt.Printf("Downloading %s...\n", assetName)
 
 	// Download to temp file
@@ -237,14 +243,12 @@ func DoUpdate(ctx context.Context, cfg Config, release *Release) error {
 
 	fmt.Printf("Downloaded %d bytes\n", written)
 
-	// Verify checksum if available
-	if checksumURL != "" {
-		fmt.Println("Verifying checksum...")
-		if err := verifyChecksumFromURL(ctx, tmpPath, checksumURL, cfg); err != nil {
-			return fmt.Errorf("checksum verification failed: %w", err)
-		}
-		fmt.Println("Checksum verified")
+	// Verify checksum (MANDATORY - checksumURL is guaranteed non-empty above)
+	fmt.Println("Verifying checksum...")
+	if err := verifyChecksumFromURL(ctx, tmpPath, checksumURL, cfg); err != nil {
+		return fmt.Errorf("checksum verification failed: %w", err)
 	}
+	fmt.Println("Checksum verified")
 
 	// Make executable (Unix)
 	if runtime.GOOS != "windows" {
