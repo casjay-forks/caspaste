@@ -103,7 +103,8 @@ func validateSessionToken(token string) (string, bool) {
 	h.Write(data)
 	expectedSig := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
-	if parts[2] != expectedSig {
+	// Constant-time comparison to prevent signature timing oracles (AI.md PART 11)
+	if !hmac.Equal([]byte(parts[2]), []byte(expectedSig)) {
 		return "", false
 	}
 
