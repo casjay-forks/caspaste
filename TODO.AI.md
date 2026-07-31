@@ -48,21 +48,3 @@ on TTY/args/flags) described in PART 6. Need to check src/cli and src/tui
 entry points and src/main.go against the exact PART 6 dispatch rules — not
 completed in this pass due to time/scope; flag only, do not implement.
 
-## [ ] Fix go-lint findings (14 issues, pre-existing, found during naming rename)
-Read: AI.md PART 26 (Makefile), PART 8 (Server binary CLI)
-go-lint agent found 14 violations unrelated to the caspaste/webappsgo rename
-that landed in the same working tree; logged rather than fixed to keep the
-rename commit scoped:
-- Makefile line 37 (GO_DOCKER): missing `-e GOFLAGS=-buildvcs=false` for
-  mounted .git directory safety
-- Makefile lines 63, 66, 75, 81, 97, 100, 175, 178: `go build` calls missing
-  `-buildvcs=false` flag
-- Makefile line 25: LDFLAGS missing `-trimpath` (required for build, release,
-  docker targets)
-- Makefile: missing required `clean` target
-- src/cli/cli.go: missing `-h`/`-v` short flag forms (only `--help`/
-  `--version` work; both forms required)
-- src/server/caspaste.go line ~1253: `--color` flag accepts wrong values
-  (`always`/`never`/`auto`; spec requires `auto`/`yes`/`no`)
-- src/server/caspaste.go line ~1253: `--color` flag defaults to empty string;
-  must default to `auto`

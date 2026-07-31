@@ -1,7 +1,7 @@
 # CasPaste Makefile - Local Development Only
-# Targets: dev, local, build, test, release, docker (exactly 6 per AI.md PART 26)
+# Targets: dev, local, build, test, release, docker (+ clean) per AI.md PART 26
 # All Go builds/tests run inside Docker (casjaysdev/go:latest)
-# DO NOT ADD MORE TARGETS per AI.md PART 26
+# DO NOT ADD TARGETS beyond those in the AI.md PART 26 .PHONY list
 
 # Infer PROJECTNAME and PROJECTORG from git remote or directory path (NEVER hardcode)
 PROJECTNAME := $(shell git remote get-url origin 2>/dev/null | sed -E 's|.*/([^/]+)(\.git)?$$|\1|' || basename "$$(pwd)")
@@ -34,12 +34,13 @@ RELDIR  := releases
 
 # Docker — persistent Go state in named volume (NOT a host path)
 # go-state:/usr/local/share/go keeps modules cached across builds
-GO_DOCKER := docker run --rm -it \
+GO_DOCKER := docker run --rm \
 	--name $(PROJECTNAME)-$$(tr -dc 'a-z0-9' </dev/urandom | head -c8) \
 	-v $(PWD):/app \
 	-v go-state:/usr/local/share/go \
 	-w /app \
 	-e CGO_ENABLED=0 \
+	-e GOFLAGS=-buildvcs=false \
 	casjaysdev/go:latest
 
 # Registry for docker target
@@ -48,22 +49,21 @@ REGISTRY ?= ghcr.io/$(PROJECTORG)/$(PROJECTNAME)
 # Build platforms (8 platforms per AI.md PART 26)
 PLATFORMS ?= linux/amd64,linux/arm64,darwin/amd64,darwin/arm64,windows/amd64,windows/arm64,freebsd/amd64,freebsd/arm64
 
-.PHONY: build local release docker test dev
+.PHONY: build local release docker test dev clean
 
 # =============================================================================
 # BUILD — Build all platforms + local binary (via Docker with cached modules)
 # =============================================================================
-build:
-	@rm -rf $(BINDIR) $(RELDIR)
+build: clean
 	@mkdir -p $(BINDIR)
 	@echo "Building version $(VERSION)..."
 	@$(GO_DOCKER) go mod tidy
 	@$(GO_DOCKER) go mod download
 	@$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
-		go build -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME) ./src/server"
+		go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME) ./src/server"
 	@if [ -d "src/client" ]; then \
 		$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
-			go build -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME)-cli ./src/client"; \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME)-cli ./src/client"; \
 	fi
 	@for platform in $$(echo "$(PLATFORMS)" | tr ',' ' '); do \
 		OS=$${platform%/*}; \
@@ -72,13 +72,13 @@ build:
 		[ "$$OS" = "windows" ] && OUTPUT=$$OUTPUT.exe; \
 		echo "Building server $$OS/$$ARCH..."; \
 		$(GO_DOCKER) sh -c "GOOS=$$OS GOARCH=$$ARCH \
-			go build -ldflags \"$(LDFLAGS)\" \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" \
 			-o $$OUTPUT ./src/server" || exit 1; \
 		if [ -d "src/client" ]; then \
 			CLI_OUTPUT=$(BINDIR)/$(PROJECTNAME)-cli-$$OS-$$ARCH; \
 			[ "$$OS" = "windows" ] && CLI_OUTPUT=$$CLI_OUTPUT.exe; \
 			$(GO_DOCKER) sh -c "GOOS=$$OS GOARCH=$$ARCH \
-				go build -ldflags \"$(LDFLAGS)\" \
+				go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" \
 				-o $$CLI_OUTPUT ./src/client" || exit 1; \
 		fi; \
 	done
@@ -87,17 +87,16 @@ build:
 # =============================================================================
 # LOCAL — Build local binaries only (fast development builds)
 # =============================================================================
-local:
-	@rm -rf $(BINDIR)
+local: clean
 	@mkdir -p $(BINDIR)
 	@echo "Building local binaries version $(VERSION)..."
 	@$(GO_DOCKER) go mod tidy
 	@$(GO_DOCKER) go mod download
 	@$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
-		go build -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME) ./src/server"
+		go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME) ./src/server"
 	@if [ -d "src/client" ]; then \
 		$(GO_DOCKER) sh -c "GOOS=$$(go env GOOS) GOARCH=$$(go env GOARCH) \
-			go build -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME)-cli ./src/client"; \
+			go build -buildvcs=false -trimpath -ldflags \"$(LDFLAGS)\" -o $(BINDIR)/$(PROJECTNAME)-cli ./src/client"; \
 	fi
 	@echo "Local build complete: $(BINDIR)/"
 
@@ -179,4 +178,11 @@ dev:
 			echo "Built: $$BUILD_DIR/$(PROJECTNAME)-cli"; \
 		fi && \
 		echo "Test: docker run --rm -it --name $(PROJECTNAME)-test -v $$BUILD_DIR:/app alpine:latest /app/$(PROJECTNAME) --help"
+
+# =============================================================================
+# CLEAN — Remove build artifacts
+# =============================================================================
+clean:
+	@rm -rf $(BINDIR) $(RELDIR)
+	@echo "Cleaned build artifacts"
 
