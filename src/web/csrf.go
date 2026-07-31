@@ -227,7 +227,7 @@ func setCSRFCookie(w http.ResponseWriter, r *http.Request, config CSRFConfig, to
 		Path:     "/",
 		HttpOnly: false,
 		Secure:   secure,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		MaxAge:   86400,
 	})
 }
