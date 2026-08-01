@@ -1,82 +1,52 @@
 # CasPaste
 
-A self-hosted, privacy-focused pastebin service for sharing text snippets, code, files, and short URLs. Single static binary, all assets embedded, zero external runtime dependencies.
-
-🌐 **Site:** https://pste.us
-
 [![CI](https://github.com/webappsgo/caspaste/actions/workflows/ci.yml/badge.svg)](https://github.com/webappsgo/caspaste/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/webappsgo/caspaste)](https://github.com/webappsgo/caspaste/releases/latest)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/github/license/webappsgo/caspaste)](LICENSE.md)
 [![Docker](https://img.shields.io/badge/Docker-ghcr.io-2496ED?logo=docker)](https://github.com/webappsgo/caspaste/pkgs/container/caspaste)
 
 ---
 
-## 📦 Install
+## About
 
-Download the latest release from [GitHub Releases](https://github.com/webappsgo/caspaste/releases/latest).
+CasPaste is a self-hosted, privacy-focused pastebin and code-sharing service
+for sharing text snippets, code (with syntax highlighting), files, and short
+URLs. It drops in for Pastebin, Microbin, Lenpaste, Stikked, Termbin,
+Hastebin, and Sprunge — existing clients keep working after only changing the
+hostname. Packaged as a single static binary with all assets embedded and
+zero external runtime dependencies.
 
-### Linux
+## Official Site
 
-| Arch | Binary |
-|------|--------|
-| amd64 | `caspaste-linux-amd64` |
-| arm64 | `caspaste-linux-arm64` |
+🌐 https://pste.us
 
-```bash
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-linux-${ARCH}" \
-  -o /usr/local/bin/caspaste && chmod +x /usr/local/bin/caspaste
-```
+## Features
 
-### macOS
+- Pastebin / code-sharing with raw text, syntax highlighting, multi-file
+  (Gist-style) pastes, and file uploads (5MB default, configurable)
+- URL shortener — the server never fetches the destination (SSRF prevention)
+- Anonymous, vanity (`/{username}/{paste_id}`), organization, and
+  custom-domain paste URLs
+- Visibility modes: public / unlisted / private, with password protection
+  and flexible expiration (time-based or burn-after-read)
+- Drop-in compatibility shims for sprunge, ix, Termbin, Stikked, Lenpaste,
+  Microbin, Hastebin, and pastebin.com — detected per-request, response
+  format matches the target service exactly
+- Multi-user accounts, organizations, and custom domains
+- Full server admin panel with setup-token first-run flow
+- Built-in scheduler for backups, GeoIP/blocklist/CVE updates, log rotation,
+  session cleanup, SSL renewal, and health checks
+- Tor hidden service support (auto-enabled when `tor` is on `PATH`)
+- Built-in metrics, GeoIP, email (SMTP), backup/restore, and in-process
+  self-update
+- Localization (multiple languages) and installable PWA support
+- QR code generation for paste URLs and embeddable/iframe views
+- 100% of features available free under the open-source license — no paid
+  tiers, no feature gating, no phone-home
 
-| Arch | Binary |
-|------|--------|
-| Intel (x86_64) | `caspaste-darwin-amd64` |
-| Apple Silicon (arm64) | `caspaste-darwin-arm64` |
+## Production
 
-```bash
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-darwin-${ARCH}" \
-  -o /usr/local/bin/caspaste && chmod +x /usr/local/bin/caspaste
-xattr -d com.apple.quarantine /usr/local/bin/caspaste 2>/dev/null || true
-```
-
-### Windows
-
-| Arch | Binary |
-|------|--------|
-| amd64 | `caspaste-windows-amd64.exe` |
-| arm64 | `caspaste-windows-arm64.exe` |
-
-Download and add to `%PATH%`.
-
-### FreeBSD
-
-| Arch | Binary |
-|------|--------|
-| amd64 | `caspaste-freebsd-amd64` |
-| arm64 | `caspaste-freebsd-arm64` |
-
-```bash
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-freebsd-${ARCH}" \
-  -o /usr/local/bin/caspaste && chmod +x /usr/local/bin/caspaste
-```
-
-### CLI Client (caspaste-cli)
-
-The CLI client is released alongside the server under the same naming convention (`caspaste-cli-{os}-{arch}`). Example for Linux:
-
-```bash
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-cli-linux-${ARCH}" \
-  -o /usr/local/bin/caspaste-cli && chmod +x /usr/local/bin/caspaste-cli
-```
-
----
-
-## 🐳 Docker
+### Docker
 
 ```bash
 docker compose up -d
@@ -133,9 +103,74 @@ services:
       - ./volumes/data/db/postgres/caspaste:/var/lib/postgresql/data:z
 ```
 
----
+### Binary
 
-## 🖥️ CLI Client
+Download the latest release from [GitHub Releases](https://github.com/webappsgo/caspaste/releases/latest).
+
+| OS | Arch | Binary |
+|----|------|--------|
+| Linux | amd64 / arm64 | `caspaste-linux-{amd64,arm64}` |
+| macOS | amd64 / arm64 | `caspaste-darwin-{amd64,arm64}` |
+| Windows | amd64 / arm64 | `caspaste-windows-{amd64,arm64}.exe` |
+| FreeBSD | amd64 / arm64 | `caspaste-freebsd-{amd64,arm64}` |
+
+```bash
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-linux-${ARCH}" \
+  -o /usr/local/bin/caspaste && chmod +x /usr/local/bin/caspaste
+```
+
+macOS also requires clearing the quarantine attribute:
+
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/caspaste 2>/dev/null || true
+```
+
+```bash
+# Start server (auto-generates config on first run)
+caspaste
+
+# Specify directories
+caspaste --port 8080 \
+  --data /var/lib/casapps/caspaste \
+  --config /etc/casapps/caspaste
+```
+
+### Service Management
+
+```bash
+# Install as system service (auto-detects systemd / launchd / Windows Service / rc.d)
+sudo caspaste --service install
+sudo caspaste --service start
+sudo caspaste --service stop
+sudo caspaste --service status
+sudo caspaste --service uninstall
+```
+
+### Health Check
+
+```bash
+caspaste --status
+# Exit codes: 0=healthy, 1=unhealthy/degraded
+```
+
+### Backup & Restore
+
+```bash
+caspaste --maintenance backup
+caspaste --maintenance restore
+```
+
+## Client
+
+The CLI client is released alongside the server under the same naming
+convention (`caspaste-cli-{os}-{arch}`). Example for Linux:
+
+```bash
+ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+curl -LSsf "https://github.com/webappsgo/caspaste/releases/latest/download/caspaste-cli-linux-${ARCH}" \
+  -o /usr/local/bin/caspaste-cli && chmod +x /usr/local/bin/caspaste-cli
+```
 
 ```bash
 # Point at your instance
@@ -163,50 +198,47 @@ caspaste-cli list
 | `--one-use` | Burn after reading |
 | `--expire` | Expiration (e.g. `1h`, `7d`, `never`) |
 
----
+## Configuration
 
-## 🤖 Server
+Configuration is auto-generated on first run. Command-line flags and
+environment variables initialize the server; the generated `server.yml` is
+the source of truth for subsequent runs.
 
-```bash
-# Start server (auto-generates config on first run)
-caspaste
+### Key Environment Variables
 
-# Specify directories
-caspaste --port 8080 \
-  --data /var/lib/casapps/caspaste \
-  --config /etc/casapps/caspaste
-```
+| Variable | Description |
+|----------|-------------|
+| `CASPASTE_ADDRESS` | Listen address (e.g. `:8080`, `0.0.0.0:80`) |
+| `CASPASTE_PORT` | Listen port |
+| `CASPASTE_PUBLIC` | `true` = open, `false` = password required |
+| `CASPASTE_CONFIG_DIR` | Config directory |
+| `CASPASTE_DATA_DIR` | Data directory |
+| `CASPASTE_DB_DIR` | Database directory |
+| `CASPASTE_BACKUP_DIR` | Backup directory |
+| `CASPASTE_DB_DRIVER` | `sqlite` (default), `postgres`, `mysql` |
+| `CASPASTE_DB_SOURCE` | Connection string or SQLite filename |
 
-### Service Management
-
-```bash
-# Install as system service (auto-detects systemd / launchd / Windows Service / rc.d)
-sudo caspaste --service install
-sudo caspaste --service start
-sudo caspaste --service stop
-sudo caspaste --service status
-sudo caspaste --service uninstall
-```
-
-### Health Check
+### Authentication (Private Mode)
 
 ```bash
-caspaste --status
-# Exit codes: 0=healthy, 1=unhealthy, 2=degraded
+# Require password for all access
+CASPASTE_PUBLIC=false caspaste
 ```
 
-### Backup & Restore
+On first run in private mode, a setup token is printed to stdout. Visit
+`/server/admin/config/setup` to create the admin account.
 
-```bash
-caspaste --maintenance backup
-caspaste --maintenance restore
-```
+### Platform-Specific Directories
 
----
+| Directory | Linux (root) | Linux (user) | macOS |
+|-----------|-------------|--------------|-------|
+| Config | `/etc/casapps/caspaste` | `~/.config/casapps/caspaste` | `~/Library/Application Support/CasPaste/Config` |
+| Data | `/var/lib/casapps/caspaste` | `~/.local/share/casapps/caspaste` | `~/Library/Application Support/CasPaste` |
+| Logs | `/var/log/casapps/caspaste` | `~/.local/log/casapps/caspaste` | `~/Library/Logs/CasPaste` |
 
 ## API
 
-Base URL: `https://pste.us/api/v1`  
+Base URL: `https://pste.us/api/v1`
 Full docs: `/docs/apiv1`
 
 ### Create Paste
@@ -237,7 +269,8 @@ curl https://pste.us/api/v1/server/healthz
 
 ### External API Compatibility
 
-Existing clients for other paste services work without modification — just change the endpoint URL:
+Existing clients for other paste services work without modification — just
+change the endpoint URL:
 
 | Service | Mode detection |
 |---------|---------------|
@@ -250,46 +283,16 @@ Existing clients for other paste services work without modification — just cha
 | microbin | Host `mb.*` or `CASPASTE_API_MODE=microbin` |
 | lenpaste | Host `lp.*` or `CASPASTE_API_MODE=lenpaste` |
 
----
+## Other
 
-## Configuration
+Additional documentation lives under [`docs/`](docs/):
 
-Configuration is auto-generated on first run. Command-line flags and environment variables initialize the server; the generated `server.yml` is the source of truth for subsequent runs.
+- [Admin Panel](docs/admin.md) — server settings, users, and moderation
+- [Security](docs/security.md) — hardening notes and vulnerability reporting
+- [Integrations](docs/integrations.md) — compatibility shims and third-party
+  clients
 
-### Key Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `CASPASTE_ADDRESS` | Listen address (e.g. `:8080`, `0.0.0.0:80`) |
-| `CASPASTE_PORT` | Listen port |
-| `CASPASTE_PUBLIC` | `true` = open, `false` = password required |
-| `CASPASTE_CONFIG_DIR` | Config directory |
-| `CASPASTE_DATA_DIR` | Data directory |
-| `CASPASTE_DB_DIR` | Database directory |
-| `CASPASTE_BACKUP_DIR` | Backup directory |
-| `CASPASTE_DB_DRIVER` | `sqlite` (default), `postgres`, `mysql` |
-| `CASPASTE_DB_SOURCE` | Connection string or SQLite filename |
-
-### Authentication (Private Mode)
-
-```bash
-# Require password for all access
-CASPASTE_PUBLIC=false caspaste
-```
-
-On first run in private mode, a setup token is printed to stdout. Visit `/server/admin/config/setup` to create the admin account.
-
-### Platform-Specific Directories
-
-| Directory | Linux (root) | Linux (user) | macOS |
-|-----------|-------------|--------------|-------|
-| Config | `/etc/casapps/caspaste` | `~/.config/casapps/caspaste` | `~/Library/Application Support/CasPaste/Config` |
-| Data | `/var/lib/casapps/caspaste` | `~/.local/share/casapps/caspaste` | `~/Library/Application Support/CasPaste` |
-| Logs | `/var/log/casapps/caspaste` | `~/.local/log/casapps/caspaste` | `~/Library/Logs/CasPaste` |
-
----
-
-## 🛠️ Development
+## Development
 
 ```bash
 git clone https://github.com/webappsgo/caspaste.git
@@ -306,8 +309,10 @@ cd caspaste
 | `make test` | Run unit tests with ≥80% coverage gate |
 | `make release` | Build + create GitHub release |
 | `make docker` | Build and push multi-arch Docker image |
+| `make clean` | Remove build artifacts |
 
-All builds run inside Docker (`casjaysdev/go:latest`) — no local Go installation required.
+All builds run inside Docker (`casjaysdev/go:latest`) — no local Go
+installation required.
 
 ### Supported Platforms
 
@@ -318,7 +323,7 @@ All builds run inside Docker (`casjaysdev/go:latest`) — no local Go installati
 | Windows | amd64, arm64 |
 | FreeBSD | amd64, arm64 |
 
-### 🐳 Docker Build
+### Docker Build
 
 ```bash
 # Build the image locally
@@ -330,8 +335,25 @@ docker buildx build \
   --push .
 ```
 
----
+## Disclaimer
 
-## 📄 License
+This software is provided "as is" without warranty of any kind. Use at your
+own risk.
+
+- **No Warranty**: The authors are not responsible for any damages, data
+  loss, or issues arising from use of this software
+- **Not Professional Advice**: This software does not constitute legal,
+  financial, medical, or other professional advice
+- **Third-Party Services**: If this software connects to external APIs or
+  services, their terms of service apply separately
+- **Security**: While we strive to follow security best practices, no
+  software is guaranteed to be free of vulnerabilities
+- **Production Use**: Evaluate thoroughly before deploying in production
+  environments
+
+By using this software, you acknowledge that you have read and understood
+this disclaimer.
+
+## License
 
 MIT — see [LICENSE.md](LICENSE.md)

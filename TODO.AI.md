@@ -9,27 +9,6 @@ CRITICAL NEVER/ALWAYS sections, key rules summary, reference line) sourced
 from the corresponding AI.md PARTs. This requires reading PARTs 7-36, which
 was out of scope for this reconciliation pass.
 
-## [ ] Verify README.md section order against PART 1 spec
-Read: AI.md PART 1
-PART 1 "README.md — Section Order" requires: Title & Badges, About,
-Official Site, Features, Production, Client, Configuration, API, Other,
-Development (always last). Current README.md order is: Install, Docker,
-CLI Client, Server, API, Configuration, Development, License — does not
-match prescribed order/section names. Not rewritten in this pass per
-"prefer flagging over silently changing large working files"; also blocked
-on the naming-conflict item above since README content itself may need to
-change depending on that decision.
-
-## [ ] Verify docs/ completeness against PART 3 tree
-Read: AI.md PART 3
-Required docs/ files per the structure tree: index.md, installation.md,
-configuration.md, api.md, cli.md, admin.md, security.md, integrations.md,
-development.md, stylesheets/dark.css (+optional light.css), requirements.txt.
-Present: admin.md, api.md, cli.md, configuration.md, development.md, index.md,
-installation.md, requirements.txt. Missing: security.md, integrations.md,
-stylesheets/ (dark.css). PART 30 governs exact content requirements and was
-out of scope for this pass (line range cutoff at PART 6).
-
 ## [ ] Verify LICENSE.md copyright year
 Read: AI.md PART 2
 PART 2 requires copyright year = "current year or year of first publication".
@@ -56,11 +35,30 @@ this repo at the org level, or switch the login step to a PAT with
 May resolve naturally if/when the org is renamed casjay-forks ->
 webappsgo per IDEA.md/LICENSE.md (separately flagged, undecided).
 
-## [ ] Verify src/mode + src/cli + src/tui runtime-mode dispatch against PART 6
-Read: AI.md PART 6
-src/mode/mode.go only implements a Production/Development app-mode toggle
-(debug flag), not full smart-detection dispatch (server vs CLI vs TUI based
-on TTY/args/flags) described in PART 6. Need to check src/cli and src/tui
-entry points and src/main.go against the exact PART 6 dispatch rules — not
-completed in this pass due to time/scope; flag only, do not implement.
+## [ ] Implement PART 6 Application Modes (mode/debug system is dead code)
+Read: AI.md PART 6 (line 9251)
+Correction to a prior (mischaracterized) entry: PART 6 is "APPLICATION
+MODES" (production/development + debug flag), not CLI/server/TUI dispatch.
+Verified: `src/mode/mode.go` implements `Set`/`SetDebug`/`FromEnv`/
+`IsAppModeDev`/`IsDebugEnabled`, but `grep -rn` for
+`"github.com/webappsgo/caspaste/src/mode"` across `src/` returns zero
+matches — the entire package is unimported dead code. Consequences:
+- No `--mode` / `--debug` CLI flags exist (verified: no `"--mode"`/
+  `"--debug"` case in src/cli/cli.go or src/server/caspaste.go; the only
+  `case "mode":` hit is `--maintenance mode {enabled|disabled}`, unrelated).
+- No `MODE`/`DEBUG` env var is read anywhere (`mode.FromEnv()` is never
+  called).
+- No `/debug/*` routes are registered at all (no pprof, `/debug/vars`,
+  `/debug/config`, `/debug/routes`, `/debug/cache`, `/debug/db`,
+  `/debug/scheduler`) — src/server/debug.go per the AI.md template does
+  not exist.
+- The Four Operational States table's per-mode behavior differences
+  (logging level, template/static caching, rate-limit strictness, security
+  header relaxation, request-logging verbosity) are not wired to
+  `mode.IsAppModeDev()`/`IsDebugEnabled()` anywhere.
+This is a feature-sized gap (new CLI flags + env wiring + a debug-routes
+file + touching logging/caching/rate-limit/security-header call sites),
+not a one-line fix, and `/debug/pprof` + verbose request/body logging are
+security-sensitive surface that should only be exposed deliberately —
+flagging for a scoping decision rather than implementing blind.
 
